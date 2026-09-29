@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../node_modules/.cache/tsc/jev",
+    "tsBuildInfoFile": "../../node_modules/.cache/tsc/jev.tsbuildinfo"
+  },
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../protocol"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../node_modules/.cache/tsc/orchestrator",
+    "tsBuildInfoFile": "../../node_modules/.cache/tsc/orchestrator.tsbuildinfo"
+  },
+  "include": ["src"]
+}
