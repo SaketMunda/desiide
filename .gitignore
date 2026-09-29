@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+.mutt/logs/
+*.vsix
+.DS_Store
