@@ -1,6 +1,6 @@
 # FND-1 · Repo foundation
 
-**Status:** review · **Milestone:** Alpha · **Size:** S · **Depends on:** — · **Skills:** none
+**Status:** done · **Milestone:** Alpha · **Size:** S · **Depends on:** — · **Skills:** none
 
 ## Purpose
 The monorepo skeleton every other module builds on: tooling, the verify script, CI, and empty packages.
