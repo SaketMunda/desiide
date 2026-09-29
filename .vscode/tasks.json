@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "mutt-ai: build",
+      "type": "shell",
+      "command": "pnpm -F mutt-ai build",
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}

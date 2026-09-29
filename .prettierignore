@@ -2,5 +2,5 @@ pnpm-lock.yaml
 editor/
 # Docs, briefs and skills are hand-formatted and owned by the planning session.
 **/*.md
-dist-vsix/
 .vscode-test/
+.screenshots/

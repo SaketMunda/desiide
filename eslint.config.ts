@@ -5,14 +5,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores([
-    '**/node_modules/',
-    '**/dist/',
-    '**/dist-vsix/',
-    '**/coverage/',
-    '**/.vscode-test/',
-    'editor/',
-  ]),
+  globalIgnores(['**/node_modules/', '**/dist/', '**/coverage/', '**/.vscode-test/', 'editor/']),
   eslint.configs.recommended,
   tseslint.configs.strict,
   {

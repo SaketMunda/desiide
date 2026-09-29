@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run mutt-ai extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/extensions/mutt-ai"],
+      "outFiles": ["${workspaceFolder}/extensions/mutt-ai/dist/**/*.js"],
+      "preLaunchTask": "mutt-ai: build"
+    }
+  ]
+}
