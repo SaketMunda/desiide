@@ -2,6 +2,7 @@
   "name": "mutt-ai",
   "displayName": "Mutt",
   "description": "Bring-your-own-model AI coding with visible routing and risk decisions (Jev).",
+  "icon": "media/icon.png",
   "version": "0.0.1",
   "private": true,
   "publisher": "mutt-dev",
@@ -74,7 +75,21 @@
           "when": "mutt.devMode"
         }
       ]
-    }
+    },
+    "themes": [
+      {
+        "id": "Mutt Dark",
+        "label": "Mutt Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/mutt-dark-color-theme.json"
+      },
+      {
+        "id": "Mutt Light",
+        "label": "Mutt Light",
+        "uiTheme": "vs",
+        "path": "./themes/mutt-light-color-theme.json"
+      }
+    ]
   },
   "scripts": {
     "build": "node scripts/build.mjs",
