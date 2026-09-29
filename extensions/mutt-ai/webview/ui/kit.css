@@ -33,7 +33,7 @@ body {
   --mutt-tone: var(--mutt-fg-muted);
 }
 .mutt-tone--ai {
-  --mutt-tone: var(--mutt-accent-ai);
+  --mutt-tone: var(--mutt-accent);
 }
 .mutt-tone--jev {
   --mutt-tone: var(--mutt-accent-jev);
@@ -151,7 +151,7 @@ body {
   --mutt-tone: var(--mutt-border);
 }
 .mutt-card--ai {
-  --mutt-tone: var(--mutt-accent-ai);
+  --mutt-tone: var(--mutt-accent);
 }
 .mutt-card--jev {
   --mutt-tone: var(--mutt-accent-jev);
@@ -260,7 +260,7 @@ body {
 }
 .mutt-empty__icon .codicon {
   font-size: 28px;
-  color: var(--mutt-accent-ai);
+  color: var(--mutt-accent);
 }
 .mutt-empty__title {
   margin: 0;

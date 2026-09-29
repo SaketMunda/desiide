@@ -23,7 +23,7 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | ID | Module | Milestone | Size | Depends on | Status |
 |---|---|---|---|---|---|
 | [FND-1](modules/FND-1-repo-foundation.md) | Repo foundation | Alpha | S | — | done |
-| [FND-2](modules/FND-2-protocol.md) | Protocol (shared contracts) | Alpha | M | FND-1 | review |
+| [FND-2](modules/FND-2-protocol.md) | Protocol (shared contracts) | Alpha | M | FND-1 | done |
 | [COR-1](modules/COR-1-orchestrator-host.md) | Orchestrator host & RPC | Alpha | M | FND-2 | todo |
 | [COR-2](modules/COR-2-task-engine.md) | Task engine & agent loop | Alpha | L | FND-2, COR-1, MOD-1 | todo |
 | [COR-3](modules/COR-3-tool-runner.md) | Tool runner | Alpha | M | FND-2 | todo |
@@ -36,13 +36,13 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [JEV-2](modules/JEV-2-policy-gate.md) | Policy & risk gate | Alpha | M | JEV-1 | todo |
 | [JEV-3](modules/JEV-3-jev-http-client.md) | Jev HTTP client (TypeSafe API) | Alpha* | S | JEV-1, **API docs** | blocked |
 | [JEV-4](modules/JEV-4-decision-log.md) | Decision log & replay | Alpha | S | JEV-1 | todo |
-| [UI-1](modules/UI-1-extension-shell.md) | Extension shell & UI kit | Alpha | M | FND-1 | review |
+| [UI-1](modules/UI-1-extension-shell.md) | Extension shell & UI kit | Alpha | M | FND-1 | done |
 | [UI-2](modules/UI-2-prompt-box.md) | Prompt Box | Alpha | M | UI-1, FND-2 | todo |
 | [UI-3](modules/UI-3-task-stream.md) | Task stream (transcript) | Alpha | M | UI-1, FND-2 | todo |
 | [UI-4](modules/UI-4-review-gate.md) | Review & approval (diffs, commands) | Alpha | L | UI-3, COR-2 | todo |
 | [UI-5](modules/UI-5-decision-panel.md) | Decision panel | Alpha | M | UI-1, JEV-4 | todo |
 | [UI-6](modules/UI-6-settings-onboarding.md) | Settings & onboarding | Alpha | M | UI-1, MOD-1, JEV-1 | todo |
-| [EDT-1](modules/EDT-1-fork-build.md) | VSCodium fork & branding | Beta | M | FND-1 | todo |
+| [EDT-1](modules/EDT-1-fork-build.md) | VSCodium fork & branding | Beta | M | FND-1 | review |
 | [EDT-2](modules/EDT-2-fork-integration.md) | Built-in extension & default layout | Beta | S | EDT-1, UI-1 | todo |
 | [REL-1](modules/REL-1-ci-release.md) | CI & release pipelines | Alpha + Beta | M | FND-1 (+EDT-1 for app) | todo |
 | [REL-2](modules/REL-2-e2e-qa.md) | E2E & QA | Alpha + Beta | M | UI-4, COR-2 | todo |

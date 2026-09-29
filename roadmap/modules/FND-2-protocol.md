@@ -1,6 +1,6 @@
 # FND-2 · Protocol (shared contracts)
 
-**Status:** review · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-orchestration-core
+**Status:** done · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-orchestration-core
 
 ## Purpose
 `@mutt/protocol` holds the zod schemas and inferred types for **everything that crosses the extension ↔ orchestrator boundary**. It defines the full Alpha surface up front so that later modules rarely touch it (ADR-010: additive-only afterwards).
@@ -50,7 +50,7 @@ Transport (COR-1), behavior. This module is types + schemas + fixtures only.
 - AC4: `docs/protocol.md`, and `docs.test.ts` fails if a method, notification, event type, or error code is missing from it.
 
 **Deviations:**
-- *The three example Jev states were reconstructed.* The "original brief" isn't in the repo. I made one state per pack (`workflow_select` bug fix, `risk_gate` = `npm run migrate` + sensitive billing files on `main`, `cost_route` small refactor), plus two extra risk_gate goldens for JEV-2: `git status` (read-only) and `git push --force origin main` (deny-listed). **Planning should confirm or replace them.**
+- *The three example Jev states were reconstructed.* The "original brief" isn't in the repo. I made one state per pack (`workflow_select` bug fix, `risk_gate` = `npm run migrate` + sensitive billing files on `main`, `cost_route` small refactor), plus two extra risk_gate goldens for JEV-2: `git status` (read-only) and `git push --force origin main` (deny-listed). **Confirmed by the user on 2026-09-29.**
 - *Added `edits.report` (ext → orch).* COR-2 waits for per-file applied/rejected/stale results and UI-4 must send them, but the brief's method list had no way to do that.
 - *Added `jev.preview {pack}`.* UI-6's "Preview payload" needs the orchestrator to build a live sample state.
 - *`Task.context` is `{refs: ContextRef[], openEditors[], tests[]}`* instead of the skill's `{files, selections, diffs, tests}`. ContextRef already expresses files, selections, and diffs as one typed list.

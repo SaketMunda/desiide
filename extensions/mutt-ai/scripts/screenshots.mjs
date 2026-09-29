@@ -1,6 +1,7 @@
 /* global window, document -- used inside callbacks that Playwright runs in the page */
 // Renders the built webview bundle in headless Chromium under Dark+, Light+ and High Contrast
-// colors taken from the local VS Code's built-in theme files, and saves PNGs to .screenshots/.
+// colors taken from the local VS Code's built-in theme files, plus the Mutt Dark/Light themes, and
+// saves PNGs to .screenshots/.
 // Approximates VS Code's webview theming (theme colors + registry defaults); final visual QA
 // still happens in VS Code itself. No server or port: requests are fulfilled via page.route.
 import { mkdirSync, readFileSync } from 'node:fs';
@@ -33,9 +34,9 @@ function parseJsonc(text) {
   return JSON.parse(s.replace(/,(\s*[}\]])/g, '$1'));
 }
 
-function themeColors(file) {
-  const json = parseJsonc(readFileSync(join(themeDir, file), 'utf8'));
-  const base = json.include ? themeColors(json.include.replace('./', '')) : {};
+function themeColors(file, dir = themeDir) {
+  const json = parseJsonc(readFileSync(join(dir, file), 'utf8'));
+  const base = json.include ? themeColors(json.include.replace('./', ''), dir) : {};
   return { ...base, ...(json.colors ?? {}) };
 }
 
@@ -107,6 +108,20 @@ const themes = [
   { name: 'dark-plus', file: 'dark_plus.json', kind: 'dark', bodyClass: 'vscode-dark' },
   { name: 'light-plus', file: 'light_plus.json', kind: 'light', bodyClass: 'vscode-light' },
   { name: 'high-contrast', file: 'hc_black.json', kind: 'hc', bodyClass: 'vscode-high-contrast' },
+  {
+    name: 'mutt-dark',
+    file: 'mutt-dark-color-theme.json',
+    dir: join(root, 'themes'),
+    kind: 'dark',
+    bodyClass: 'vscode-dark',
+  },
+  {
+    name: 'mutt-light',
+    file: 'mutt-light-color-theme.json',
+    dir: join(root, 'themes'),
+    kind: 'light',
+    bodyClass: 'vscode-light',
+  },
 ];
 
 function cssVars(colors) {
@@ -127,7 +142,7 @@ mkdirSync(out, { recursive: true });
 const browser = await chromium.launch();
 try {
   for (const theme of themes) {
-    const colors = { ...defaults[theme.kind], ...themeColors(theme.file) };
+    const colors = { ...defaults[theme.kind], ...themeColors(theme.file, theme.dir) };
     for (const [view, showcase] of [
       ['panel', true],
       ['decisions', false],

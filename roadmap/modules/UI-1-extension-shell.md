@@ -1,6 +1,6 @@
 # UI-1 · Extension shell & UI kit
 
-**Status:** review · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-editor-shell
+**Status:** done · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-editor-shell
 
 ## Purpose
 The `mutt-ai` extension skeleton and the shared webview UI kit that every UI module builds on. It must work in stock VS Code, VSCodium, and our fork (ADR-008).
