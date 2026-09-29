@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { Id, IsoDateTime, WorkspacePath } from './common.ts';
 import { FileMeta } from './context.ts';
 import { EditProposal } from './edits.ts';

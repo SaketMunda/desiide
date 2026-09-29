@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { Id, SecretRef } from './common.ts';
 
 export const ModelProvider = z.enum(['openai-compatible', 'ollama', 'anthropic']);

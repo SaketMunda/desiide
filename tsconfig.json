@@ -1,10 +1,26 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/protocol" },
-    { "path": "packages/orchestrator" },
-    { "path": "packages/models" },
-    { "path": "packages/jev" },
-    { "path": "tsconfig.tooling.json" }
+    {
+      "path": "packages/protocol"
+    },
+    {
+      "path": "packages/orchestrator"
+    },
+    {
+      "path": "packages/models"
+    },
+    {
+      "path": "packages/jev"
+    },
+    {
+      "path": "extensions/mutt-ai"
+    },
+    {
+      "path": "extensions/mutt-ai/tsconfig.webview.json"
+    },
+    {
+      "path": "tsconfig.tooling.json"
+    }
   ]
 }

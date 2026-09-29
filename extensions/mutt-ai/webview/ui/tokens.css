@@ -1,0 +1,61 @@
+/*
+ * Mutt design tokens. Everything derives from VS Code theme variables so views follow the
+ * user's theme; Mutt adds only two accents (AI violet, Jev teal) and three outcome colors.
+ */
+:root {
+  --mutt-font: var(--vscode-font-family);
+  --mutt-font-size: var(--vscode-font-size, 13px);
+  --mutt-font-mono: var(--vscode-editor-font-family, monospace);
+
+  --mutt-fg: var(--vscode-foreground);
+  --mutt-fg-muted: var(--vscode-descriptionForeground);
+  --mutt-bg: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  --mutt-surface: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  --mutt-border: var(--vscode-widget-border, var(--vscode-panel-border, transparent));
+  --mutt-focus: var(--vscode-focusBorder);
+  --mutt-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.16));
+
+  --mutt-accent-ai: #9f7aea;
+  --mutt-accent-jev: #2cb5a0;
+  --mutt-outcome-auto: var(--vscode-testing-iconPassed, #73c991);
+  --mutt-outcome-confirm: var(--vscode-editorWarning-foreground, #cca700);
+  --mutt-outcome-block: var(--vscode-errorForeground, #f48771);
+
+  --mutt-radius: 8px;
+  --mutt-radius-sm: 4px;
+  --mutt-space-1: 4px;
+  --mutt-space-2: 8px;
+  --mutt-space-3: 12px;
+  --mutt-space-4: 16px;
+
+  --mutt-motion-fast: 150ms;
+  --mutt-motion-base: 250ms;
+  --mutt-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Light themes: darker accents keep text contrast >= 4.5:1 on light backgrounds. */
+body.vscode-light {
+  --mutt-accent-ai: #6b3fd4;
+  --mutt-accent-jev: #0f7b6c;
+}
+
+/* High contrast: rely on theme borders, and use the brightest accents. */
+body.vscode-high-contrast {
+  --mutt-accent-ai: #c8a8ff;
+  --mutt-accent-jev: #3ee6c8;
+  --mutt-border: var(--vscode-contrastBorder);
+  --mutt-shadow: none;
+}
+body.vscode-high-contrast-light {
+  --mutt-accent-ai: #4b1fa8;
+  --mutt-accent-jev: #005c50;
+  --mutt-border: var(--vscode-contrastBorder);
+  --mutt-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --mutt-motion-fast: 0ms;
+    --mutt-motion-base: 0ms;
+  }
+}

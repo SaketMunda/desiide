@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { Id } from './common.ts';
 import { ReasonLabel } from './reasons.ts';
 

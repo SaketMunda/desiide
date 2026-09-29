@@ -5,3 +5,6 @@ coverage/
 .mutt/logs/
 *.vsix
 .DS_Store
+
+.vscode-test/
+.screenshots/

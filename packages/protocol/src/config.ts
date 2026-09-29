@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { Id, SecretRef } from './common.ts';
 import { ModelConfig } from './models.ts';
 
