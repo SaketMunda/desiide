@@ -1,0 +1,9 @@
+**
+!dist/extension.js
+!dist/orchestrator.js
+!dist/webview/**
+!dist/codicons/**
+!media/**
+!package.json
+!README.md
+!CHANGELOG.md

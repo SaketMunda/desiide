@@ -1,3 +1,8 @@
 packages:
   - packages/*
   - extensions/*
+allowBuilds:
+  # Installs the platform binary for bundling.
+  esbuild: true
+  # Only needed for signed Marketplace publishing (REL-1); packaging works without it.
+  '@vscode/vsce-sign': false
