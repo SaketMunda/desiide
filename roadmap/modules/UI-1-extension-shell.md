@@ -3,7 +3,7 @@
 **Status:** done · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-editor-shell
 
 ## Purpose
-The `mutt-ai` extension skeleton and the shared webview UI kit that every UI module builds on. It must work in stock VS Code, VSCodium, and our fork (ADR-008).
+The `mutt-ai` extension skeleton and the shared webview UI kit that every UI module builds on. It ships built into the Mutt app (ADR-011) and must keep working in stock VS Code and VSCodium, for the Beta standalone channel.
 
 ## Scope
 - `extensions/mutt-ai/package.json`: publisher placeholder, `engines.vscode`, lazy activation (`onView:`, `onCommand:`), `mutt` activity-bar container with two webview views: **Mutt** (AI panel) and **Decisions**.

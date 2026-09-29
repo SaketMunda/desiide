@@ -1,6 +1,6 @@
 # Mutt — AI-native IDE
 
-Open-source VS Code fork (VSCodium base) with bring-your-own models and Jev (TypeSafe) as the routing / risk / cost decision layer. Alpha ships as the `mutt-ai` extension; Beta ships the desktop app (ADR-008).
+Open-source VS Code fork (VSCodium base) with bring-your-own models and Jev (TypeSafe) as the routing / risk / cost decision layer. Alpha ships the Mutt desktop app with the `mutt-ai` extension built in (ADR-011); the extension is also published standalone at Beta.
 
 ## How work is organized
 - `roadmap/README.md`: milestones, the module index with status, and the build order (waves).

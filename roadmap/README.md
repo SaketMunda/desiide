@@ -9,8 +9,8 @@ This is the source of truth for **what** gets built, **in what order**, and **wh
 
 | Milestone | What ships | Target (indicative) | Exit criteria |
 |---|---|---|---|
-| **Alpha** | `mutt-ai` **extension** on Open VSX + VS Code Marketplace (see ADR-008). Works in any VS Code / VSCodium / Cursor-style fork. | ~3 weeks from FND-1 start | A dev installs it, connects Ollama or a Claude/OpenAI-compat key in <2 min, runs a bug-fix task, sees the Jev routing + risk decisions, and approves a diff. REL-2 Alpha suite green. |
-| **Beta** | **Mutt IDE** desktop app (VSCodium fork) for macOS + Linux, with the extension built in. Critique workflow. Live Jev API. | ~+3 weeks | App downloads from GitHub Releases, launches, installs Open VSX extensions, passes REL-2 app suite. |
+| **Alpha** | **Mutt IDE** desktop app (VSCodium fork) for macOS (arm64 + x64) and Linux x64, from GitHub Releases, with `mutt-ai` built in (ADR-011). Unsigned: first launch needs one documented step. | ~4 weeks from FND-1 start | A dev downloads and launches Mutt, connects Ollama or a Claude/OpenAI-compat key in <2 min, runs a bug-fix task, sees the Jev routing + risk decisions, and approves a diff. Open VSX extensions install. REL-2 Alpha suite green against the app. |
+| **Beta** | Critique workflow. Live Jev API. The `mutt-ai` extension also published standalone on Open VSX + VS Code Marketplace, for people who stay in VS Code. | ~+3 weeks | Critique and live Jev pass the REL-2 suite in the app. The standalone extension installs from both registries and passes the suite in stock VS Code. |
 | **1.0** | Hardening + pro/enterprise features (see backlog). Windows. Signed builds. | ~+4–6 weeks | Defined at the Beta retro. |
 
 Targets are indicative and get revisited in the planning session after each milestone.
@@ -42,9 +42,9 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [UI-4](modules/UI-4-review-gate.md) | Review & approval (diffs, commands) | Alpha | L | UI-3, COR-2 | todo |
 | [UI-5](modules/UI-5-decision-panel.md) | Decision panel | Alpha | M | UI-1, JEV-4 | todo |
 | [UI-6](modules/UI-6-settings-onboarding.md) | Settings & onboarding | Alpha | M | UI-1, MOD-1, JEV-1 | todo |
-| [EDT-1](modules/EDT-1-fork-build.md) | VSCodium fork & branding | Beta | M | FND-1 | review |
-| [EDT-2](modules/EDT-2-fork-integration.md) | Built-in extension & default layout | Beta | S | EDT-1, UI-1 | todo |
-| [REL-1](modules/REL-1-ci-release.md) | CI & release pipelines | Alpha + Beta | M | FND-1 (+EDT-1 for app) | todo |
+| [EDT-1](modules/EDT-1-fork-build.md) | VSCodium fork & branding | Alpha | M | FND-1 | review |
+| [EDT-2](modules/EDT-2-fork-integration.md) | Built-in extension & default layout | Alpha | S | EDT-1, UI-1 | todo |
+| [REL-1](modules/REL-1-ci-release.md) | CI & release pipelines | Alpha + Beta | L | FND-1, EDT-1, EDT-2 (app release) | todo |
 | [REL-2](modules/REL-2-e2e-qa.md) | E2E & QA | Alpha + Beta | M | UI-4, COR-2 | todo |
 | [REL-3](modules/REL-3-docs-community.md) | Docs & community | Alpha + Beta | S | continuous | todo |
 
@@ -56,15 +56,15 @@ Modules in the same wave can run in **parallel sessions**, each on its own branc
 
 ```
 Wave 1  FND-1
-Wave 2  FND-2 · UI-1 · EDT-1 (Beta track, runs in the background) · REL-1 (verify CI part)
-Wave 3  COR-1 · COR-3 · MOD-1 · JEV-1 · UI-2 (mock client)
+Wave 2  FND-2 · UI-1 · EDT-1 · REL-1 (verify CI part)
+Wave 3  COR-1 · COR-3 · MOD-1 · JEV-1 · UI-2 (mock client) · EDT-2
 Wave 4  COR-2 · COR-4 · MOD-2 · MOD-3 · JEV-2 · JEV-4 · UI-3 · UI-6
 Wave 5  COR-5 (single+cascade) · UI-4 · UI-5 · JEV-3 (when docs land)
-Wave 6  REL-2 (Alpha) · REL-1 (extension publish) · REL-3  → 🚀 Alpha
-Beta    EDT-2 · COR-5 (critique) · REL-1 (app builds) · REL-2 (app) · REL-3  → 🚀 Beta
+Wave 6  REL-2 (app) · REL-1 (app release) · REL-3  → 🚀 Alpha
+Beta    COR-5 (critique) · REL-1 (extension publish) · REL-2 (standalone extension) · REL-3  → 🚀 Beta
 ```
 
-Critical path to Alpha: `FND-1 → FND-2 → COR-1 → COR-2 → UI-4 → REL-2`. Put the strongest attention there.
+Critical path to Alpha: `FND-1 → FND-2 → COR-1 → COR-2 → UI-4 → REL-2`. Put the strongest attention there. The app track `EDT-1 → EDT-2 → REL-1 (app release)` also blocks Alpha (ADR-011), but it's short and runs in parallel.
 
 ## 1.0 backlog (not yet briefed; the planning session writes briefs after Beta)
 - Inline tab autocomplete (FIM on a local model, Jev-routed escalation)

@@ -1,6 +1,6 @@
 # EDT-2 · Built-in extension & default layout
 
-**Status:** todo · **Milestone:** Beta · **Size:** S · **Depends on:** EDT-1, UI-1 · **Skills:** ide-editor-shell
+**Status:** todo · **Milestone:** Alpha (ADR-011) · **Size:** S · **Depends on:** EDT-1, UI-1 · **Skills:** ide-editor-shell
 
 ## Purpose
 Make the IDE feel AI-native out of the box: `mutt-ai` built in, and the panels placed where users expect them on first run.
@@ -15,7 +15,7 @@ Make the IDE feel AI-native out of the box: `mutt-ai` built in, and the panels p
 
 ## Acceptance criteria
 1. First launch of a fresh profile: the Mutt panel is visible in the secondary sidebar and the walkthrough opens.
-2. The same `mutt-ai` version behaves identically as a Marketplace install in stock VS Code (except app-only defaults).
+2. The same `mutt-ai` build behaves identically when installed from its `.vsix` in stock VS Code (except app-only defaults), so the Beta standalone channel needs no extra work.
 3. The patch set still applies cleanly after bumping to the next VSCodium minor (dry-run documented).
 
 ## Handoff notes
