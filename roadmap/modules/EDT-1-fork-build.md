@@ -1,6 +1,6 @@
 # EDT-1 · VSCodium fork & branding
 
-**Status:** review · **Milestone:** Beta (start in Wave 2; it runs in the background) · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-editor-shell
+**Status:** review · **Milestone:** Alpha (ADR-011) · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-editor-shell
 
 ## Purpose
 A reproducible local build of the Mutt desktop app from our VSCodium fork, with our branding and no Mutt logic in the patches.

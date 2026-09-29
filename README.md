@@ -2,7 +2,7 @@
 
 **An open-source, AI-native IDE where you bring your own models and every AI decision is visible.**
 
-> **Status: pre-alpha.** Mutt is being built in the open. Nothing is installable yet. The first release (Alpha) will be the `mutt-ai` VS Code extension. See the [roadmap](roadmap/README.md) for what's done and what's next.
+> **Status: pre-alpha.** Mutt is being built in the open. Nothing is installable yet. The first release (Alpha) will be the Mutt desktop app for macOS and Linux. See the [roadmap](roadmap/README.md) for what's done and what's next.
 
 ## About
 
@@ -45,8 +45,8 @@ The full wire contract is in [docs/protocol.md](docs/protocol.md).
 
 | Milestone | What ships |
 |---|---|
-| **Alpha** | The `mutt-ai` extension on Open VSX and the VS Code Marketplace. Works in VS Code, VSCodium, and compatible editors. |
-| **Beta** | The Mutt IDE desktop app (a VSCodium fork) for macOS and Linux, with the extension built in. Critique workflow and the live Jev API. |
+| **Alpha** | The Mutt IDE desktop app (a VSCodium fork) for macOS and Linux, from GitHub Releases, with the AI features built in. |
+| **Beta** | Critique workflow and the live Jev API. The `mutt-ai` extension is also published on Open VSX and the VS Code Marketplace, for people who stay in VS Code. |
 | **1.0** | Hardening, Windows, signed builds, and team features. |
 
 Details, build order, and module status: [roadmap/README.md](roadmap/README.md). Architecture decisions: [roadmap/DECISIONS.md](roadmap/DECISIONS.md).
@@ -60,7 +60,7 @@ Details, build order, and module status: [roadmap/README.md](roadmap/README.md).
 | `packages/orchestrator/` | Task engine, workflows, tool runner, context engine |
 | `packages/models/` | Model adapters (OpenAI-compatible, Ollama, Anthropic) |
 | `packages/jev/` | Jev engine, decision packs, policy gate, decision log |
-| `editor/` | The VSCodium fork (Beta) |
+| `editor/` | The VSCodium fork: the Mutt desktop app |
 | `roadmap/` | Milestones, module briefs, standards, decisions |
 | `docs/` | Developer docs |
 
