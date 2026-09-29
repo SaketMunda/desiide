@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/protocol" },
+    { "path": "packages/orchestrator" },
+    { "path": "packages/models" },
+    { "path": "packages/jev" },
+    { "path": "tsconfig.tooling.json" }
+  ]
+}
