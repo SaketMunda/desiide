@@ -22,8 +22,8 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 
 | ID | Module | Milestone | Size | Depends on | Status |
 |---|---|---|---|---|---|
-| [FND-1](modules/FND-1-repo-foundation.md) | Repo foundation | Alpha | S | — | review |
-| [FND-2](modules/FND-2-protocol.md) | Protocol (shared contracts) | Alpha | M | FND-1 | todo |
+| [FND-1](modules/FND-1-repo-foundation.md) | Repo foundation | Alpha | S | — | done |
+| [FND-2](modules/FND-2-protocol.md) | Protocol (shared contracts) | Alpha | M | FND-1 | in-progress |
 | [COR-1](modules/COR-1-orchestrator-host.md) | Orchestrator host & RPC | Alpha | M | FND-2 | todo |
 | [COR-2](modules/COR-2-task-engine.md) | Task engine & agent loop | Alpha | L | FND-2, COR-1, MOD-1 | todo |
 | [COR-3](modules/COR-3-tool-runner.md) | Tool runner | Alpha | M | FND-2 | todo |

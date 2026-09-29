@@ -1,6 +1,6 @@
 # FND-2 · Protocol (shared contracts)
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-orchestration-core
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-orchestration-core
 
 ## Purpose
 `@mutt/protocol` holds the zod schemas and inferred types for **everything that crosses the extension ↔ orchestrator boundary**. It defines the full Alpha surface up front so that later modules rarely touch it (ADR-010: additive-only afterwards).
