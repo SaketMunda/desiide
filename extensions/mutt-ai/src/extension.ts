@@ -45,6 +45,10 @@ export function activate(context: vscode.ExtensionContext): MuttApi {
     'mutt.focus': () => vscode.commands.executeCommand(`${VIEW_TYPES.panel}.focus`),
     'mutt.showLog': () => channel.show(true),
     'mutt.dev.showcase': () => {
+      if (!devMode) {
+        log.warn('mutt.dev.showcase is only available in development builds');
+        return undefined;
+      }
       host.showcase = !host.showcase;
       for (const p of Object.values(providers))
         p.post({ type: 'showcase', enabled: host.showcase });
