@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { Range, WorkspacePath } from './common.ts';
 
 export const ContextRef = z.discriminatedUnion('type', [

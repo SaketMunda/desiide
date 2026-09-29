@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import * as z from 'zod';
 import { COMMAND_IDS } from './commands.ts';
 import { VIEW_TYPES } from './views/viewTypes.ts';
 

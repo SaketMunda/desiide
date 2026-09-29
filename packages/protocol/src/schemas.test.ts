@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import * as z from 'zod';
 import * as protocol from './index.ts';
 import { ClientMethods, ServerMethods } from './methods.ts';
 import { schemaFixtures } from './fixtures/index.ts';

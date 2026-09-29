@@ -83,7 +83,7 @@
     "test": "vitest run",
     "test:integration": "node scripts/build.mjs && node test/integration/run.mjs",
     "screenshots": "node scripts/build.mjs && node scripts/screenshots.mjs",
-    "package": "node scripts/build.mjs && vsce package --no-dependencies --skip-license --out dist-vsix/mutt-ai.vsix"
+    "package": "node scripts/build.mjs --production && vsce package --no-dependencies --skip-license --out dist-vsix/mutt-ai.vsix"
   },
   "dependencies": {
     "@vscode/codicons": "0.0.46-24",

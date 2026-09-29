@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { Ack, Empty, Id, SecretRef } from './common.ts';
 import { MuttConfig } from './config.ts';
 import { FileApplyResult } from './edits.ts';

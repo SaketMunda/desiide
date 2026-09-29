@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Messages between the extension host and the webviews. Both sides validate everything they

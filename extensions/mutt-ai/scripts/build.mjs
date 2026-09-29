@@ -19,8 +19,9 @@ await build({
   format: 'cjs',
   target: 'node20',
   external: ['vscode'],
+  // Always minified: bundle size is parse time, which counts against the 150 ms activation budget.
   sourcemap: !production,
-  minify: production,
+  minify: true,
   logLevel: 'warning',
 });
 

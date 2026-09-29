@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const PolicyOutcome = z.enum(['auto', 'confirm', 'block']);
 export type PolicyOutcome = z.infer<typeof PolicyOutcome>;

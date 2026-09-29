@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { Id, IsoDateTime, WorkspacePath } from './common.ts';
 import { ContextRef } from './context.ts';
 import { ToolName } from './tools.ts';

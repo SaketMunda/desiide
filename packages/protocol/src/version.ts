@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /** Semver of the wire protocol. Bump major only for breaking changes (needs an ADR, see ADR-010). */
 export const PROTOCOL_VERSION = '1.0.0';
