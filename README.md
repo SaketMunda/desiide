@@ -83,6 +83,49 @@ pnpm format                   # Prettier
 
 Stack: TypeScript (strict, ESM), pnpm workspaces, zod at every boundary, Vitest, ESLint flat config, and Prettier. Internal packages are consumed as TypeScript source and bundled with esbuild.
 
+### Building the Mutt app
+
+The desktop app is built from our VSCodium fork, [SaketMunda/mutt-vscodium](https://github.com/SaketMunda/mutt-vscodium), which lives in `editor/` as a git submodule. Day-to-day work on the AI features doesn't need the app build: develop `mutt-ai` in regular VS Code with **F5**.
+
+You need macOS or Linux, `git`, `jq`, `python3`, `curl`, the Xcode Command Line Tools (macOS), and **about 15 GB of free disk**. Rust isn't needed. The script downloads the Node version VSCodium pins by itself.
+
+```sh
+git clone --recurse-submodules https://github.com/SaketMunda/mutt.git
+# or, in an existing clone:
+git submodule update --init editor
+
+scripts/build-editor.sh           # ~7 min on an M4 Pro; re-runs reuse the downloaded source
+scripts/build-editor.sh --clean   # re-download the upstream VS Code source first
+```
+
+The app lands in `editor/VSCode-darwin-arm64/Mutt.app` (Linux: `editor/VSCode-linux-<arch>/`). It keeps its data in `~/.mutt-ide` and `~/Library/Application Support/Mutt`, separate from VS Code and VSCodium. If you launch it from a terminal inside VS Code, unset `ELECTRON_RUN_AS_NODE` first:
+
+```sh
+env -u ELECTRON_RUN_AS_NODE editor/VSCode-darwin-arm64/Mutt.app/Contents/MacOS/Mutt
+```
+
+**Changing the fork.** Mutt's branding and patches live in `editor/patches/mutt/` (see its README). The fork has its own history, so a change there takes two commits and two pushes:
+
+```sh
+# 1. Commit and push inside the fork (branch `mutt`)
+git -C editor add patches/mutt
+git -C editor commit -m "feat(<ID>): ..."
+git -C editor push origin mutt
+
+# 2. Record the new fork commit in this repo
+git add editor
+git commit -m "feat(<ID>): bump editor"
+```
+
+Push the fork first. Otherwise this repo points at a commit nobody else can fetch.
+
+**Freeing disk space.** The build leaves about 8.5 GB behind. You can delete it anytime; the next build recreates it:
+
+```sh
+rm -rf editor/vscode editor/VSCode-*   # ~7 GB: upstream source and the built app
+rm -rf ~/.cache/mutt                   # ~1 GB: pinned Node and the build's npm cache
+```
+
 ## Contributing
 
 Work is organized into **modules**, each with a brief in [`roadmap/modules/`](roadmap/modules) that defines its scope and acceptance criteria. A module is built on a `mod/<ID>-<slug>` branch and merged by PR once [the Definition of Done](roadmap/STANDARDS.md) is met and CI is green. Contribution guidelines, a code of conduct, and a security policy will be added before Alpha.
