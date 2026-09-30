@@ -18,9 +18,15 @@ CLEAN="no"
 [[ "${1:-}" == "--clean" ]] && CLEAN="yes"
 
 [[ -f "${EDITOR}/build.sh" ]] || { echo "editor/ is empty: run 'git submodule update --init editor'" >&2; exit 1; }
-for tool in git jq python3 curl; do
+for tool in git jq python3 curl unzip pnpm; do
   command -v "${tool}" > /dev/null || { echo "missing dependency: ${tool}" >&2; exit 1; }
 done
+
+# {{{ desiide-ai: packaged first, with the repo's own toolchain, and built into the app (EDT-2)
+echo "Packaging desiide-ai"
+( cd "${ROOT}" && pnpm --filter desiide-ai run package )
+DESIIDE_AI_VSIX="${ROOT}/extensions/desiide-ai/desiide-ai.vsix"
+# }}}
 
 # {{{ platform
 case "${OSTYPE}" in
@@ -70,10 +76,11 @@ export VSCODE_SKIP_NODE_VERSION_CHECK="yes"
 # A private npm cache: the build doesn't depend on (or write to) the user's ~/.npm.
 export npm_config_cache="${HOME}/.cache/desiide/npm"
 
-# Reproducible versions: the release version is the pinned VSCodium tag, not VSCodium's
-# time-derived one, and the source version is computed here (version.sh would otherwise
-# `npm install -g` a checksum tool on machines without sha1sum).
-RELEASE_VERSION="$( git -C "${EDITOR}" describe --tags --abbrev=0 )"
+# Reproducible versions: the release version is the VSCodium release the fork is based on, pinned
+# in a file (forks and submodule clones don't carry VSCodium's tags), not VSCodium's time-derived
+# one. The source version is computed here (version.sh would otherwise `npm install -g` a checksum
+# tool on machines without sha1sum).
+RELEASE_VERSION="$( tr -d '[:space:]' < "${EDITOR}/patches/desiide/base-version" )"
 export RELEASE_VERSION
 BUILD_SOURCEVERSION="$( printf '%s\n' "${RELEASE_VERSION}" | shasum -a 1 | cut -d' ' -f1 )"
 export BUILD_SOURCEVERSION
@@ -101,6 +108,9 @@ fi
 # }}}
 
 rm -rf "VSCode-darwin-${VSCODE_ARCH}" "VSCode-linux-${VSCODE_ARCH}"
+# patches/desiide/apply.sh picks it up from here (a path under vscode/, as upstream's build expects).
+mkdir -p vscode/.build/desiide
+cp "${DESIIDE_AI_VSIX}" vscode/.build/desiide/desiide-ai.vsix
 START=$( date +%s )
 # shellcheck disable=SC1091
 . version.sh

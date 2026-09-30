@@ -89,6 +89,37 @@
         "uiTheme": "vs",
         "path": "./themes/desiide-light-color-theme.json"
       }
+    ],
+    "walkthroughs": [
+      {
+        "id": "desiide.welcome",
+        "title": "Set up Desiide AI",
+        "description": "Your AI-native editor: bring your own models, and see every decision it makes.",
+        "steps": [
+          {
+            "id": "panel",
+            "title": "Meet the Desiide panel",
+            "description": "Describe a change and Desiide routes it to the right model, shows its decisions, and asks before anything risky.\n[Open the Desiide panel](command:desiide.focus)",
+            "media": {
+              "markdown": "media/walkthrough/panel.md"
+            },
+            "completionEvents": [
+              "onCommand:desiide.focus"
+            ]
+          },
+          {
+            "id": "theme",
+            "title": "Pick your theme",
+            "description": "Desiide Dark and Desiide Light are the defaults. Any theme works.\n[Browse color themes](command:workbench.action.selectTheme)",
+            "media": {
+              "markdown": "media/walkthrough/theme.md"
+            },
+            "completionEvents": [
+              "onSettingChanged:workbench.colorTheme"
+            ]
+          }
+        ]
+      }
     ]
   },
   "scripts": {
@@ -97,6 +128,7 @@
     "typecheck": "tsc -b tsconfig.json tsconfig.webview.json",
     "test": "vitest run",
     "test:integration": "node scripts/build.mjs && node test/integration/run.mjs",
+    "test:app": "node test/app/run.mjs",
     "screenshots": "node scripts/build.mjs && node scripts/screenshots.mjs",
     "package": "node scripts/build.mjs --production && vsce package --no-dependencies --skip-license --out desiide-ai.vsix"
   },

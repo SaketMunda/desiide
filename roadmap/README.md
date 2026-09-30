@@ -43,7 +43,7 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [UI-5](modules/UI-5-decision-panel.md) | Decision panel | Alpha | M | UI-1, JEV-4 | todo |
 | [UI-6](modules/UI-6-settings-onboarding.md) | Settings & onboarding | Alpha | M | UI-1, MOD-1, JEV-1 | todo |
 | [EDT-1](modules/EDT-1-fork-build.md) | VSCodium fork & branding | Alpha | M | FND-1 | done |
-| [EDT-2](modules/EDT-2-fork-integration.md) | Built-in extension & default layout | Alpha | S | EDT-1, UI-1 | todo |
+| [EDT-2](modules/EDT-2-fork-integration.md) | Built-in extension & default layout | Alpha | S | EDT-1, UI-1 | review |
 | [REL-1](modules/REL-1-ci-release.md) | CI & release pipelines | Alpha + Beta | L | FND-1, EDT-1, EDT-2 (app release) | todo |
 | [REL-2](modules/REL-2-e2e-qa.md) | E2E & QA | Alpha + Beta | M | UI-4, COR-2 | todo |
 | [REL-3](modules/REL-3-docs-community.md) | Docs & community | Alpha + Beta | S | continuous | todo |

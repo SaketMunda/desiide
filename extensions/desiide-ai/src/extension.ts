@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import * as vscode from 'vscode';
 import type { ViewId } from '../shared/messages.ts';
+import { shouldOpenWelcome, WALKTHROUGH_ID, WELCOME_SHOWN_KEY } from './appWelcome.ts';
 import type { CommandHandlers } from './commands.ts';
 import type { Logger } from './log.ts';
 import { formatStatus, type StatusState } from './status.ts';
@@ -10,6 +11,8 @@ import { DesiideViewProvider, VIEW_TYPES } from './views/DesiideViewProvider.ts'
 export interface DesiideApi {
   readonly activationMs: number;
   readonly readyViews: ReadonlySet<ViewId>;
+  /** True once the app-only first-run walkthrough has been opened (always false in stock VS Code). */
+  readonly welcomeOpened: boolean;
   setStatus(state: StatusState): void;
 }
 
@@ -69,9 +72,31 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   );
   void vscode.commands.executeCommand('setContext', 'desiide.devMode', devMode);
 
+  // App build only: open the walkthrough on first run (EDT-2). In stock VS Code this is a no-op.
+  let welcomeOpened = false;
+  if (shouldOpenWelcome(vscode.env.appName, context.globalState.get(WELCOME_SHOWN_KEY) === true)) {
+    void context.globalState.update(WELCOME_SHOWN_KEY, true);
+    vscode.commands
+      .executeCommand(
+        'workbench.action.openWalkthrough',
+        `${context.extension.id}#${WALKTHROUGH_ID}`,
+      )
+      .then(
+        () => (welcomeOpened = true),
+        (err: unknown) => log.warn(`Could not open the welcome walkthrough: ${String(err)}`),
+      );
+  }
+
   const activationMs = performance.now() - start;
   log.info(`Desiide activated in ${activationMs.toFixed(1)} ms`);
-  return { activationMs, readyViews, setStatus };
+  return {
+    activationMs,
+    readyViews,
+    get welcomeOpened() {
+      return welcomeOpened;
+    },
+    setStatus,
+  };
 }
 
 export function deactivate(): void {
