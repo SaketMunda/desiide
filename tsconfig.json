@@ -14,10 +14,10 @@
       "path": "packages/jev"
     },
     {
-      "path": "extensions/mutt-ai"
+      "path": "extensions/desiide-ai"
     },
     {
-      "path": "extensions/mutt-ai/tsconfig.webview.json"
+      "path": "extensions/desiide-ai/tsconfig.webview.json"
     },
     {
       "path": "tsconfig.tooling.json"

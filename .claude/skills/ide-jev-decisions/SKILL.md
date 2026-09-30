@@ -48,13 +48,13 @@ Workflow/cost:
 - Cascade escalates when `escalation_need ≥ 3`, verification fails, or the draft doesn't parse.
 - A policy override of Jev's choice is logged with reason `policy_override:<rule>`.
 
-Thresholds live in `packages/jev/src/policy/thresholds.ts` as one exported object. Users can make them stricter via `mutt.gating.*` but never looser than the deny-list.
+Thresholds live in `packages/jev/src/policy/thresholds.ts` as one exported object. Users can make them stricter via `desiide.gating.*` but never looser than the deny-list.
 
 ## Logging
-Each decision → `DecisionRecord{id, taskId, pack@version, question, engine, stateHash, state, result, policyOutcome, reasons: string[] (labels like "sensitive_file", "deny_list:rm_rf"), latencyMs, ts}` appended to `.mutt/logs/decisions.jsonl` (gitignored) and emitted as an event. Reasons are structured labels. The UI maps them to text.
+Each decision → `DecisionRecord{id, taskId, pack@version, question, engine, stateHash, state, result, policyOutcome, reasons: string[] (labels like "sensitive_file", "deny_list:rm_rf"), latencyMs, ts}` appended to `.desiide/logs/decisions.jsonl` (gitignored) and emitted as an event. Reasons are structured labels. The UI maps them to text.
 
 ## Gotchas
 - **Evolving schemas:** bump the pack version (`risk_gate@2`) for breaking state changes. Keep the old builder until Jev supports the new one. Golden tests are per version.
 - **Token budget:** cap `filesTouched` at 50 entries (sort by sensitivity then size, add `truncatedCount`), and truncate commands to 500 chars.
-- **Privacy:** paths and commands can themselves be sensitive. The settings page shows a sample payload, and `mutt.jev.redactPaths` hashes path segments outside a known list (`src`, `test`, `auth`, ...).
-- **Debugging:** `mutt: Replay decision` re-runs a logged state through both engines and diffs the results.
+- **Privacy:** paths and commands can themselves be sensitive. The settings page shows a sample payload, and `desiide.jev.redactPaths` hashes path segments outside a known list (`src`, `test`, `auth`, ...).
+- **Debugging:** `desiide: Replay decision` re-runs a logged state through both engines and diffs the results.

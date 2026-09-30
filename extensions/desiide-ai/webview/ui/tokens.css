@@ -1,0 +1,62 @@
+/*
+ * Desiide design tokens. Everything derives from VS Code theme variables so views follow the
+ * user's theme; Desiide adds only its two brand accents (teal primary, amber for Jev decisions and
+ * risk) and three outcome colors. The brand palette also ships as the Desiide Dark/Light themes.
+ */
+:root {
+  --desiide-font: var(--vscode-font-family);
+  --desiide-font-size: var(--vscode-font-size, 13px);
+  --desiide-font-mono: var(--vscode-editor-font-family, monospace);
+
+  --desiide-fg: var(--vscode-foreground);
+  --desiide-fg-muted: var(--vscode-descriptionForeground);
+  --desiide-bg: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  --desiide-surface: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  --desiide-border: var(--vscode-widget-border, var(--vscode-panel-border, transparent));
+  --desiide-focus: var(--vscode-focusBorder);
+  --desiide-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.16));
+
+  --desiide-accent: #2bb3a3;
+  --desiide-accent-jev: #f2a33a;
+  --desiide-outcome-auto: var(--vscode-testing-iconPassed, #73c991);
+  --desiide-outcome-confirm: var(--vscode-editorWarning-foreground, #cca700);
+  --desiide-outcome-block: var(--vscode-errorForeground, #f48771);
+
+  --desiide-radius: 8px;
+  --desiide-radius-sm: 4px;
+  --desiide-space-1: 4px;
+  --desiide-space-2: 8px;
+  --desiide-space-3: 12px;
+  --desiide-space-4: 16px;
+
+  --desiide-motion-fast: 150ms;
+  --desiide-motion-base: 250ms;
+  --desiide-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Light themes: darker accents keep text contrast >= 4.5:1 on light backgrounds. */
+body.vscode-light {
+  --desiide-accent: #0e8074;
+  --desiide-accent-jev: #a35f00;
+}
+
+/* High contrast: rely on theme borders, and use the brightest accents. */
+body.vscode-high-contrast {
+  --desiide-accent: #3ee6d2;
+  --desiide-accent-jev: #ffc266;
+  --desiide-border: var(--vscode-contrastBorder);
+  --desiide-shadow: none;
+}
+body.vscode-high-contrast-light {
+  --desiide-accent: #005c53;
+  --desiide-accent-jev: #7a4500;
+  --desiide-border: var(--vscode-contrastBorder);
+  --desiide-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --desiide-motion-fast: 0ms;
+    --desiide-motion-base: 0ms;
+  }
+}

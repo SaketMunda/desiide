@@ -190,7 +190,7 @@ export const schemaFixtures: Record<string, SchemaFixture> = {
     valid: [{}, { mode: 'strict', thresholds: { safeNowAuto: 0.95 } }],
     invalid: [{ mode: 'permissive' }],
   },
-  MuttConfig: {
+  DesiideConfig: {
     valid: [{}, { models: [modelConfig], roles: { strong: 'claude-strong' } }],
     invalid: [{ models: [{ id: 'x' }] }, { telemetry: true }],
   },
@@ -361,16 +361,22 @@ export const schemaFixtures: Record<string, SchemaFixture> = {
     valid: [
       {
         protocolVersion: '1.0.0',
-        client: { name: 'mutt-ai', version: '0.1.0' },
+        client: { name: 'desiide-ai', version: '0.1.0' },
         workspaceRoots: ['/Users/dev/project'],
       },
     ],
     invalid: [
-      { protocolVersion: '1', client: { name: 'mutt-ai', version: '0.1.0' }, workspaceRoots: [] },
+      {
+        protocolVersion: '1',
+        client: { name: 'desiide-ai', version: '0.1.0' },
+        workspaceRoots: [],
+      },
     ],
   },
   'initialize.result': {
-    valid: [{ protocolVersion: '1.0.0', server: { name: 'mutt-orchestrator', version: '0.1.0' } }],
+    valid: [
+      { protocolVersion: '1.0.0', server: { name: 'desiide-orchestrator', version: '0.1.0' } },
+    ],
     invalid: [{ protocolVersion: 'x', server: {} }],
   },
   'task.create.params': { valid: [taskInput], invalid: [{ ...taskInput, kind: 'deploy' }] },

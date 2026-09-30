@@ -16,7 +16,7 @@ The bar is **enterprise-trustworthy, not enterprise-heavy**. If a rule here slow
 - Branch: `mod/<ID>-<slug>` (e.g. `mod/UI-2-prompt-box`). Fixes use `fix/<short>`.
 - Commits: Conventional Commits with the module scope, e.g. `feat(UI-2): add @file mentions`.
 - Small PRs are preferred. A module can land as 2–3 PRs if it's `L`.
-- Never commit secrets, `.mutt/logs/`, or model fixture files that contain real keys.
+- Never commit secrets, `.desiide/logs/`, or model fixture files that contain real keys.
 
 ## Code
 - TypeScript strict, ESM. Named exports. One concept per file. Prefer functions and plain data over class hierarchies.
@@ -27,7 +27,7 @@ The bar is **enterprise-trustworthy, not enterprise-heavy**. If a rule here slow
 
 ## Testing
 - Unit tests use Vitest, colocated as `*.test.ts`.
-- Model and Jev HTTP is tested with recorded fixtures. Live tests run only with `MUTT_LIVE=1`.
+- Model and Jev HTTP is tested with recorded fixtures. Live tests run only with `DESIIDE_LIVE=1`.
 - Safety-critical code (policy, deny-list, path confinement) gets **adversarial** tests (obfuscated commands, symlink escapes, `..` traversal).
 - E2E lives in REL-2. Modules add E2E cases there only when their brief says so.
 
@@ -42,12 +42,12 @@ The bar is **enterprise-trustworthy, not enterprise-heavy**. If a rule here slow
 |---|---|
 | Extension activation | < 150 ms (lazy, no orchestrator spawn until first use) |
 | Orchestrator cold start | < 500 ms |
-| Mutt overhead on first model token | < 100 ms beyond provider latency |
+| Desiide overhead on first model token | < 100 ms beyond provider latency |
 | Jev decision | p95 < 1.5 s, else fall back to rules |
 | Webview first paint | < 300 ms |
 
 ## UX & accessibility
 - Everything is reachable by keyboard, has visible focus, and ARIA labels on icon buttons.
-- Colors come from VS Code theme variables plus Mutt accent tokens (UI-1). Test in dark, light, and high-contrast themes.
+- Colors come from VS Code theme variables plus Desiide accent tokens (UI-1). Test in dark, light, and high-contrast themes.
 - Motion is subtle, under 250 ms, and honors `prefers-reduced-motion`.
 - Show decisions as structured labels and numbers; keep the prose short.

@@ -3,7 +3,7 @@
 **Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, JEV-4 · **Skills:** ide-editor-shell, ide-jev-decisions
 
 ## Purpose
-The visible Jev brain and the product's differentiator. It shows *why* Mutt chose a model and *why* an action was gated, in structured form, with the savings made visible.
+The visible Jev brain and the product's differentiator. It shows *why* Desiide chose a model and *why* an action was gated, in structured form, with the savings made visible.
 
 ## Scope
 - **Decision timeline** (per task, with a filter for all tasks): cards showing `pack@version`, question, result (selected option / score dots / yes-no-unknown), `ProbabilityBar` per option, **engine badge** (Jev / Rules), latency, policy outcome, and reason labels.

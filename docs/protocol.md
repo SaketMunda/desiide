@@ -1,4 +1,4 @@
-# Mutt protocol (extension ↔ orchestrator)
+# Desiide protocol (extension ↔ orchestrator)
 
 JSON-RPC 2.0 over stdio (ADR-003). Every schema lives in [`packages/protocol`](../packages/protocol/src) as zod; the TypeScript types are inferred from it. This page summarizes the surface. The source is authoritative, and a test fails if a method or event is missing here.
 
@@ -25,7 +25,7 @@ JSON-RPC 2.0 over stdio (ADR-003). Every schema lives in [`packages/protocol`](.
 | `jev.preview` | `{pack: KnownPack}` | `{state: JevPackState}` | A sample payload for the settings page. Metadata only. |
 | `decisions.list` | `{taskId?, pack?, outcome?, limit=50 (≤500), cursor?}` | `{decisions: DecisionRecord[], nextCursor?}` | |
 | `decisions.replay` | `{id}` | `{record, rules: EngineRun, jev?: EngineRun, jevError?, differs}` | |
-| `config.update` | `MuttConfig` (`models[], roles, jev, gating`) | `{ok: true}` | A full snapshot of the `mutt.*` settings. API keys are `secret:` refs only. |
+| `config.update` | `DesiideConfig` (`models[], roles, jev, gating`) | `{ok: true}` | A full snapshot of the `desiide.*` settings. API keys are `secret:` refs only. |
 | `health.ping` | `{}` | `{ok: true, uptimeMs}` | |
 
 ## Reverse requests: orchestrator → extension
@@ -80,4 +80,4 @@ Task states: `queued → planning → running ⇄ awaiting_approval → verifyin
 | `risk_gate@1` | `actionType, command? (≤500 chars), editFileCount?, context{branch, env, hasPendingMigrations}, filesTouched[{path, sensitive}] (≤50), truncatedCount?` |
 | `cost_route@1` | `taskType, filesTouchedCount, projectSizeLines, userCostBias, recentFailures` |
 
-Results are `choice {selected, probs}`, `score {score 0–4, probs?}`, or `noul {answer: yes|no|unknown, pYes}`. The example states (one per pack) and the extra risk-gate golden cases are exported from `@mutt/protocol/fixtures`.
+Results are `choice {selected, probs}`, `score {score 0–4, probs?}`, or `noul {answer: yes|no|unknown, pYes}`. The example states (one per pack) and the extra risk-gate golden cases are exported from `@desiide/protocol/fixtures`.

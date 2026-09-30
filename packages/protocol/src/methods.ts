@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { Ack, Empty, Id, SecretRef } from './common.ts';
-import { MuttConfig } from './config.ts';
+import { DesiideConfig } from './config.ts';
 import { FileApplyResult } from './edits.ts';
 import { TaskEvent, LogNotification } from './events.ts';
 import {
@@ -109,7 +109,7 @@ export const ClientMethods = {
       differs: z.boolean(),
     }),
   },
-  'config.update': { params: MuttConfig, result: Ack },
+  'config.update': { params: DesiideConfig, result: Ack },
   'health.ping': {
     params: Empty,
     result: z.object({ ok: z.literal(true), uptimeMs: z.int().nonnegative() }),

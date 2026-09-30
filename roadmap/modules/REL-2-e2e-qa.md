@@ -6,7 +6,7 @@
 Prove the whole product works the way a user uses it, before every release.
 
 ## Scope
-- `@vscode/test-electron` suite run against the **built Mutt app** (`vscodeExecutablePath`), with the extension loaded and the orchestrator using a **scripted fake model** (enabled via a test-only setting, which isn't reachable in production builds).
+- `@vscode/test-electron` suite run against the **built Desiide app** (`vscodeExecutablePath`), with the extension loaded and the orchestrator using a **scripted fake model** (enabled via a test-only setting, which isn't reachable in production builds).
 - Scenarios (Alpha):
   1. Bug-fix task → edit proposed → accept → file changed → tests pass → `done`.
   2. Gated command → confirm → runs.

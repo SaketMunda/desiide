@@ -15,7 +15,7 @@ One adapter that covers most of the world: OpenAI, OpenRouter, Gemini's OpenAI e
 1. Passes the MOD-1 contract suite with recorded fixtures for OpenAI-style and Ollama-style streams.
 2. Fragmented and single-chunk tool-call fixtures both parse correctly.
 3. Ollama not running → `network` error kind with a friendly "Is Ollama running?" hint.
-4. Live smoke (`MUTT_LIVE=1`) against a local Ollama `qwen2.5-coder` completes a tool call.
+4. Live smoke (`DESIIDE_LIVE=1`) against a local Ollama `qwen2.5-coder` completes a tool call.
 
 ## Handoff notes
 _(filled by the build session)_

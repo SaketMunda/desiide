@@ -1,6 +1,6 @@
 ---
 name: build-module
-description: Start or continue building a Mutt roadmap module. Use whenever the user names a module or feature to build or work on — by ID (e.g. "UI-2", "COR-2") or by name (e.g. "Prompt Box", "task engine", "decision panel", "Anthropic adapter", "policy gate", "fork build") — or says "build the next module". Loads the module brief, standards, and the right domain skills, then builds to the brief's acceptance criteria.
+description: Start or continue building a Desiide roadmap module. Use whenever the user names a module or feature to build or work on — by ID (e.g. "UI-2", "COR-2") or by name (e.g. "Prompt Box", "task engine", "decision panel", "Anthropic adapter", "policy gate", "fork build") — or says "build the next module". Loads the module brief, standards, and the right domain skills, then builds to the brief's acceptance criteria.
 ---
 
 # Build a roadmap module

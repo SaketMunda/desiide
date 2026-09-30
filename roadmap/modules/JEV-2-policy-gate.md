@@ -6,7 +6,7 @@
 Turn Jev (or rules) answers into IDE behavior: `auto | confirm | block` for actions, and the workflow choice for tasks. **This is the trust layer, so it gets the most adversarial testing.**
 
 ## Scope
-- `thresholds.ts`: a single exported, documented object (values from the skill's conservative defaults). User overrides via `mutt.gating.*` can only be **stricter**; this is enforced by a validation function.
+- `thresholds.ts`: a single exported, documented object (values from the skill's conservative defaults). User overrides via `desiide.gating.*` can only be **stricter**; this is enforced by a validation function.
 - Hard **deny-list** with command normalization before matching: strip `sudo`/env prefixes, collapse whitespace, expand `bash -c`/`sh -c` one level, split on `;`, `&&`, `||`, `|`, and flag `$(…)`/backticks as `confirm` minimum.
 - Read-only **allow-list** (`ls`, `cat`, `pwd`, `git status|diff|log|show`, and configured test/lint commands).
 - `PolicyGate` implements COR-2's `Gate`: deny-list → allow-list → edit rules (multi-file or sensitive → confirm) → risk_gate pack → thresholds. Always returns `reasons: ReasonLabel[]` + `decisionId`.

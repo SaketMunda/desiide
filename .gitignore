@@ -2,7 +2,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 coverage/
-.mutt/logs/
+.desiide/logs/
 *.vsix
 .DS_Store
 

@@ -27,7 +27,7 @@ export function checkProtocolCompatibility(local: string, remote: string): Proto
     return {
       ok: false,
       reason: 'major_mismatch',
-      message: `Protocol mismatch: extension speaks ${remote}, orchestrator speaks ${local}. Update Mutt so both sides match.`,
+      message: `Protocol mismatch: extension speaks ${remote}, orchestrator speaks ${local}. Update Desiide so both sides match.`,
     };
   }
   return { ok: true };

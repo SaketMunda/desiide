@@ -6,7 +6,7 @@
 Every decision is recorded, inspectable, and replayable. This is the transparency promise and the debugging tool.
 
 ## Scope
-- `DecisionRecord` writer → `.mutt/logs/decisions.jsonl` in the workspace (gitignored), rotated at 10 MB (keep 3).
+- `DecisionRecord` writer → `.desiide/logs/decisions.jsonl` in the workspace (gitignored), rotated at 10 MB (keep 3).
 - Emits the `decision_made` event for each record.
 - `decisions.list {taskId?, pack?, outcome?, limit, cursor}`.
 - `decisions.replay {id}`: re-run the stored state through the rules engine and Jev (if configured) and return both results + a diff.

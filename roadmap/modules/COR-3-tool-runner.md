@@ -19,7 +19,7 @@ Each tool = `{name, argsSchema (zod), spec (JSON schema for models), sideEffect,
 | `git_read` | none | `status`, `diff`, `log`, `show` only |
 
 - Path confinement: resolve `realpath`, reject anything outside the workspace root(s), including through symlinks and `..`.
-- `ProjectConfig` loader for `.mutt/project.json`, with auto-detection fallback (package.json `test`/`lint` scripts, `pytest`, `cargo test`, `go test`).
+- `ProjectConfig` loader for `.desiide/project.json`, with auto-detection fallback (package.json `test`/`lint` scripts, `pytest`, `cargo test`, `go test`).
 
 ## Out of scope
 Deciding *whether* a tool may run (JEV-2 / COR-2 gate).

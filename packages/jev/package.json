@@ -1,5 +1,5 @@
 {
-  "name": "@mutt/jev",
+  "name": "@desiide/jev",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,6 +11,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mutt/protocol": "workspace:*"
+    "@desiide/protocol": "workspace:*"
   }
 }

@@ -2,7 +2,7 @@ import * as z from 'zod';
 import { Id, SecretRef } from './common.ts';
 import { ModelConfig } from './models.ts';
 
-/** `.mutt/project.json`. Tolerant: unknown keys are ignored so newer files still load. */
+/** `.desiide/project.json`. Tolerant: unknown keys are ignored so newer files still load. */
 export const ProjectConfig = z.object({
   testCommand: z.string().min(1).max(1000).optional(),
   lintCommand: z.string().min(1).max(1000).optional(),
@@ -35,12 +35,12 @@ export const GatingConfig = z.strictObject({
 });
 export type GatingConfig = z.infer<typeof GatingConfig>;
 
-/** The full `mutt.*` settings snapshot the extension pushes with `config.update`. */
-export const MuttConfig = z.strictObject({
+/** The full `desiide.*` settings snapshot the extension pushes with `config.update`. */
+export const DesiideConfig = z.strictObject({
   models: z.array(ModelConfig).default([]),
   roles: RolesConfig.prefault({}),
   jev: JevConfig.prefault({}),
   gating: GatingConfig.prefault({}),
 });
-export type MuttConfig = z.infer<typeof MuttConfig>;
-export type MuttConfigInput = z.input<typeof MuttConfig>;
+export type DesiideConfig = z.infer<typeof DesiideConfig>;
+export type DesiideConfigInput = z.input<typeof DesiideConfig>;

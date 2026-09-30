@@ -6,7 +6,7 @@ description: Designing or changing the orchestrator — Task DSL, agent loop, wo
 # Orchestration core
 
 ## Process model
-The orchestrator is a Node child process spawned by the `mutt-ai` extension and speaks JSON-RPC 2.0 over stdio (`vscode-jsonrpc`). It must not import `vscode`, so it can later run remotely behind a WebSocket transport.
+The orchestrator is a Node child process spawned by the `desiide-ai` extension and speaks JSON-RPC 2.0 over stdio (`vscode-jsonrpc`). It must not import `vscode`, so it can later run remotely behind a WebSocket transport.
 
 ## Task DSL (`packages/protocol`, zod)
 ```ts
@@ -44,7 +44,7 @@ States: `queued → planning → running ⇄ awaiting_approval → verifying →
 | read/search/list | workspace-confined; resolve realpath to block symlink escape; skip `.git`, `node_modules`, gitignored |
 | propose_edit | returns `FileEdit[]` (search/replace blocks); **never writes**; the extension applies via WorkspaceEdit |
 | shell | cwd = workspace root, timeout (default 120 s), output capped at 64 KB tail, AbortSignal, env scrubbed of `*KEY*`, `*TOKEN*`, `*SECRET*`, `*PASSWORD*` |
-| run_tests / lint | commands from `.mutt/project.json`; parse exit code + summary |
+| run_tests / lint | commands from `.desiide/project.json`; parse exit code + summary |
 | git_read | status/diff/log/show only. Commit/push/reset go through `shell`, so they're gated |
 
 ## Gotchas

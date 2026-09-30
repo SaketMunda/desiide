@@ -1,4 +1,4 @@
 [submodule "editor"]
 	path = editor
-	url = https://github.com/SaketMunda/mutt-vscodium.git
-	branch = mutt
+	url = https://github.com/SaketMunda/desiide-vscodium.git
+	branch = desiide

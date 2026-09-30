@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "mutt-ai: build",
+      "label": "desiide-ai: build",
       "type": "shell",
-      "command": "pnpm -F mutt-ai build",
+      "command": "pnpm -F desiide-ai build",
       "problemMatcher": [],
       "group": "build"
     }

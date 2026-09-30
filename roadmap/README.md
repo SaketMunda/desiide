@@ -1,4 +1,4 @@
-# Mutt Roadmap
+# Desiide Roadmap
 
 This is the source of truth for **what** gets built, **in what order**, and **what "done" means**.
 
@@ -9,8 +9,8 @@ This is the source of truth for **what** gets built, **in what order**, and **wh
 
 | Milestone | What ships | Target (indicative) | Exit criteria |
 |---|---|---|---|
-| **Alpha** | **Mutt IDE** desktop app (VSCodium fork) for macOS (arm64 + x64) and Linux x64, from GitHub Releases, with `mutt-ai` built in (ADR-011). Unsigned: first launch needs one documented step. | ~4 weeks from FND-1 start | A dev downloads and launches Mutt, connects Ollama or a Claude/OpenAI-compat key in <2 min, runs a bug-fix task, sees the Jev routing + risk decisions, and approves a diff. Open VSX extensions install. REL-2 Alpha suite green against the app. |
-| **Beta** | Critique workflow. Live Jev API. The `mutt-ai` extension also published standalone on Open VSX + VS Code Marketplace, for people who stay in VS Code. | ~+3 weeks | Critique and live Jev pass the REL-2 suite in the app. The standalone extension installs from both registries and passes the suite in stock VS Code. |
+| **Alpha** | **Desiide** desktop app (VSCodium fork) for macOS (arm64 + x64) and Linux x64, from GitHub Releases, with `desiide-ai` built in (ADR-011). Unsigned: first launch needs one documented step. | ~4 weeks from FND-1 start | A dev downloads and launches Desiide, connects Ollama or a Claude/OpenAI-compat key in <2 min, runs a bug-fix task, sees the Jev routing + risk decisions, and approves a diff. Open VSX extensions install. REL-2 Alpha suite green against the app. |
+| **Beta** | Critique workflow. Live Jev API. The `desiide-ai` extension also published standalone on Open VSX + VS Code Marketplace, for people who stay in VS Code. | ~+3 weeks | Critique and live Jev pass the REL-2 suite in the app. The standalone extension installs from both registries and passes the suite in stock VS Code. |
 | **1.0** | Hardening + pro/enterprise features (see backlog). Windows. Signed builds. | ~+4–6 weeks | Defined at the Beta retro. |
 
 Targets are indicative and get revisited in the planning session after each milestone.

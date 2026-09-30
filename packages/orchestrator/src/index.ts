@@ -1,1 +1,1 @@
-export const PACKAGE_NAME = '@mutt/orchestrator';
+export const PACKAGE_NAME = '@desiide/orchestrator';

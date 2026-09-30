@@ -3,7 +3,7 @@
 **Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, FND-2 (COR-1 for live submit; mock until then) · **Skills:** ide-editor-shell
 
 ## Purpose
-The composer at the bottom of the Mutt panel where every task starts. It should feel as fast and precise as Cursor's composer, while showing the user what context and routing will be used *before* they send.
+The composer at the bottom of the Desiide panel where every task starts. It should feel as fast and precise as Cursor's composer, while showing the user what context and routing will be used *before* they send.
 
 ## Scope
 **Input**
@@ -11,7 +11,7 @@ The composer at the bottom of the Mutt panel where every task starts. It should 
 - **@-mentions** with a popup, keyboard-navigable and fuzzy-matched:
   - `@file` (workspace file search via the extension, using `workspace.findFiles` with a debounce and 50 results), `@folder`, `@selection` (current editor selection), `@diff` (working-tree changes).
   - Selected mentions render as removable **chips** above the input showing the file name + line range. The chip tooltip shows the full path.
-- Paste of a file path or code from the editor: the "Mutt: Add selection to prompt" command (editor context menu + keybinding) inserts an `@selection` chip.
+- Paste of a file path or code from the editor: the "Desiide: Add selection to prompt" command (editor context menu + keybinding) inserts an `@selection` chip.
 - Prompt history per workspace (`↑`/`↓` when the cursor is at the start/end). The draft persists across panel reloads.
 
 **Routing controls (compact row under the input)**

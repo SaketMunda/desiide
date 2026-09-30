@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": [],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "outDir": "../../node_modules/.cache/tsc/desiide-ai-webview",
+    "tsBuildInfoFile": "../../node_modules/.cache/tsc/desiide-ai-webview.tsbuildinfo"
+  },
+  "include": ["webview", "shared"]
+}

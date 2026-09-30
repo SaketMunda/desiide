@@ -33,7 +33,7 @@ export const CostPerMTok = z.strictObject({
 });
 export type CostPerMTok = z.infer<typeof CostPerMTok>;
 
-/** One entry of `mutt.models[]`, pushed to the orchestrator via `config.update`. */
+/** One entry of `desiide.models[]`, pushed to the orchestrator via `config.update`. */
 export const ModelConfig = z.strictObject({
   id: Id,
   provider: ModelProvider,

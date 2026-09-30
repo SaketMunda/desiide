@@ -16,7 +16,7 @@ A native Claude adapter using the official `@anthropic-ai/sdk`. It's the default
 1. Passes the MOD-1 contract suite with recorded fixtures.
 2. Message-mapping tests: consecutive same-role messages merged; tool call/result pairing preserved.
 3. Cache-control markers placed only on cacheable sections (asserted from request snapshot).
-4. Live smoke under `MUTT_LIVE=1`.
+4. Live smoke under `DESIIDE_LIVE=1`.
 
 ## Handoff notes
 _(filled by the build session)_

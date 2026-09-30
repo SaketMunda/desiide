@@ -2,12 +2,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run mutt-ai extension",
+      "name": "Run desiide-ai extension",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/extensions/mutt-ai"],
-      "outFiles": ["${workspaceFolder}/extensions/mutt-ai/dist/**/*.js"],
-      "preLaunchTask": "mutt-ai: build"
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/extensions/desiide-ai"],
+      "outFiles": ["${workspaceFolder}/extensions/desiide-ai/dist/**/*.js"],
+      "preLaunchTask": "desiide-ai: build"
     }
   ]
 }

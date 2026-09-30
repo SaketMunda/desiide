@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Builds the Mutt desktop app from the VSCodium fork in editor/ (EDT-1).
+# Builds the Desiide desktop app from the VSCodium fork in editor/ (EDT-1).
 #
 #   scripts/build-editor.sh           build (reuses editor/vscode if it is at the pinned commit)
 #   scripts/build-editor.sh --clean   re-fetch the upstream source first
 #
-# Output: editor/VSCode-<os>-<arch>/ (macOS: Mutt.app). ~7 min and ~8.5 GB on an M4 Pro;
+# Output: editor/VSCode-<os>-<arch>/ (macOS: Desiide.app). ~7 min and ~8.5 GB on an M4 Pro;
 # see the ide-editor-shell skill ("Building") for measured numbers.
 #
 # Follows the flow of VSCodium's dev/build.sh, which can't be used directly because it hard-codes
@@ -38,7 +38,7 @@ esac
 # {{{ node: VSCodium's pinned version, not the repo root's
 NODE_VERSION="$( tr -d '[:space:]v' < "${EDITOR}/.nvmrc" )"
 if [[ "$( node -v 2> /dev/null )" != "v${NODE_VERSION}" ]]; then
-  NODE_DIR="${HOME}/.cache/mutt/node-v${NODE_VERSION}-${NODE_OS}-${NODE_ARCH}"
+  NODE_DIR="${HOME}/.cache/desiide/node-v${NODE_VERSION}-${NODE_OS}-${NODE_ARCH}"
   if [[ ! -x "${NODE_DIR}/bin/node" ]]; then
     echo "Downloading Node ${NODE_VERSION} to ${NODE_DIR}"
     mkdir -p "$( dirname "${NODE_DIR}" )"
@@ -54,11 +54,11 @@ echo "node $( node -v )"
 # }}}
 
 # {{{ build environment
-export APP_NAME="Mutt"
-export BINARY_NAME="mutt"
-export ORG_NAME="Mutt"
-export GH_REPO_PATH="SaketMunda/mutt"
-export ASSETS_REPOSITORY="SaketMunda/mutt"
+export APP_NAME="Desiide"
+export BINARY_NAME="desiide"
+export ORG_NAME="Desiide"
+export GH_REPO_PATH="SaketMunda/desiide"
+export ASSETS_REPOSITORY="SaketMunda/desiide"
 export VSCODE_QUALITY="stable"
 export CI_BUILD="no"
 export SHOULD_BUILD="yes"
@@ -68,7 +68,7 @@ export SHOULD_BUILD_REH_WEB="no"
 export DISABLE_UPDATE="yes"       # never poll VSCodium's update feed (privacy rule)
 export VSCODE_SKIP_NODE_VERSION_CHECK="yes"
 # A private npm cache: the build doesn't depend on (or write to) the user's ~/.npm.
-export npm_config_cache="${HOME}/.cache/mutt/npm"
+export npm_config_cache="${HOME}/.cache/desiide/npm"
 
 # Reproducible versions: the release version is the pinned VSCodium tag, not VSCodium's
 # time-derived one, and the source version is computed here (version.sh would otherwise

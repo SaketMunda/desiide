@@ -10,7 +10,7 @@ describe('checkProtocolCompatibility', () => {
   it('rejects a major mismatch with an actionable message', () => {
     const result = checkProtocolCompatibility('1.0.0', '2.0.0');
     expect(result).toMatchObject({ ok: false, reason: 'major_mismatch' });
-    expect(!result.ok && result.message).toMatch(/Update Mutt/);
+    expect(!result.ok && result.message).toMatch(/Update Desiide/);
   });
 
   it('rejects malformed versions', () => {

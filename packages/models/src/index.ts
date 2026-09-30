@@ -1,1 +1,1 @@
-export const PACKAGE_NAME = '@mutt/models';
+export const PACKAGE_NAME = '@desiide/models';

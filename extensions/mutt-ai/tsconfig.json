@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "types": ["node", "vscode"],
-    "outDir": "../../node_modules/.cache/tsc/mutt-ai-host",
-    "tsBuildInfoFile": "../../node_modules/.cache/tsc/mutt-ai-host.tsbuildinfo"
-  },
-  "include": ["src", "shared", "vite.config.mts", "vitest.config.mts"]
-}

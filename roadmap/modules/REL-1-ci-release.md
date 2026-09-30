@@ -8,9 +8,9 @@ Repeatable, low-effort releases, so shipping is a tag push rather than a ritual.
 ## Scope
 **Alpha** (app-first, ADR-011)
 - `verify.yml` hardening (cache pnpm, matrix macOS + Linux + Windows for packages/extension tests).
-- `release-app.yml` on tag `app-v*`: verify → build `mutt-ai` → `scripts/build-editor.sh` (with `mutt-ai` built in, per EDT-2) for macOS arm64 + x64 (dmg, zip) and Linux x64 (deb, AppImage, tar.gz) → GitHub Release with SHA-256 checksums. Tags with `-alpha`/`-beta` are marked pre-release. Builds are unsigned; the release notes carry the first-launch step.
+- `release-app.yml` on tag `app-v*`: verify → build `desiide-ai` → `scripts/build-editor.sh` (with `desiide-ai` built in, per EDT-2) for macOS arm64 + x64 (dmg, zip) and Linux x64 (deb, AppImage, tar.gz) → GitHub Release with SHA-256 checksums. Tags with `-alpha`/`-beta` are marked pre-release. Builds are unsigned; the release notes carry the first-launch step.
 - `upstream-sync.yml` (weekly): check for a new VSCodium tag → bump the submodule on a branch → try the build → open a PR with the result.
-- Version source of truth: the app tag for the app; `extensions/mutt-ai/package.json` for the extension. Changelog from Conventional Commits.
+- Version source of truth: the app tag for the app; `extensions/desiide-ai/package.json` for the extension. Changelog from Conventional Commits.
 
 **Beta**
 - `release-extension.yml` on tag `ext-v*`: verify → build → `vsce package` → publish to the **VS Code Marketplace** and **Open VSX** → attach the `.vsix` to a GitHub Release. Pre-release channel via `--pre-release` for `-alpha`/`-beta` tags.

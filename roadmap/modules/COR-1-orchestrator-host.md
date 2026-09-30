@@ -14,7 +14,7 @@ The process boundary: the orchestrator's RPC server, and the extension-side clie
 - Graceful shutdown on `exit` / stdin close: abort all tasks and kill child process groups.
 - esbuild bundle → single `dist/orchestrator.js`.
 
-**Extension side (`extensions/mutt-ai/src/orchestrator/`)**
+**Extension side (`extensions/desiide-ai/src/orchestrator/`)**
 - `OrchestratorClient`: lazy spawn on first use via `child_process.fork` with `ELECTRON_RUN_AS_NODE` using `process.execPath` (so no system Node is required).
 - Supervisor: restart with backoff, at most 3 restarts in 60 s, then surface an error with "Restart orchestrator" in the UI.
 - Answers `secrets.get` from `context.secrets`.

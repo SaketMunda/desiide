@@ -8,12 +8,12 @@ The monorepo skeleton every other module builds on: tooling, the verify script, 
 ## Scope
 - pnpm workspace: `packages/*`, `extensions/*`. `.nvmrc` = 24. `packageManager` field pinned.
 - `tsconfig.base.json` (strict, `noUncheckedIndexedAccess`, ESM, `moduleResolution: bundler`) and per-package `tsconfig.json` with project references. Typecheck via `tsc -b` (noEmit).
-- Internal packages `@mutt/protocol`, `@mutt/orchestrator`, `@mutt/models`, `@mutt/jev` with `exports` → `./src/index.ts` (consumed as source, bundled by esbuild). Each has one placeholder test.
-- `extensions/mutt-ai/` placeholder `package.json` only (UI-1 fills it).
+- Internal packages `@desiide/protocol`, `@desiide/orchestrator`, `@desiide/models`, `@desiide/jev` with `exports` → `./src/index.ts` (consumed as source, bundled by esbuild). Each has one placeholder test.
+- `extensions/desiide-ai/` placeholder `package.json` only (UI-1 fills it).
 - ESLint flat config (typescript-eslint strict; `no-explicit-any: error`) + Prettier. Vitest workspace config.
 - `scripts/verify.sh`: `pnpm -r typecheck && pnpm lint && pnpm test`.
 - `.github/workflows/verify.yml` (PR + push to master), `.github/pull_request_template.md` containing the DoD checklist from `STANDARDS.md`.
-- `.gitignore` (node_modules, dist, `.mutt/logs/`, `*.vsix`), `.editorconfig`.
+- `.gitignore` (node_modules, dist, `.desiide/logs/`, `*.vsix`), `.editorconfig`.
 
 ## Out of scope
 The license file (open decision), the VSCodium fork (EDT-1), and the extension scaffold (UI-1).
@@ -22,14 +22,14 @@ The license file (open decision), the VSCodium fork (EDT-1), and the extension s
 1. Fresh clone: `pnpm i && scripts/verify.sh` passes in < 60 s locally.
 2. The CI workflow runs and passes on a PR.
 3. Adding `const x: any = 1; export { x }` in any package fails lint.
-4. A package can import another (`@mutt/protocol` from `@mutt/jev`) and typecheck passes.
+4. A package can import another (`@desiide/protocol` from `@desiide/jev`) and typecheck passes.
 
 ## Handoff notes
 **Built (branch `mod/FND-1-repo-foundation`):**
 - pnpm workspace (`packages/*`, `extensions/*`), `packageManager: pnpm@12.6.0`, `.nvmrc` = 24, `engines.node >=24`.
 - `tsconfig.base.json` (strict, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, ESM, `moduleResolution: bundler`, `allowImportingTsExtensions`). Root `tsconfig.json` is a solution file referencing each package + `tsconfig.tooling.json` (covers `eslint.config.ts`, `vitest.config.ts`).
-- `@mutt/protocol`, `@mutt/orchestrator`, `@mutt/models`, `@mutt/jev`: `exports` → `./src/index.ts`, one placeholder test each. `@mutt/jev` depends on `@mutt/protocol` (`workspace:*` + tsconfig `references`) to prove cross-package imports.
-- `extensions/mutt-ai/package.json` placeholder.
+- `@desiide/protocol`, `@desiide/orchestrator`, `@desiide/models`, `@desiide/jev`: `exports` → `./src/index.ts`, one placeholder test each. `@desiide/jev` depends on `@desiide/protocol` (`workspace:*` + tsconfig `references`) to prove cross-package imports.
+- `extensions/desiide-ai/package.json` placeholder.
 - ESLint flat config (`eslint.config.ts`): `@eslint/js` recommended + `typescript-eslint` strict + `no-explicit-any: error` + `eslint-config-prettier`. Prettier (`singleQuote`, `printWidth: 100`).
 - Vitest root config using `test.projects: ['packages/*']`. Each package also has its own `test` script.
 - `scripts/verify.sh`, `.github/workflows/verify.yml` (PR + push to master, frozen lockfile), `.github/pull_request_template.md` (DoD checklist), `.gitignore`, `.editorconfig`.

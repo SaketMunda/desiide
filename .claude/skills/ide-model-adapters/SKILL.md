@@ -28,7 +28,7 @@ type ModelCapabilities = {
 If `edit` is missing, `packages/models/src/edit-fallback.ts` implements it via `chat` using the search/replace block format.
 
 ## Config
-The `mutt.models` setting (or `~/.mutt/models.json`):
+The `desiide.models` setting (or `~/.desiide/models.json`):
 ```json
 { "models": [
   { "id": "local-small", "provider": "ollama", "model": "qwen2.5-coder:7b",
@@ -39,7 +39,7 @@ The `mutt.models` setting (or `~/.mutt/models.json`):
     "baseUrl": "https://api.example.com/v1", "apiKey": "secret:example" }
 ]}
 ```
-Keys are always `secret:<name>` references. The extension resolves them from VS Code SecretStorage when the orchestrator asks via the `secrets.get` RPC, and they are held in memory only. Workflows address models by role (`mutt.roles.cheap|strong|reviewer`), never by ID. Config-declared capabilities override probed ones.
+Keys are always `secret:<name>` references. The extension resolves them from VS Code SecretStorage when the orchestrator asks via the `secrets.get` RPC, and they are held in memory only. Workflows address models by role (`desiide.roles.cheap|strong|reviewer`), never by ID. Config-declared capabilities override probed ones.
 
 ## Providers
 - **openai-compat**: `POST {baseUrl}/chat/completions` with `stream: true`, SSE parse, and accumulate `tool_calls` deltas by index. Covers OpenAI, OpenRouter, Gemini's OpenAI endpoint, vLLM, LM Studio, and llama.cpp server.
@@ -53,7 +53,7 @@ Keys are always `secret:<name>` references. The extension resolves them from VS 
 
 ## Testing
 - Contract suite `test/contract.ts` runs against every adapter using recorded fixtures (`test/fixtures/<provider>/*.jsonl`).
-- Live tests only run with `MUTT_LIVE=1` and keys in the env.
+- Live tests only run with `DESIIDE_LIVE=1` and keys in the env.
 
 ## Gotchas
 - Some OpenAI-compat servers send `tool_calls` arguments as full JSON in one chunk and others as fragments. Always accumulate by index.

@@ -3,7 +3,7 @@
 **Status:** done · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-1 · **Skills:** ide-orchestration-core
 
 ## Purpose
-`@mutt/protocol` holds the zod schemas and inferred types for **everything that crosses the extension ↔ orchestrator boundary**. It defines the full Alpha surface up front so that later modules rarely touch it (ADR-010: additive-only afterwards).
+`@desiide/protocol` holds the zod schemas and inferred types for **everything that crosses the extension ↔ orchestrator boundary**. It defines the full Alpha surface up front so that later modules rarely touch it (ADR-010: additive-only afterwards).
 
 ## Scope
 **Domain schemas**
@@ -14,7 +14,7 @@
 - `TaskState` enum + `TaskSummary`
 - `DecisionRecord`, `PolicyOutcome = auto|confirm|block`, `ReasonLabel` (string enum, extensible)
 - `ModelInfo {id, provider, model, role?, capabilities, healthy}`
-- `ProjectConfig` (`.mutt/project.json`: `testCommand?, lintCommand?, sensitiveGlobs?, ignoreGlobs?`)
+- `ProjectConfig` (`.desiide/project.json`: `testCommand?, lintCommand?, sensitiveGlobs?, ignoreGlobs?`)
 
 **RPC** (`methods.ts`: one table of `{params, result}` schemas)
 - ext → orch: `initialize` (protocol version handshake), `task.create`, `task.cancel`, `task.list`, `task.approve {taskId, approvalId, scope: once|task}`, `task.reject`, `models.list`, `models.test`, `jev.test`, `decisions.list`, `decisions.replay`, `config.update`, `health.ping`
@@ -35,9 +35,9 @@ Transport (COR-1), behavior. This module is types + schemas + fixtures only.
 4. A `docs/protocol.md` generated or hand-written summary table of methods + events.
 
 ## Handoff notes
-**Built (branch `mod/FND-2-protocol`):** `@mutt/protocol` at `PROTOCOL_VERSION = 1.0.0`, zod 4.
-- **Entry points:** `@mutt/protocol` (all schemas + inferred types) and `@mutt/protocol/fixtures` (`schemaFixtures`, `jevExampleStates`, extra risk-gate goldens).
-- **Files:** `common.ts` (Id, IsoDateTime, WorkspacePath, Range, SecretRef, Ack, Empty), `context.ts` (ContextRef, FileMeta), `task.ts` (Task, TaskInput, TaskState, TaskSummary, Budget, WorkflowOption, Usage), `tools.ts`, `edits.ts`, `models.ts` (ModelInfo, ModelConfig, ModelCapabilities, ModelErrorKind), `config.ts` (ProjectConfig, MuttConfig), `reasons.ts` (PolicyOutcome, ReasonLabel), `jev.ts` (pack states, JevResult, DecisionRecord), `events.ts` (TaskEvent + `parseTaskEvent`), `methods.ts` (`ClientMethods`, `ServerMethods`, `ServerNotifications`, `ParamsOf/ResultOf`, `RpcErrorCode`), `version.ts` (`checkProtocolCompatibility`).
+**Built (branch `mod/FND-2-protocol`):** `@desiide/protocol` at `PROTOCOL_VERSION = 1.0.0`, zod 4.
+- **Entry points:** `@desiide/protocol` (all schemas + inferred types) and `@desiide/protocol/fixtures` (`schemaFixtures`, `jevExampleStates`, extra risk-gate goldens).
+- **Files:** `common.ts` (Id, IsoDateTime, WorkspacePath, Range, SecretRef, Ack, Empty), `context.ts` (ContextRef, FileMeta), `task.ts` (Task, TaskInput, TaskState, TaskSummary, Budget, WorkflowOption, Usage), `tools.ts`, `edits.ts`, `models.ts` (ModelInfo, ModelConfig, ModelCapabilities, ModelErrorKind), `config.ts` (ProjectConfig, DesiideConfig), `reasons.ts` (PolicyOutcome, ReasonLabel), `jev.ts` (pack states, JevResult, DecisionRecord), `events.ts` (TaskEvent + `parseTaskEvent`), `methods.ts` (`ClientMethods`, `ServerMethods`, `ServerNotifications`, `ParamsOf/ResultOf`, `RpcErrorCode`), `version.ts` (`checkProtocolCompatibility`).
 - **For COR-1:** build the router from `ClientMethods[m].params/result`, answer a major mismatch with `RpcErrorCode.ProtocolMismatch` plus `checkProtocolCompatibility(...).message`, and type `requestSecret` from `ServerMethods['secrets.get']`.
 - **For UI-3:** use `parseTaskEvent`. It returns `known | unknown | invalid`, so ignore `unknown` with a debug log.
 - **For JEV-1:** register `WorkflowSelectState` / `RiskGateState` / `CostRouteState` as the v1 pack schemas instead of redefining them. The caps (`MAX_FILES_TOUCHED`, `MAX_COMMAND_CHARS`) are exported.

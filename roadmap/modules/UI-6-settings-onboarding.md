@@ -17,9 +17,9 @@ Get a new user from install to first task in **under 2 minutes**, and give pros 
 - **Models**: list with health, add/edit/remove, test, capability overrides, and the `secret:` key status (set / missing, never displayed).
 - **Roles**: cheap / strong / reviewer dropdowns.
 - **Jev**: off by default. Endpoint, key, `redactPaths`, **Preview payload** (live sample state built by JEV-1 from the current workspace), and Test connection.
-- **Gating**: Conservative (default) / Strict. Sensitive-glob editor (writes `.mutt/project.json`). The deny-list is shown read-only.
+- **Gating**: Conservative (default) / Strict. Sensitive-glob editor (writes `.desiide/project.json`). The deny-list is shown read-only.
 - **Project**: test and lint commands (auto-detected, editable).
-- Settings persist as VS Code settings (`mutt.*`). Secrets go only to SecretStorage. Changes push `config.update` to the orchestrator.
+- Settings persist as VS Code settings (`desiide.*`). Secrets go only to SecretStorage. Changes push `config.update` to the orchestrator.
 
 ## Acceptance criteria
 1. A fresh profile with Ollama running reaches a successful first task in under 2 min (timed manual QA script).

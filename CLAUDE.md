@@ -1,6 +1,6 @@
-# Mutt — AI-native IDE
+# Desiide — AI-native IDE
 
-Open-source VS Code fork (VSCodium base) with bring-your-own models and Jev (TypeSafe) as the routing / risk / cost decision layer. Alpha ships the Mutt desktop app with the `mutt-ai` extension built in (ADR-011); the extension is also published standalone at Beta.
+Open-source VS Code fork (VSCodium base) with bring-your-own models and Jev (TypeSafe) as the routing / risk / cost decision layer. Alpha ships the Desiide desktop app with the `desiide-ai` extension built in (ADR-011); the extension is also published standalone at Beta.
 
 ## How work is organized
 - `roadmap/README.md`: milestones, the module index with status, and the build order (waves).
@@ -10,8 +10,8 @@ Open-source VS Code fork (VSCodium base) with bring-your-own models and Jev (Typ
 - **Planning sessions:** own scope, priorities, and ADRs. Build sessions never change another module's scope or an ADR; they escalate instead.
 
 ## Layout
-- `editor/`: VSCodium fork (submodule). Only minimal patches in `editor/patches/mutt/`.
-- `extensions/mutt-ai/`: the extension. **All AI/Jev UI lives here**, not in workbench patches.
+- `editor/`: VSCodium fork (submodule). Only minimal patches in `editor/patches/desiide/`.
+- `extensions/desiide-ai/`: the extension. **All AI/Jev UI lives here**, not in workbench patches.
 - `packages/protocol`: zod schemas for everything crossing the extension ↔ orchestrator boundary. Additive-only.
 - `packages/orchestrator`: host, task engine, workflows, tool runner, context engine. No `vscode` imports.
 - `packages/models`: `ModelAdapter` implementations.
@@ -23,7 +23,7 @@ Open-source VS Code fork (VSCodium base) with bring-your-own models and Jev (Typ
 - For the editor build, see the `ide-editor-shell` skill.
 
 ## Domain skills
-- `ide-editor-shell`: `editor/`, `extensions/mutt-ai/`
+- `ide-editor-shell`: `editor/`, `extensions/desiide-ai/`
 - `ide-orchestration-core`: `packages/orchestrator`, `packages/protocol`
 - `ide-model-adapters`: `packages/models`
 - `ide-jev-decisions`: `packages/jev`, gating, decision packs
@@ -34,4 +34,4 @@ Open-source VS Code fork (VSCodium base) with bring-your-own models and Jev (Typ
 - **Edits:** the orchestrator never writes files. It returns `FileEdit[]`, and the extension applies them via `WorkspaceEdit`.
 - **Transport:** JSON-RPC over stdio. No localhost ports without an ADR.
 - **Types:** TypeScript strict, no `any` at package boundaries. zod-validate every external input (RPC, webview messages, model output, Jev responses).
-- **Tests:** Vitest for every package change. HTTP uses recorded fixtures, and live calls only run under `MUTT_LIVE=1`.
+- **Tests:** Vitest for every package change. HTTP uses recorded fixtures, and live calls only run under `DESIIDE_LIVE=1`.
