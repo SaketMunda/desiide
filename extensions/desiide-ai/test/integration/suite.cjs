@@ -43,6 +43,18 @@ async function run() {
   await waitFor(() => api.readyViews.has('decisions'), 'decisions webview ready');
   results.readyViews = [...api.readyViews].sort();
 
+  // EDT-2 AC2: app-only first-run behavior stays off in stock VS Code. The run uses --skip-welcome,
+  // so any editor tab here could only be the walkthrough opened by the extension.
+  results.appName = vscode.env.appName;
+  assert.notEqual(vscode.env.appName, 'Desiide', 'this suite runs in stock VS Code');
+  await new Promise((r) => setTimeout(r, 1000));
+  results.tabsAfterActivation = vscode.window.tabGroups.all
+    .flatMap((g) => g.tabs)
+    .map((t) => t.label);
+  assert.deepEqual(results.tabsAfterActivation, [], 'no walkthrough opened outside the app');
+  results.welcomeOpened = api.welcomeOpened;
+  assert.equal(api.welcomeOpened, false, 'the first-run walkthrough is app-only');
+
   // Dev-only showcase command is registered and runs.
   await vscode.commands.executeCommand('desiide.dev.showcase');
   results.showcaseCommand = 'ok';

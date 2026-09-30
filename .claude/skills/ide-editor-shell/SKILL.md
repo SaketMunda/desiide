@@ -16,7 +16,9 @@ Default to the extension. Patch the workbench **only** when the extension API ca
 |---|---|
 | Panels, views, webviews, commands, menus, keybindings, status bar, settings | `desiide-ai` `package.json` contributions |
 | Product name, icons, data folder, default settings, Open VSX gallery | `product.json` patch |
-| Default placement of the Desiide container in the secondary sidebar on first run | small workbench patch |
+| Default placement of the Desiide container in the secondary sidebar on first run | small workbench patch (`02-default-layout.patch`) |
+| App-only settings defaults, keybindings | the code-free built-in `desiide-app` extension (`editor/patches/desiide/extensions/`). Note: extension `configurationDefaults` load after the layout is computed, so layout defaults need the patch |
+| App-only behavior inside `desiide-ai` | check `isDesiideApp(vscode.env.appName)` (`src/appWelcome.ts`); never a hard dependency |
 | Anything else | Write down why the extension API can't do it in the patch header before adding it |
 
 Each patch does one thing, has a header comment (purpose, upstream files touched), and is named `NN-short-name.patch`.
@@ -34,7 +36,7 @@ Each patch does one thing, has a header comment (purpose, upstream files touched
 ## Building
 - One command: `scripts/build-editor.sh` (add `--clean` to re-fetch upstream). Output: `editor/VSCode-darwin-arm64/Desiide.app` (or `VSCode-linux-<arch>/`). Don't use VSCodium's `dev/build.sh`: it hard-codes the VSCodium branding variables.
 - Prerequisites: `git`, `jq`, `python3`, `curl`, Xcode Command Line Tools. **No Rust needed**: the script sets `SHOULD_BUILD_CLI=no` (the CLI is only for tunnels). The script uses VSCodium's pinned Node (`editor/.nvmrc`); if `node -v` differs, it downloads and checksum-verifies that version into `~/.cache/desiide/`.
-- The script pins `RELEASE_VERSION` to the submodule tag and computes `BUILD_SOURCEVERSION` itself (VSCodium's defaults are time-based, or `npm install -g` a tool). It uses a private npm cache in `~/.cache/desiide/npm`, so a broken `~/.npm` (e.g. root-owned files) doesn't matter. It sets `DISABLE_UPDATE=yes`: the app never polls VSCodium's update feed.
+- The script reads `RELEASE_VERSION` from `editor/patches/desiide/base-version` (the fork has no VSCodium tags; bump the file on every upstream sync) and computes `BUILD_SOURCEVERSION` itself (VSCodium's defaults are time-based, or `npm install -g` a tool). It uses a private npm cache in `~/.cache/desiide/npm`, so a broken `~/.npm` (e.g. root-owned files) doesn't matter. It sets `DISABLE_UPDATE=yes`: the app never polls VSCodium's update feed.
 - Measured (EDT-1, 2026-09-29, Apple M4 Pro, 12 cores, 24 GB, VSCodium `1.135.06055`): upstream fetch 41 s; build 6.6 min; peak RAM 7.5 GB. Disk: `editor/vscode` 6.1 GB, `Desiide.app` 1.0 GB, caches ~1.2 GB (npm 0.6, node-gyp 0.25, Node 0.2, Electron 0.13). Keep **~15 GB free** for headroom.
 - Re-runs are idempotent: if `editor/vscode` is already at the pinned commit, the script resets it (undoing the previous run's patches) instead of re-cloning, then re-runs `npm ci` + compile (~6–7 min).
 - Launching from a terminal inside VS Code: unset `ELECTRON_RUN_AS_NODE` first (`env -u ELECTRON_RUN_AS_NODE .../Desiide.app/Contents/MacOS/Desiide`), or Electron starts as plain Node ("bad option").
@@ -42,8 +44,10 @@ Each patch does one thing, has a header comment (purpose, upstream files touched
 - Dev loop: develop `desiide-ai` in **stock VS Code** (F5 Extension Development Host). Only build the fork to test patches or packaging.
 
 ## Upstream sync
-- Bump the VSCodium tag → re-run the build → fix patches that fail to apply. Patches that touch `src/vs/workbench/**` break most often, which is one more reason to keep them tiny.
-- Never hand-edit files inside the cloned `vscode/` tree. Regenerate the patch instead (`git diff > patches/desiide/NN-x.patch`).
+- Dry-run first: `scripts/check-editor-patches.sh <vscode-tag>` downloads only the files our patches touch and runs `git apply --check` (seconds, no build). It also checks that upstream still supports local-VSIX built-ins.
+- Merge the new VSCodium tag into the fork's `desiide` branch, update `patches/desiide/base-version`, re-run the build, and fix patches that fail to apply. Patches that touch `src/vs/workbench/**` break most often, which is one more reason to keep them tiny.
+- Never hand-edit files inside the cloned `vscode/` tree. Regenerate the patch instead (`git diff > patches/desiide/NN-x.patch`). After a build, `vscode/` holds every patch applied, so diff pristine copies (`git show HEAD:<file>`) rather than the working tree.
+- The fork has no VSCodium tags, and VSCodium's `.gitignore` has `VSCodium*`, which macOS git matches case-insensitively. Check `git -C editor status` shows new files before committing.
 
 ## Gotchas
 - Electron: keep extension activation lazy (`onView:`/`onCommand:`). Never block the extension host. Heavy work belongs in the orchestrator child process.

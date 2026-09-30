@@ -102,6 +102,8 @@ The app lands in `editor/VSCode-darwin-arm64/Desiide.app` (Linux: `editor/VSCode
 env -u ELECTRON_RUN_AS_NODE editor/VSCode-darwin-arm64/Desiide.app/Contents/MacOS/Desiide
 ```
 
+**Checking the built app.** `pnpm -F desiide-ai test:app` runs a first-launch test inside the built app with a brand-new profile: the Desiide panel shows in the secondary side bar and the walkthrough opens, with nothing clicked. Before bumping VSCodium, `scripts/check-editor-patches.sh <vscode-version>` dry-runs our patches against that VS Code release in seconds.
+
 **Changing the fork.** Desiide's branding and patches live in `editor/patches/desiide/` (see its README). The fork has its own history, so a change there takes two commits and two pushes:
 
 ```sh
