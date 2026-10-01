@@ -1,0 +1,8 @@
+{
+  "name": "fixture-node",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint ."
+  }
+}
