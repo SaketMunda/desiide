@@ -1,0 +1,12 @@
+export { executeToolCall } from './runner.ts';
+export type { RawToolCall, ToolExecution } from './runner.ts';
+export { TOOLS, toolSpecs } from './registry.ts';
+export type { Tool, ToolContext, ToolOutput, ToolSpec } from './types.ts';
+export type { EditError, EditErrorCode } from './proposeEdit.ts';
+export { PathError, createWorkspace, resolveWorkspacePath } from './paths.ts';
+export type { PathErrorReason, ResolvedPath, Workspace } from './paths.ts';
+export { loadProjectConfig, PROJECT_CONFIG_PATH } from './projectConfig.ts';
+export type { CommandSource, LoadedProjectConfig } from './projectConfig.ts';
+export { resolveRgPath } from './ripgrep.ts';
+export { runProcess, scrubEnv } from './process.ts';
+export type { ProcessCommand, ProcessOptions, ProcessResult } from './process.ts';

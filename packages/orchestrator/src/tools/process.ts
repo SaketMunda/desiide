@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 
 export const DEFAULT_TIMEOUT_MS = 120_000;
 export const DEFAULT_OUTPUT_CAP_BYTES = 64 * 1024;
+const STDERR_TAIL_BYTES = 8 * 1024;
 
 /** Names that look like credentials. Matching vars never reach a child process. */
 const SECRET_NAME = /KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL/i;
@@ -67,6 +68,12 @@ export interface ProcessOptions {
   env: NodeJS.ProcessEnv;
   timeoutMs?: number;
   outputCapBytes?: number;
+  /**
+   * `tail` (default): stdout + stderr interleaved, keep the last bytes (logs, test output).
+   * `head`: keep the first bytes of stdout and stop the process once the cap is hit (listings,
+   * search results, diffs); stderr is returned separately.
+   */
+  capture?: 'tail' | 'head';
   signal?: AbortSignal;
   /** Called with the child's process-group id; returns an untrack fn (see Host.trackProcessGroup). */
   trackProcessGroup?: (pid: number) => () => void;
@@ -76,8 +83,13 @@ export interface ProcessOptions {
 
 export interface ProcessResult {
   exitCode: number | null;
-  /** Combined stdout + stderr in arrival order, tail-capped, with a marker when truncated. */
+  /**
+   * `tail`: combined stdout + stderr in arrival order, with a marker when truncated.
+   * `head`: the first `outputCapBytes` of stdout, no marker (the caller knows its format).
+   */
   output: string;
+  /** `head` capture only: the tail of stderr. */
+  stderr?: string;
   truncated: boolean;
   timedOut: boolean;
   cancelled: boolean;
@@ -103,7 +115,12 @@ export function runProcess(cmd: ProcessCommand, opts: ProcessOptions): Promise<P
   const start = Date.now();
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const killGroup = opts.killProcessGroup ?? defaultKillGroup;
-  const tail = new TailBuffer(opts.outputCapBytes ?? DEFAULT_OUTPUT_CAP_BYTES);
+  const cap = opts.outputCapBytes ?? DEFAULT_OUTPUT_CAP_BYTES;
+  const head = opts.capture === 'head';
+  const tail = new TailBuffer(head ? STDERR_TAIL_BYTES : cap);
+  const headChunks: Buffer[] = [];
+  let headSize = 0;
+  let headFull = false;
 
   return new Promise((resolvePromise) => {
     if (opts.signal?.aborted) {
@@ -150,7 +167,17 @@ export function runProcess(cmd: ProcessCommand, opts: ProcessOptions): Promise<P
     };
     opts.signal?.addEventListener('abort', onAbort, { once: true });
 
-    child.stdout.on('data', (c: Buffer) => tail.push(c));
+    child.stdout.on('data', (c: Buffer) => {
+      if (!head) return tail.push(c);
+      if (headFull) return;
+      const room = cap - headSize;
+      headChunks.push(c.length > room ? c.subarray(0, room) : c);
+      headSize += Math.min(c.length, room);
+      if (c.length >= room) {
+        headFull = true;
+        kill();
+      }
+    });
     child.stderr.on('data', (c: Buffer) => tail.push(c));
 
     const finish = (): void => {
@@ -159,15 +186,21 @@ export function runProcess(cmd: ProcessCommand, opts: ProcessOptions): Promise<P
       clearTimeout(timer);
       opts.signal?.removeEventListener('abort', onAbort);
       untrack?.();
-      const truncated = tail.dropped > 0;
+      const truncated = head ? headFull : tail.dropped > 0;
+      const output = head
+        ? Buffer.concat(headChunks)
+            .toString('utf8')
+            .replace(/\uFFFD+$/, '')
+        : (truncated ? truncationMarker(tail.dropped) : '') + tail.text();
       const result: ProcessResult = {
         exitCode,
-        output: (truncated ? truncationMarker(tail.dropped) : '') + tail.text(),
+        output,
         truncated,
         timedOut,
         cancelled,
         durationMs: Date.now() - start,
       };
+      if (head) result.stderr = tail.text();
       if (spawnError !== undefined) result.spawnError = spawnError;
       resolvePromise(result);
     };

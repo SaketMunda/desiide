@@ -178,4 +178,24 @@ describe('runProcess', () => {
     );
     expect(events).toEqual(['track:true', 'untrack']);
   });
+
+  it('head capture keeps the start of stdout, stops early, and separates stderr', async () => {
+    const r = await runProcess(
+      { kind: 'shell', command: 'echo oops >&2; yes line' },
+      { cwd, env, capture: 'head', outputCapBytes: 100, timeoutMs: 10_000 },
+    );
+    expect(r.truncated).toBe(true);
+    expect(r.timedOut).toBe(false);
+    expect(Buffer.byteLength(r.output)).toBe(100);
+    expect(r.output.startsWith('line\nline\n')).toBe(true);
+    expect(r.stderr).toBe('oops\n');
+  });
+
+  it('head capture under the cap is complete and not truncated', async () => {
+    const r = await runProcess(
+      { kind: 'shell', command: 'echo a; echo b' },
+      { cwd, env, capture: 'head' },
+    );
+    expect(r).toMatchObject({ output: 'a\nb\n', truncated: false, exitCode: 0, stderr: '' });
+  });
 });
