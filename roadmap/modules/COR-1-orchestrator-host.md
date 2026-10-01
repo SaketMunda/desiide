@@ -1,6 +1,6 @@
 # COR-1 · Orchestrator host & RPC
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-2 · **Skills:** ide-orchestration-core
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-2 · **Skills:** ide-orchestration-core
 
 ## Purpose
 The process boundary: the orchestrator's RPC server, and the extension-side client that spawns and supervises it.

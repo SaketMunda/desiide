@@ -133,8 +133,10 @@
     "package": "node scripts/build.mjs --production && vsce package --no-dependencies --skip-license --out desiide-ai.vsix"
   },
   "dependencies": {
+    "@desiide/protocol": "workspace:*",
     "@vscode/codicons": "0.0.46-24",
     "preact": "^10.29.8",
+    "vscode-jsonrpc": "^9.0.3",
     "zod": "^4.6.5"
   },
   "devDependencies": {

@@ -5,5 +5,10 @@
     "outDir": "../../node_modules/.cache/tsc/orchestrator",
     "tsBuildInfoFile": "../../node_modules/.cache/tsc/orchestrator.tsbuildinfo"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../protocol"
+    }
+  ]
 }
