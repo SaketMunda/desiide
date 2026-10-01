@@ -37,6 +37,10 @@ async function run() {
     `activation took ${api.activationMs} ms (budget ${ACTIVATION_BUDGET_MS} ms)`,
   );
 
+  // COR-1 AC5: activation never spawns the orchestrator; the first request does.
+  results.orchestratorAfterActivation = api.orchestrator.status.state;
+  assert.equal(api.orchestrator.status.state, 'idle', 'orchestrator not spawned during activation');
+
   // `ready` is sent by the webview script, so this proves the bundle loads under the CSP and the
   // bridge round-trips.
   await waitFor(() => api.readyViews.has('panel'), 'panel webview ready');
@@ -59,11 +63,47 @@ async function run() {
   await vscode.commands.executeCommand('desiide.dev.showcase');
   results.showcaseCommand = 'ok';
 
+  const expected = [
+    'desiide.focus',
+    'desiide.showLog',
+    'desiide.restartOrchestrator',
+    'desiide.dev.showcase',
+  ];
   const all = await vscode.commands.getCommands(true);
-  results.commands = ['desiide.focus', 'desiide.showLog', 'desiide.dev.showcase'].filter((c) =>
-    all.includes(c),
+  results.commands = expected.filter((c) => all.includes(c));
+  assert.deepEqual(results.commands, expected, 'all desiide.* commands registered');
+
+  // COR-1: the orchestrator runs on the editor's own runtime (fork + ELECTRON_RUN_AS_NODE).
+  const orch = api.orchestrator;
+  const firstRequest = Date.now();
+  const ping = await orch.request('health.ping', {});
+  results.orchestratorFirstPingMs = Date.now() - firstRequest;
+  assert.equal(ping.ok, true);
+  const firstPid = orch.status.pid;
+  assert.equal(orch.status.state, 'ready');
+  assert.ok(firstPid, 'orchestrator has a pid');
+
+  // COR-1 AC2 in the real host: kill -9 → the supervisor restarts it.
+  const seen = [];
+  const sub = orch.onStatus((s) => seen.push(s.state));
+  process.kill(firstPid, 'SIGKILL');
+  await waitFor(
+    () => orch.status.state === 'ready' && orch.status.pid !== firstPid,
+    'orchestrator restart after kill -9',
   );
-  assert.equal(results.commands.length, 3, 'all desiide.* commands registered');
+  results.orchestratorStatusesAfterKill = [...seen];
+  assert.deepEqual(seen, ['restarting', 'starting', 'ready']);
+  assert.equal((await orch.request('health.ping', {})).ok, true);
+
+  // Manual restart command.
+  const beforeRestart = orch.status.pid;
+  await vscode.commands.executeCommand('desiide.restartOrchestrator');
+  await waitFor(
+    () => orch.status.state === 'ready' && orch.status.pid !== beforeRestart,
+    'manual orchestrator restart',
+  );
+  sub.dispose();
+  results.orchestratorRestartCommand = 'ok';
 
   results.vscodeVersion = vscode.version;
   const out = process.env.DESIIDE_IT_RESULT;

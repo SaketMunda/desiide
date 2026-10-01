@@ -1,7 +1,7 @@
 // Builds the extension host bundle (esbuild), the webview bundle (Vite), and copies static assets.
 import { build } from 'esbuild';
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,10 +36,13 @@ for (const file of ['codicon.css', 'codicon.ttf']) {
   copyFileSync(join(codicons, file), join(dist, 'codicons', file));
 }
 
-// The orchestrator bundle comes from COR-1; ship it when it has been built.
-const orchestrator = join(root, '../../packages/orchestrator/dist/orchestrator.js');
-if (existsSync(orchestrator)) {
-  copyFileSync(orchestrator, join(dist, 'orchestrator.js'));
-} else {
-  console.warn('desiide-ai build: orchestrator bundle not found, skipping (built by COR-1).');
-}
+// The orchestrator (COR-1) ships next to the extension and is forked from dist/ on first use.
+execFileSync(
+  process.execPath,
+  [
+    join(root, '../../packages/orchestrator/scripts/build.mjs'),
+    '--outfile',
+    join(dist, 'orchestrator.js'),
+  ],
+  { stdio: 'inherit' },
+);

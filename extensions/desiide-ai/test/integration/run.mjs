@@ -1,7 +1,7 @@
 // Runs the integration suite in a real VS Code with an isolated profile.
 // Uses VSCODE_PATH (or the standard macOS install) when present, else downloads stable VS Code.
 import { runTests } from '@vscode/test-electron';
-import { existsSync, mkdtempSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +15,9 @@ const vscodeExecutablePath =
 delete process.env.ELECTRON_RUN_AS_NODE;
 
 const profile = mkdtempSync(join(tmpdir(), 'desiide-it-'));
+// The orchestrator needs a workspace folder (initialize requires at least one root).
+const workspace = join(profile, 'workspace');
+mkdirSync(workspace);
 
 try {
   await runTests({
@@ -22,6 +25,7 @@ try {
     extensionDevelopmentPath: join(here, '../..'),
     extensionTestsPath: join(here, 'suite.cjs'),
     launchArgs: [
+      workspace,
       '--disable-extensions',
       '--disable-workspace-trust',
       '--skip-welcome',
