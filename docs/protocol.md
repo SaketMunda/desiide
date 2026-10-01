@@ -7,6 +7,8 @@ JSON-RPC 2.0 over stdio (ADR-003). Every schema lives in [`packages/protocol`](.
 - **Additive-only** after FND-2 (ADR-010). Breaking changes need an ADR and a major bump.
 - **Paths** are workspace-relative POSIX paths. Absolute paths and `..` are rejected.
 - **Secrets** appear only as `secret:<name>` refs. Values travel only in the `secrets.get` result.
+- **Process (COR-1):** the extension forks `dist/orchestrator.js` on the first request, using the editor's own runtime (`ELECTRON_RUN_AS_NODE`). stdout carries only `Content-Length`-framed RPC messages. Logs are pino JSON on stderr (forwarded to the Desiide output channel) and a rotating `orchestrator.log` in the extension's log dir (`--log-dir`). Before `initialize`, every request fails with `NotInitialized`. Bad params fail with `InvalidParams` (-32602) and the zod message. Methods no module has registered yet fail with `NotImplemented`. The orchestrator shuts down when stdin closes or on SIGTERM.
+- **Secrets storage:** `secret:<name>` is looked up as the key `<name>` in the extension's VS Code SecretStorage.
 
 ## Requests: extension → orchestrator
 
