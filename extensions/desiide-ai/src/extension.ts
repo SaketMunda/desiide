@@ -4,6 +4,13 @@ import type { ViewId } from '../shared/messages.ts';
 import { shouldOpenWelcome, WALKTHROUGH_ID, WELCOME_SHOWN_KEY } from './appWelcome.ts';
 import type { CommandHandlers } from './commands.ts';
 import type { Logger } from './log.ts';
+import { OrchestratorClient } from './orchestrator/client.ts';
+import {
+  RESTART_ACTION,
+  SHOW_LOG_ACTION,
+  secretStorageKey,
+  statusNotice,
+} from './orchestrator/notice.ts';
 import { formatStatus, type StatusState } from './status.ts';
 import { DesiideViewProvider, VIEW_TYPES } from './views/DesiideViewProvider.ts';
 
@@ -13,8 +20,12 @@ export interface DesiideApi {
   readonly readyViews: ReadonlySet<ViewId>;
   /** True once the app-only first-run walkthrough has been opened (always false in stock VS Code). */
   readonly welcomeOpened: boolean;
+  /** Spawned lazily on the first request; never during activation. */
+  readonly orchestrator: OrchestratorClient;
   setStatus(state: StatusState): void;
 }
+
+let orchestrator: OrchestratorClient | undefined;
 
 export function activate(context: vscode.ExtensionContext): DesiideApi {
   const start = performance.now();
@@ -44,9 +55,39 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   setStatus({ runningTasks: 0 });
   status.show();
 
+  const client = new OrchestratorClient({
+    modulePath: vscode.Uri.joinPath(context.extensionUri, 'dist', 'orchestrator.js').fsPath,
+    logDir: context.logUri.fsPath,
+    logLevel: devMode ? 'debug' : 'info',
+    workspaceRoots: () =>
+      (vscode.workspace.workspaceFolders ?? [])
+        .filter((folder) => folder.uri.scheme === 'file')
+        .map((folder) => folder.uri.fsPath),
+    client: {
+      name: 'desiide-ai',
+      version: (context.extension.packageJSON as { version?: string }).version ?? '0.0.0',
+    },
+    secrets: async (ref) => (await context.secrets.get(secretStorageKey(ref))) ?? null,
+    log,
+  });
+  orchestrator = client;
+  const restartOrchestrator = (): Promise<void> =>
+    client.restart().catch((err: unknown) => {
+      log.error(`Orchestrator restart failed: ${String(err)}`);
+    });
+  client.onStatus((state) => {
+    const notice = statusNotice(state);
+    if (!notice) return;
+    void vscode.window.showErrorMessage(notice.message, ...notice.actions).then((action) => {
+      if (action === RESTART_ACTION) void restartOrchestrator();
+      else if (action === SHOW_LOG_ACTION) channel.show(true);
+    });
+  });
+
   const commands: CommandHandlers = {
     'desiide.focus': () => vscode.commands.executeCommand(`${VIEW_TYPES.panel}.focus`),
     'desiide.showLog': () => channel.show(true),
+    'desiide.restartOrchestrator': restartOrchestrator,
     'desiide.dev.showcase': () => {
       if (!devMode) {
         log.warn('desiide.dev.showcase is only available in development builds');
@@ -63,6 +104,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   context.subscriptions.push(
     channel,
     status,
+    { dispose: () => void client.dispose() },
     ...(Object.keys(providers) as ViewId[]).map((view) =>
       vscode.window.registerWebviewViewProvider(VIEW_TYPES[view], providers[view]),
     ),
@@ -95,10 +137,14 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     get welcomeOpened() {
       return welcomeOpened;
     },
+    orchestrator: client,
     setStatus,
   };
 }
 
-export function deactivate(): void {
-  // Disposables are released through context.subscriptions.
+/** Returning the promise gives the orchestrator its SIGTERM grace period before the host exits. */
+export function deactivate(): Promise<void> | undefined {
+  const client = orchestrator;
+  orchestrator = undefined;
+  return client?.dispose();
 }

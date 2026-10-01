@@ -8,6 +8,16 @@
   },
   "scripts": {
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "dependencies": {
+    "@desiide/protocol": "workspace:*",
+    "pino": "^10.3.1",
+    "vscode-jsonrpc": "^9.0.3",
+    "zod": "^4.6.5"
   }
 }
