@@ -1,6 +1,6 @@
 # COR-3 · Tool runner
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-2 · **Skills:** ide-orchestration-core
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-2 · **Skills:** ide-orchestration-core
 
 ## Purpose
 Safe, workspace-confined implementations of every tool the agent can call, plus the model-facing tool specs.
