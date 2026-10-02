@@ -203,15 +203,21 @@ export class PromptController implements vscode.Disposable {
     }
   }
 
+  /** @-mention results: open editors for an empty query, else fuzzy-matched workspace files. */
+  async searchFiles(query: string, signal: AbortSignal): Promise<MentionItem[]> {
+    this.ensureWatcher();
+    const editors = query.trim() === '' ? this.openEditorItems() : [];
+    return editors.length > 0 ? editors : this.index.search(query, signal);
+  }
+
   private async searchMentions({ requestId, query }: Msg<'mention.search'>): Promise<void> {
+    // A newer keystroke supersedes the previous search.
     this.search?.abort();
     const search = new AbortController();
     this.search = search;
-    this.ensureWatcher();
     const started = performance.now();
     try {
-      const items = query.trim() === '' ? this.openEditorItems() : [];
-      const found = items.length > 0 ? items : await this.index.search(query, search.signal);
+      const found = await this.searchFiles(query, search.signal);
       if (search.signal.aborted) return;
       this.log.debug(
         `@-search (${query.length} chars) → ${found.length} in ${(performance.now() - started).toFixed(1)} ms`,

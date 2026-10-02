@@ -115,13 +115,13 @@
     "keybindings": [
       {
         "command": "desiide.focusPrompt",
-        "key": "ctrl+alt+l",
-        "mac": "cmd+alt+l"
+        "key": "ctrl+alt+j",
+        "mac": "cmd+alt+j"
       },
       {
         "command": "desiide.addSelectionToPrompt",
-        "key": "ctrl+alt+shift+l",
-        "mac": "cmd+alt+shift+l",
+        "key": "ctrl+alt+shift+j",
+        "mac": "cmd+alt+shift+j",
         "when": "editorTextFocus && editorHasSelection"
       }
     ],

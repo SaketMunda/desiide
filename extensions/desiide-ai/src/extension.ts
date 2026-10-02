@@ -25,7 +25,7 @@ export interface DesiideApi {
   /** Spawned lazily on the first request; never during activation. */
   readonly orchestrator: OrchestratorClient;
   /** Host side of the Prompt Box (UI-2). `fill` lets onboarding (UI-6) prefill a sample task. */
-  readonly prompt: Pick<PromptController, 'fill' | 'focus'>;
+  readonly prompt: Pick<PromptController, 'fill' | 'focus' | 'searchFiles'>;
   setStatus(state: StatusState): void;
 }
 
@@ -107,12 +107,15 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   late.prompt = promptController;
   const focusPanel = () => vscode.commands.executeCommand(`${VIEW_TYPES.panel}.focus`);
 
+  const focusPrompt = async (): Promise<void> => {
+    await focusPanel();
+    promptController.focus();
+  };
+
   const commands: CommandHandlers = {
-    'desiide.focus': focusPanel,
-    'desiide.focusPrompt': async () => {
-      await focusPanel();
-      promptController.focus();
-    },
+    // The app binds Cmd/Ctrl+L to `desiide.focus` (EDT-2), so it lands in the Prompt Box too.
+    'desiide.focus': focusPrompt,
+    'desiide.focusPrompt': focusPrompt,
     'desiide.addSelectionToPrompt': async () => {
       const error = promptController.addActiveSelection();
       if (error) {
