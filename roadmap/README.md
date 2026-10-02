@@ -25,7 +25,7 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [FND-1](modules/FND-1-repo-foundation.md) | Repo foundation | Alpha | S | — | done |
 | [FND-2](modules/FND-2-protocol.md) | Protocol (shared contracts) | Alpha | M | FND-1 | done |
 | [COR-1](modules/COR-1-orchestrator-host.md) | Orchestrator host & RPC | Alpha | M | FND-2 | review |
-| [COR-2](modules/COR-2-task-engine.md) | Task engine & agent loop | Alpha | L | FND-2, COR-1, MOD-1 | todo |
+| [COR-2](modules/COR-2-task-engine.md) | Task engine & agent loop | Alpha | L | FND-2, COR-1, MOD-1 | review |
 | [COR-3](modules/COR-3-tool-runner.md) | Tool runner | Alpha | M | FND-2 | review |
 | [COR-4](modules/COR-4-context-engine.md) | Context engine | Alpha | M | COR-3 | todo |
 | [COR-5](modules/COR-5-workflows.md) | Workflows (single/cascade/critique) | Alpha + Beta | M | COR-2, JEV-2 | todo |

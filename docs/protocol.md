@@ -63,6 +63,29 @@ Every event carries `taskId`, `seq` (monotonic per task, starting at 0), and `ts
 
 Task states: `queued → planning → running ⇄ awaiting_approval → verifying → done | failed | cancelled`.
 
+### Task lifecycle (COR-2)
+
+- At most 2 tasks run at once. The rest stay `queued` in FIFO order.
+- `awaiting_approval` covers both waits on the user: an `approval_required` card (answer with `task.approve` / `task.reject`) and an `edit_proposed` review (answer with `edits.report`). The wall-clock budget is paused while the task waits.
+- A `propose_edit` call never raises `approval_required`. The diff review is its approval. The task waits until every file of the proposal has been reported, possibly over several `edits.report` calls. Each proposal is reported once: reporting it again, or reporting a path that isn't in the proposal, is an error.
+- `task.approve` with `scope: task` turns later **exact-match** calls (same tool + args) from `confirm` into `auto`. A `block` stays a block.
+- A task that fails emits an `error` event, then `state_changed` to `failed`. `reason` matches `TaskSummary.failureReason`:
+
+| `failureReason` | Meaning |
+|---|---|
+| `budget:maxIterations` | Checks were still failing after the last verify→fix attempt. |
+| `budget:maxToolCalls` / `budget:maxTokens` / `budget:wallClockMs` | A budget ran out. |
+| `loop_detected` | The model made the same call (tool + args, key order ignored) 3× in a row. |
+| `model_error:<kind>` | The model stream ended with an error (`error.kind` is the `ModelErrorKind`). |
+| `model_unavailable` | No usable model for the task's role. The `error` message carries the settings hint. |
+| `verification_rejected` / `verification_blocked` | The user rejected a success check, or policy blocked it. |
+| `no_check_command` | `success.testsPass` / `lintClean` was set but the project has no test/lint command. |
+| `ripgrep_missing` | `list_files` / `search` are allowed but no ripgrep binary was found. |
+| `no_workspace` | No folder is open. |
+| `internal_error` | A bug. Details go to the orchestrator log only. |
+
+Reason labels COR-2 adds: `tool_not_allowed` (the model called a tool outside `allowedTools`) and `gate_error` (the gate threw, so the call falls back to `confirm`).
+
 ## Error codes
 
 | Code | Name |
