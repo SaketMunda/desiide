@@ -260,6 +260,9 @@ importers:
 
   packages/orchestrator:
     dependencies:
+      '@desiide/models':
+        specifier: workspace:*
+        version: link:../models
       '@desiide/protocol':
         specifier: workspace:*
         version: link:../protocol

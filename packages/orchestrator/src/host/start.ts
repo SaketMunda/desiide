@@ -5,7 +5,7 @@ import {
   StreamMessageWriter,
 } from 'vscode-jsonrpc/node';
 import { createHost, type Host } from './host.ts';
-import { createLogger } from './logger.ts';
+import { createLogger, type Logger } from './logger.ts';
 import { claimStdout } from './stdio.ts';
 
 declare const __DESIIDE_VERSION__: string | undefined;
@@ -15,7 +15,7 @@ const SERVER_VERSION = typeof __DESIIDE_VERSION__ === 'string' ? __DESIIDE_VERSI
 export interface StartOptions {
   argv: readonly string[];
   /** Where feature modules register their handlers (`host.register(...)`). */
-  configure?: (host: Host) => void;
+  configure?: (host: Host, ctx: { logger: Logger }) => void;
 }
 
 export interface CliArgs {
@@ -56,7 +56,7 @@ export function startOrchestrator({ argv, configure }: StartOptions): Host {
     logger,
     server: { name: 'desiide-orchestrator', version: SERVER_VERSION },
   });
-  configure?.(host);
+  configure?.(host, { logger });
 
   const exit = (reason: string, code: number): void => {
     void host.shutdown(reason).finally(() => {

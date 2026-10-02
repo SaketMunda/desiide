@@ -39,3 +39,16 @@ export type {
   ParseEditOptions,
   ParseEditResult,
 } from './edit-fallback.ts';
+export { createSecretResolver } from './secrets.ts';
+export type { RequestSecret, SecretResolver } from './secrets.ts';
+export { FALLBACK_CAPABILITIES, createModelRegistry } from './registry.ts';
+export type {
+  DiscoveredModel,
+  ModelRegistry,
+  ModelRegistryOptions,
+  ModelTestResult,
+  ProviderContext,
+  ProviderDefinition,
+  ProviderDefinitions,
+} from './registry.ts';
+export { BUILTIN_PROVIDERS } from './providers.ts';
