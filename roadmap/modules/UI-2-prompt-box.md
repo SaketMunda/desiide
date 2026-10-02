@@ -1,6 +1,6 @@
 # UI-2 · Prompt Box
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, FND-2 (COR-1 for live submit; mock until then) · **Skills:** ide-editor-shell
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, FND-2 (COR-1 for live submit; mock until then) · **Skills:** ide-editor-shell
 
 ## Purpose
 The composer at the bottom of the Desiide panel where every task starts. It should feel as fast and precise as Cursor's composer, while showing the user what context and routing will be used *before* they send.

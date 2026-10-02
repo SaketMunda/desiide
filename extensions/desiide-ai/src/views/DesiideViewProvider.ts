@@ -18,6 +18,7 @@ export interface ViewHost {
 
 export class DesiideViewProvider implements vscode.WebviewViewProvider {
   private webviewView: vscode.WebviewView | undefined;
+  private ready = false;
   readonly router: MessageRouter;
 
   constructor(
@@ -28,6 +29,7 @@ export class DesiideViewProvider implements vscode.WebviewViewProvider {
   ) {
     this.router = createMessageRouter(view, log);
     this.router.on('ready', () => {
+      this.ready = true;
       this.post({
         type: 'init',
         view: this.view,
@@ -42,6 +44,7 @@ export class DesiideViewProvider implements vscode.WebviewViewProvider {
 
   resolveWebviewView(webviewView: vscode.WebviewView): void {
     this.webviewView = webviewView;
+    this.ready = false;
     const dist = vscode.Uri.joinPath(this.extensionUri, 'dist');
     const webview = webviewView.webview;
     webview.options = {
@@ -65,7 +68,13 @@ export class DesiideViewProvider implements vscode.WebviewViewProvider {
     webview.onDidReceiveMessage((raw: unknown) => void this.router.handle(raw));
     webviewView.onDidDispose(() => {
       this.webviewView = undefined;
+      this.ready = false;
     });
+  }
+
+  /** True once the current webview's script has loaded and said `ready`; messages before that are lost. */
+  get isReady(): boolean {
+    return this.ready;
   }
 
   post(message: ExtensionToWebview): void {

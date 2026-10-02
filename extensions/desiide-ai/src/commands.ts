@@ -1,6 +1,9 @@
 /** Every `desiide.*` command. `package.json` must contribute exactly these (checked by a test). */
 export const COMMAND_IDS = [
   'desiide.focus',
+  'desiide.focusPrompt',
+  'desiide.addSelectionToPrompt',
+  'desiide.setup',
   'desiide.showLog',
   'desiide.restartOrchestrator',
   'desiide.dev.showcase',

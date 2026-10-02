@@ -11,6 +11,8 @@ import {
   secretStorageKey,
   statusNotice,
 } from './orchestrator/notice.ts';
+import { PromptController } from './prompt/controller.ts';
+import { FallbackTaskClient, MockTaskClient, orchestratorTaskClient } from './prompt/taskClient.ts';
 import { formatStatus, type StatusState } from './status.ts';
 import { DesiideViewProvider, VIEW_TYPES } from './views/DesiideViewProvider.ts';
 
@@ -22,6 +24,8 @@ export interface DesiideApi {
   readonly welcomeOpened: boolean;
   /** Spawned lazily on the first request; never during activation. */
   readonly orchestrator: OrchestratorClient;
+  /** Host side of the Prompt Box (UI-2). `fill` lets onboarding (UI-6) prefill a sample task. */
+  readonly prompt: Pick<PromptController, 'fill' | 'focus'>;
   setStatus(state: StatusState): void;
 }
 
@@ -34,10 +38,15 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   const devMode = context.extensionMode !== vscode.ExtensionMode.Production;
   const readyViews = new Set<ViewId>();
 
+  // Views are constructed before the controller that listens to them; it is attached below.
+  const late: { prompt?: PromptController } = {};
   const host = {
     devMode,
     showcase: false,
-    onReady: (view: ViewId) => readyViews.add(view),
+    onReady: (view: ViewId) => {
+      readyViews.add(view);
+      if (view === 'panel') late.prompt?.onReady();
+    },
   };
   const providers = {
     panel: new DesiideViewProvider('panel', context.extensionUri, host, log),
@@ -84,8 +93,40 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     });
   });
 
+  // The engine behind `task.create` (COR-2) may not be registered yet; until it is, sends are
+  // echoed by the mock (UI-2 mock strategy).
+  const tasks = new FallbackTaskClient(orchestratorTaskClient(client), new MockTaskClient(), () =>
+    late.prompt?.onFallbackToMock(),
+  );
+  const promptController = new PromptController(
+    providers.panel,
+    tasks,
+    context.workspaceState,
+    log,
+  );
+  late.prompt = promptController;
+  const focusPanel = () => vscode.commands.executeCommand(`${VIEW_TYPES.panel}.focus`);
+
   const commands: CommandHandlers = {
-    'desiide.focus': () => vscode.commands.executeCommand(`${VIEW_TYPES.panel}.focus`),
+    'desiide.focus': focusPanel,
+    'desiide.focusPrompt': async () => {
+      await focusPanel();
+      promptController.focus();
+    },
+    'desiide.addSelectionToPrompt': async () => {
+      const error = promptController.addActiveSelection();
+      if (error) {
+        void vscode.window.showInformationMessage(error);
+        return;
+      }
+      await focusPanel();
+    },
+    'desiide.setup': () =>
+      vscode.commands.executeCommand(
+        'workbench.action.openWalkthrough',
+        `${context.extension.id}#${WALKTHROUGH_ID}`,
+        false,
+      ),
     'desiide.showLog': () => channel.show(true),
     'desiide.restartOrchestrator': restartOrchestrator,
     'desiide.dev.showcase': () => {
@@ -104,6 +145,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   context.subscriptions.push(
     channel,
     status,
+    promptController,
     { dispose: () => void client.dispose() },
     ...(Object.keys(providers) as ViewId[]).map((view) =>
       vscode.window.registerWebviewViewProvider(VIEW_TYPES[view], providers[view]),
@@ -138,6 +180,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
       return welcomeOpened;
     },
     orchestrator: client,
+    prompt: promptController,
     setStatus,
   };
 }
