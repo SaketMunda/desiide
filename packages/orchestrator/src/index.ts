@@ -4,3 +4,6 @@ export type { Handler, HandlerContext, Host, HostOptions, Session } from './host
 export { createLogger } from './host/logger.ts';
 export type { Logger } from './host/logger.ts';
 export * from './tools/index.ts';
+export { registerConfigUpdate } from './config/handler.ts';
+export type { ConfigListener } from './config/handler.ts';
+export { registerModelHandlers } from './models/handlers.ts';

@@ -16,6 +16,7 @@
     "esbuild": "^0.28.2"
   },
   "dependencies": {
+    "@desiide/models": "workspace:*",
     "@desiide/protocol": "workspace:*",
     "@vscode/ripgrep": "^1.18.0",
     "pino": "^10.3.1",

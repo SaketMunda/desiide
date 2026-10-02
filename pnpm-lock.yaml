@@ -249,10 +249,20 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
-  packages/models: {}
+  packages/models:
+    dependencies:
+      '@desiide/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
 
   packages/orchestrator:
     dependencies:
+      '@desiide/models':
+        specifier: workspace:*
+        version: link:../models
       '@desiide/protocol':
         specifier: workspace:*
         version: link:../protocol

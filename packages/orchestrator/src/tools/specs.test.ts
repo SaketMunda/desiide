@@ -1,3 +1,5 @@
+import { collectTurn, type ToolCallRequest } from '@desiide/models';
+import { createFakeModelAdapter } from '@desiide/models/testing';
 import { ToolName } from '@desiide/protocol';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -9,31 +11,42 @@ import type { ToolSpec } from './types.ts';
 const ajv = new Ajv2020({ strict: true, allErrors: true });
 
 /**
- * Stand-in for a provider: it only sees the specs as wire JSON, refuses calls whose arguments
- * don't match a spec (like strict tool-use modes), and returns arguments as a JSON string.
- * MOD-1's FakeModelAdapter replaces this once it lands.
+ * Plays scripted tool calls through MOD-1's FakeModelAdapter, the way COR-2 will drive a real
+ * model: the specs go out as `ChatRequest.tools` (round-tripped through wire JSON), and each call
+ * is refused if its args don't match a declared spec, like strict tool-use modes.
  */
-class FakeModel {
-  private readonly specs: Map<string, ToolSpec>;
-  constructor(
-    wireSpecs: string,
-    private readonly script: { name: string; args: unknown }[],
-  ) {
-    const parsed = JSON.parse(wireSpecs) as ToolSpec[];
-    this.specs = new Map(parsed.map((s) => [s.name, s]));
-  }
-  *turns(): Generator<{ id: string; name: string; arguments: string }> {
-    let i = 0;
-    for (const step of this.script) {
-      const spec = this.specs.get(step.name);
-      if (!spec) throw new Error(`model called undeclared tool ${step.name}`);
-      const validate = ajv.compile(spec.inputSchema);
-      if (!validate(step.args)) {
-        throw new Error(`${step.name} args violate spec: ${ajv.errorsText(validate.errors)}`);
-      }
-      yield { id: `call_${i++}`, name: step.name, arguments: JSON.stringify(step.args) };
+async function playScript(
+  specs: ToolSpec[],
+  script: { name: string; args: unknown }[],
+): Promise<ToolCallRequest[]> {
+  const model = createFakeModelAdapter({
+    turns: [
+      {
+        toolCalls: script.map((step, i) => ({
+          id: `call_${i}`,
+          name: step.name,
+          args: JSON.stringify(step.args),
+        })),
+      },
+    ],
+  });
+  const tools = JSON.parse(JSON.stringify(specs)) as ToolSpec[];
+  const turn = await collectTurn(
+    model.chat(
+      { messages: [{ role: 'user', content: 'go' }], tools },
+      new AbortController().signal,
+    ),
+  );
+  const declared = new Map((model.calls[0]?.tools ?? []).map((s) => [s.name, s]));
+  for (const call of turn.toolCalls) {
+    const spec = declared.get(call.name);
+    if (!spec) throw new Error(`model called undeclared tool ${call.name}`);
+    const validate = ajv.compile(spec.inputSchema);
+    if (!validate(JSON.parse(call.args))) {
+      throw new Error(`${call.name} args violate spec: ${ajv.errorsText(validate.errors)}`);
     }
   }
+  return turn.toolCalls;
 }
 
 // One valid and one invalid argument object per tool. Spec (ajv) and argsSchema (zod) must agree.
@@ -140,8 +153,7 @@ describe('round-trip through a fake model', () => {
   });
 
   it('every tool: spec → model → JSON args → executeToolCall succeeds', async () => {
-    const wire = JSON.stringify(toolSpecs(ToolName.options));
-    const model = new FakeModel(wire, [
+    const calls = await playScript(toolSpecs(ToolName.options), [
       { name: 'list_files', args: { depth: 2 } },
       { name: 'read_file', args: { path: 'src/a.ts', startLine: 1 } },
       { name: 'search', args: { query: 'const a' } },
@@ -155,9 +167,9 @@ describe('round-trip through a fake model', () => {
       { name: 'lint', args: {} },
     ]);
     const seen: string[] = [];
-    for (const call of model.turns()) {
+    for (const call of calls) {
       const exec = await executeToolCall(
-        { id: call.id, tool: call.name, args: JSON.parse(call.arguments) as unknown },
+        { id: call.id, tool: call.name, args: JSON.parse(call.args) as unknown },
         tw.ctx,
         new AbortController().signal,
       );
@@ -168,10 +180,9 @@ describe('round-trip through a fake model', () => {
     expect(seen.sort()).toEqual([...ToolName.options].sort());
   });
 
-  it('the fake model refuses args its spec forbids, before anything runs', () => {
-    const model = new FakeModel(JSON.stringify(toolSpecs(['git_read'])), [
-      { name: 'git_read', args: { command: 'push' } },
-    ]);
-    expect(() => [...model.turns()]).toThrow(/violate spec/);
+  it('the fake model refuses args its spec forbids, before anything runs', async () => {
+    await expect(
+      playScript(toolSpecs(['git_read']), [{ name: 'git_read', args: { command: 'push' } }]),
+    ).rejects.toThrow(/violate spec/);
   });
 });
