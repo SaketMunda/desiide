@@ -23,3 +23,19 @@ export type {
   ModelLogger,
   RetryPolicy,
 } from './http.ts';
+export { collectTurn } from './stream.ts';
+export type { CollectedTurn } from './stream.ts';
+export { complete } from './complete.ts';
+export {
+  EDIT_FORMAT_PROMPT,
+  buildEditPrompt,
+  edit,
+  editViaChat,
+  parseEditBlocks,
+} from './edit-fallback.ts';
+export type {
+  EditBlockError,
+  EditBlockErrorCode,
+  ParseEditOptions,
+  ParseEditResult,
+} from './edit-fallback.ts';
