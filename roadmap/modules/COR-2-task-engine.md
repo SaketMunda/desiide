@@ -1,6 +1,6 @@
 # COR-2 · Task engine & agent loop
 
-**Status:** todo · **Milestone:** Alpha · **Size:** L · **Depends on:** FND-2, COR-1, MOD-1 (interface + FakeModelAdapter) · **Skills:** ide-orchestration-core
+**Status:** in-progress · **Milestone:** Alpha · **Size:** L · **Depends on:** FND-2, COR-1, MOD-1 (interface + FakeModelAdapter) · **Skills:** ide-orchestration-core
 
 ## Purpose
 The heart of the product: take a `Task` and run model turns → tool calls → gate → approvals → verification until done, within hard budgets.
