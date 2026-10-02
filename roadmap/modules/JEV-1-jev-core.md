@@ -1,6 +1,6 @@
 # JEV-1 · Jev core (packs, rules engine, state builders)
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-2 · **Skills:** ide-jev-decisions
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-2 · **Skills:** ide-jev-decisions
 
 ## Purpose
 Everything about Jev decisions that doesn't need the TypeSafe API. Alpha ships fully functional on the rules engine, and JEV-3 swaps in the real Jev with no other changes.

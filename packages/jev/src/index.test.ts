@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { PROTOCOL_VERSION } from '@desiide/protocol';
-import { JEV_PROTOCOL_VERSION, PACKAGE_NAME } from './index.ts';
+import { PACKAGE_NAME, createRuleJevEngine, listPacks } from './index.ts';
 
 describe('@desiide/jev', () => {
-  it('exposes its package name', () => {
+  it('exposes its package name and public API', () => {
     expect(PACKAGE_NAME).toBe('@desiide/jev');
-  });
-
-  it('imports @desiide/protocol', () => {
-    expect(JEV_PROTOCOL_VERSION).toBe(PROTOCOL_VERSION);
+    expect(createRuleJevEngine().kind).toBe('rules');
+    expect(listPacks()).toHaveLength(3);
   });
 });

@@ -1,6 +1,15 @@
-import { PROTOCOL_VERSION } from '@desiide/protocol';
-
 export const PACKAGE_NAME = '@desiide/jev';
-
-// Proves cross-package imports resolve through workspace `exports` (FND-1 AC 4).
-export const JEV_PROTOCOL_VERSION: string = PROTOCOL_VERSION;
+export * from './types.ts';
+export {
+  allowedWorkflowOptions,
+  costRoutePack,
+  getPack,
+  getQuestion,
+  listPacks,
+  parsePackState,
+  resolveChoiceOptions,
+  riskGatePack,
+  workflowSelectPack,
+} from './packs/registry.ts';
+export type { PackDefinition, QuestionTemplate } from './packs/registry.ts';
+export { createRuleJevEngine } from './rules/engine.ts';
