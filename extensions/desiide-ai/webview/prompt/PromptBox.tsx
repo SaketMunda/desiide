@@ -291,6 +291,8 @@ export function PromptBox() {
 
   const tokens = estimateTokens(text, chips);
   const overLimit = config?.contextLimitTokens !== undefined && tokens > config.contextLimitTokens;
+  // Folders and diffs have no size until the orchestrator reads them.
+  const unsized = chips.some((c) => c.chars === undefined);
   const workflowOptions: SegmentedOption<WorkflowChoice>[] = [
     { value: 'auto', label: WORKFLOW_LABELS.auto },
     ...(config?.workflows ?? [])
@@ -479,11 +481,12 @@ export function PromptBox() {
             class={`desiide-prompt__tokens${overLimit ? ' is-over' : ''}`}
             title={
               config?.contextLimitTokens === undefined
-                ? 'Estimated tokens of the prompt and attached context (chars ÷ 4).'
-                : `Estimated tokens (chars ÷ 4). The smallest configured model fits ${formatTokens(config.contextLimitTokens)}.`
+                ? `Estimated tokens of the prompt and attached context (chars ÷ 4).${unsized ? ' Folders and diffs are not counted.' : ''}`
+                : `Estimated tokens (chars ÷ 4). The smallest configured model fits ${formatTokens(config.contextLimitTokens)}.${unsized ? ' Folders and diffs are not counted.' : ''}`
             }
           >
-            {overLimit && <Codicon name="warning" />}~{formatTokens(tokens)} tokens
+            {overLimit && <Codicon name="warning" />}~{formatTokens(tokens)}
+            {unsized ? '+' : ''} tokens
           </span>
           {config?.mock && <Badge tone="ai">mock</Badge>}
           <span class="desiide-prompt__spacer" />
