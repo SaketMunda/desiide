@@ -24,6 +24,9 @@
     "onView:desiide.panel",
     "onView:desiide.decisions",
     "onCommand:desiide.focus",
+    "onCommand:desiide.focusPrompt",
+    "onCommand:desiide.addSelectionToPrompt",
+    "onCommand:desiide.setup",
     "onCommand:desiide.showLog",
     "onCommand:desiide.restartOrchestrator",
     "onCommand:desiide.dev.showcase"
@@ -59,6 +62,22 @@
         "category": "Desiide"
       },
       {
+        "command": "desiide.focusPrompt",
+        "title": "Focus Prompt Box",
+        "category": "Desiide",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "desiide.addSelectionToPrompt",
+        "title": "Add Selection to Prompt",
+        "category": "Desiide"
+      },
+      {
+        "command": "desiide.setup",
+        "title": "Set Up Models",
+        "category": "Desiide"
+      },
+      {
         "command": "desiide.showLog",
         "title": "Show Log",
         "category": "Desiide"
@@ -79,8 +98,52 @@
         {
           "command": "desiide.dev.showcase",
           "when": "desiide.devMode"
+        },
+        {
+          "command": "desiide.addSelectionToPrompt",
+          "when": "editorHasSelection"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "desiide.addSelectionToPrompt",
+          "when": "editorHasSelection",
+          "group": "9_desiide@1"
         }
       ]
+    },
+    "keybindings": [
+      {
+        "command": "desiide.focusPrompt",
+        "key": "ctrl+alt+j",
+        "mac": "cmd+alt+j"
+      },
+      {
+        "command": "desiide.addSelectionToPrompt",
+        "key": "ctrl+alt+shift+j",
+        "mac": "cmd+alt+shift+j",
+        "when": "editorTextFocus && editorHasSelection"
+      }
+    ],
+    "configuration": {
+      "title": "Desiide",
+      "properties": {
+        "desiide.defaultPreference": {
+          "type": "string",
+          "enum": [
+            "cheap",
+            "balance",
+            "quality"
+          ],
+          "enumDescriptions": [
+            "Prefer cheaper/local models.",
+            "Balance cost and quality.",
+            "Prefer the strongest models."
+          ],
+          "default": "balance",
+          "description": "Default cost preference in the Prompt Box. You can change it per task."
+        }
+      }
     },
     "themes": [
       {
@@ -136,7 +199,8 @@
     "test:integration": "node scripts/build.mjs && node test/integration/run.mjs",
     "test:app": "node test/app/run.mjs",
     "screenshots": "node scripts/build.mjs && node scripts/screenshots.mjs",
-    "package": "node scripts/build.mjs --production && vsce package --no-dependencies --skip-license --out desiide-ai.vsix"
+    "package": "node scripts/build.mjs --production && vsce package --no-dependencies --skip-license --out desiide-ai.vsix",
+    "test:webview": "node scripts/build.mjs && node test/webview/prompt.mjs"
   },
   "dependencies": {
     "@desiide/protocol": "workspace:*",

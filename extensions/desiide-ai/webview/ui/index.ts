@@ -10,3 +10,4 @@ export * from './metrics.ts';
 export * from './ProbabilityBar.tsx';
 export * from './ScoreDots.tsx';
 export * from './Spinner.tsx';
+export * from './Segmented.tsx';

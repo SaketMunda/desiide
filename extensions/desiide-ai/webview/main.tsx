@@ -2,6 +2,7 @@ import { render } from 'preact';
 import { ViewId } from '../shared/messages.ts';
 import { post } from './bridge.ts';
 import './ui/kit.css';
+import './prompt/prompt.css';
 import { App } from './views/App.tsx';
 
 const root = document.getElementById('root');

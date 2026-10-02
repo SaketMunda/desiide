@@ -4,6 +4,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Logger } from '../log.ts';
+import type { TaskEvent } from '@desiide/protocol';
+import { ActiveTasks } from '../prompt/activeTasks.ts';
+import { buildTaskCreateParams } from '../prompt/payload.ts';
+import {
+  FallbackTaskClient,
+  MockTaskClient,
+  orchestratorTaskClient,
+} from '../prompt/taskClient.ts';
 import { OrchestratorClient, type OrchestratorStatus } from './client.ts';
 
 // Spawns the real bundled orchestrator (as the extension does), so it needs a build first.
@@ -83,6 +91,49 @@ describe('OrchestratorClient with the bundled orchestrator process', () => {
       expect(readFileSync(join(logDir, 'orchestrator.log'), 'utf8')).toContain('SIGTERM');
       // Cold start budget is 500 ms (STANDARDS); allow slack for loaded CI machines.
       expect(coldStartMs).toBeLessThan(2_000);
+    } finally {
+      await client.dispose();
+    }
+  }, 30_000);
+
+  it('Prompt Box send → Stop against the real orchestrator (UI-2 AC5, mock until COR-2)', async () => {
+    const client = new OrchestratorClient({
+      modulePath: bundle,
+      logDir: join(dir, 'logs-prompt'),
+      workspaceRoots: () => [dir],
+      client: { name: 'desiide-ai-test', version: '0.0.0' },
+      secrets: () => Promise.resolve(null),
+      log: silent,
+    });
+    const onFallback = vi.fn();
+    const tasks = new FallbackTaskClient(
+      orchestratorTaskClient(client),
+      new MockTaskClient(),
+      onFallback,
+    );
+    const active = new ActiveTasks();
+    const events: TaskEvent[] = [];
+    tasks.onEvent((e) => {
+      events.push(e);
+      active.apply(e);
+    });
+    try {
+      const built = buildTaskCreateParams({
+        instruction: 'Fix the parser',
+        chips: [],
+        preference: 'balance',
+        workflow: 'auto',
+        openEditors: [],
+      });
+      if (!built.ok) throw new Error(built.message);
+      const task = await tasks.create(built.params);
+      active.add(task.id, task.state);
+      // When COR-2 registers task.create this goes through the real engine instead.
+      expect(onFallback).toHaveBeenCalledTimes(1);
+      await vi.waitFor(() => expect(active.list()).toEqual([{ id: task.id, state: 'running' }]));
+      expect(await tasks.cancel(task.id)).toBe(true);
+      expect(active.list()).toEqual([]);
+      expect(events.at(-1)).toMatchObject({ type: 'state_changed', to: 'cancelled' });
     } finally {
       await client.dispose();
     }

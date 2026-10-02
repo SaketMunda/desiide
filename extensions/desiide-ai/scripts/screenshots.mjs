@@ -143,8 +143,9 @@ const browser = await chromium.launch();
 try {
   for (const theme of themes) {
     const colors = { ...defaults[theme.kind], ...themeColors(theme.file, theme.dir) };
-    for (const [view, showcase] of [
+    for (const [view, showcase, name = view] of [
       ['panel', true],
+      ['panel', false, 'prompt'],
       ['decisions', false],
     ]) {
       const page = await browser.newPage({
@@ -186,9 +187,11 @@ try {
         { view, showcase },
       );
       await page.goto(`${origin}/index.html`);
-      await page.waitForSelector(showcase ? '.desiide-card' : '.desiide-empty');
+      await page.waitForSelector(
+        showcase ? '.desiide-card' : view === 'panel' ? '.desiide-prompt' : '.desiide-empty',
+      );
       await page.evaluate(() => document.fonts.ready);
-      const target = join(out, `${theme.name}-${view}.png`);
+      const target = join(out, `${theme.name}-${name}.png`);
       await page.screenshot({ path: target, fullPage: true });
       console.log(`saved ${target}`);
       await page.close();
