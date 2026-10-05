@@ -67,7 +67,11 @@ export interface OrchestratorProcess {
   once(event: 'error', listener: (err: Error) => void): unknown;
 }
 
-export type SpawnOrchestrator = (modulePath: string, args: string[]) => OrchestratorProcess;
+export type SpawnOrchestrator = (
+  modulePath: string,
+  args: string[],
+  env?: Record<string, string>,
+) => OrchestratorProcess;
 
 /** Resolves `secret:<name>` refs. Returns `null` when the secret isn't set. */
 export type SecretResolver = (ref: string) => Promise<string | null>;
@@ -87,6 +91,8 @@ export interface OrchestratorClientOptions {
   secrets: SecretResolver;
   log: Logger;
   spawn?: SpawnOrchestrator;
+  /** Extra environment for the orchestrator process, e.g. `DESIIDE_RG_PATH`. */
+  env?: Record<string, string>;
   restartPolicy?: RestartPolicyOptions;
   initTimeoutMs?: number;
   /** Grace period between SIGTERM and SIGKILL when stopping. */
@@ -98,10 +104,10 @@ export interface OrchestratorClientOptions {
  * `fork` runs the bundle on the editor's own runtime (`process.execPath` with
  * `ELECTRON_RUN_AS_NODE`), so users don't need a system Node.
  */
-export const forkOrchestrator: SpawnOrchestrator = (modulePath, args) =>
+export const forkOrchestrator: SpawnOrchestrator = (modulePath, args, env = {}) =>
   fork(modulePath, args, {
     execPath: process.execPath,
-    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+    env: { ...process.env, ...env, ELECTRON_RUN_AS_NODE: '1' },
     stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
   });
 
@@ -258,7 +264,7 @@ export class OrchestratorClient {
 
     let child: OrchestratorProcess;
     try {
-      child = this.spawnProcess(this.opts.modulePath, args);
+      child = this.spawnProcess(this.opts.modulePath, args, this.opts.env);
     } catch (err) {
       throw this.startFailed(`Could not start the Desiide orchestrator: ${String(err)}`);
     }

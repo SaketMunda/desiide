@@ -2,6 +2,7 @@ export const PACKAGE_NAME = '@desiide/jev';
 export * from './types.ts';
 export {
   allowedWorkflowOptions,
+  isLocalModel,
   costRoutePack,
   getPack,
   getQuestion,

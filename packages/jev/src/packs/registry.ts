@@ -142,13 +142,15 @@ export function getQuestion(pack: string, id: string, type: QuestionType): Quest
   return question;
 }
 
-/**
- * Workflow options whose models are configured. A `free` cost tier counts as local
- * (Ollama and other self-hosted models); any paid tier counts as cloud.
- */
+/** Local or cloud. States from before `locality` existed fall back to `free` cost tier = local. */
+export function isLocalModel(model: WorkflowSelectState['availableModels'][number]): boolean {
+  return model.locality ? model.locality === 'local' : model.costTier === 'free';
+}
+
+/** Workflow options whose models are configured. */
 export function allowedWorkflowOptions(state: WorkflowSelectState): WorkflowOption[] {
-  const hasLocal = state.availableModels.some((m) => m.costTier === 'free');
-  const hasCloud = state.availableModels.some((m) => m.costTier !== 'free');
+  const hasLocal = state.availableModels.some(isLocalModel);
+  const hasCloud = state.availableModels.some((m) => !isLocalModel(m));
   return WORKFLOW_OPTIONS.filter((option) => {
     switch (option) {
       case 'local-single':

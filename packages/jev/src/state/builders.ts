@@ -124,6 +124,7 @@ export function buildWorkflowSelectState(
         contextTokens: m.contextTokens,
         latencyMs: m.latencyMs,
         costTier: m.costTier,
+        ...(m.locality ? { locality: m.locality } : {}),
       })),
     },
     'workflow_select@1',

@@ -5,8 +5,8 @@
   "icon": "media/icon.png",
   "version": "0.0.1",
   "private": true,
-  "publisher": "desiide-dev",
-  "license": "UNLICENSED",
+  "publisher": "desiide",
+  "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/SaketMunda/desiide.git"
@@ -199,7 +199,7 @@
     "test:integration": "node scripts/build.mjs && node test/integration/run.mjs",
     "test:app": "node test/app/run.mjs",
     "screenshots": "node scripts/build.mjs && node scripts/screenshots.mjs",
-    "package": "node scripts/build.mjs --production && vsce package --no-dependencies --skip-license --out desiide-ai.vsix",
+    "package": "node scripts/build.mjs --production && vsce package --no-dependencies --out desiide-ai.vsix",
     "test:webview": "node scripts/build.mjs && node test/webview/prompt.mjs"
   },
   "dependencies": {

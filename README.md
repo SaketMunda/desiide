@@ -132,4 +132,4 @@ Work is organized into **modules**, each with a brief in [`roadmap/modules/`](ro
 
 ## License
 
-To be decided before Alpha (see open decision #2 in [DECISIONS.md](roadmap/DECISIONS.md)). Upstream VS Code / VSCodium code remains under its MIT license.
+Desiide's own code is dual licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option (ADR-013). Upstream VS Code / VSCodium code stays under its MIT license.

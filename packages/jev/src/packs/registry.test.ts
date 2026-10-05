@@ -10,6 +10,7 @@ import { createRuleJevEngine } from '../rules/engine.ts';
 import { JevRequestError } from '../types.ts';
 import {
   allowedWorkflowOptions,
+  isLocalModel,
   getPack,
   getQuestion,
   listPacks,
@@ -97,6 +98,32 @@ describe('workflow options', () => {
       'cloud-with-critique',
     ]);
     expect(allowedWorkflowOptions(withModels([]))).toEqual([]);
+  });
+
+  it('uses locality over cost tier: a free cloud model is cloud, a paid local one is local', () => {
+    const state: WorkflowSelectState = {
+      ...withModels([]),
+      availableModels: [
+        {
+          id: 'free-cloud',
+          contextTokens: 8000,
+          latencyMs: 100,
+          costTier: 'free',
+          locality: 'cloud',
+        },
+      ],
+    };
+    expect(allowedWorkflowOptions(state)).toEqual(['cloud-single', 'cloud-with-critique']);
+    expect(
+      isLocalModel({
+        id: 'm',
+        contextTokens: 1,
+        latencyMs: 1,
+        costTier: 'high',
+        locality: 'local',
+      }),
+    ).toBe(true);
+    expect(isLocalModel({ id: 'm', contextTokens: 1, latencyMs: 1, costTier: 'free' })).toBe(true);
   });
 
   it('validates requested options against the question', () => {
