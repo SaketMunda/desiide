@@ -185,7 +185,7 @@ const GIT_OUTPUT_CAP_BYTES = 64 * 1024;
 
 // Repo config can name programs git runs (fsmonitor, pager, external diff, textconv); a read-only
 // tool must not execute them.
-const SAFE_GIT = [
+export const SAFE_GIT = [
   '--no-pager',
   '-c',
   'core.fsmonitor=false',

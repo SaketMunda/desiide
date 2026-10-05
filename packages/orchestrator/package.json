@@ -17,6 +17,7 @@
     "esbuild": "^0.28.2"
   },
   "dependencies": {
+    "@desiide/jev": "workspace:*",
     "@desiide/models": "workspace:*",
     "@desiide/protocol": "workspace:*",
     "@vscode/ripgrep": "^1.18.0",

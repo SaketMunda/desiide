@@ -40,3 +40,33 @@ export { DEFAULT_PATH_ALLOWLIST, createPathRedactor } from './state/redact.ts';
 export type { PathRedactor, PathRedactorOptions } from './state/redact.ts';
 export { actionFromToolCall } from './state/toolCall.ts';
 export type { ToolCallAction, ToolCallActionOptions } from './state/toolCall.ts';
+export { createPolicyGate, evaluateRiskState, stateHash } from './policy/gate.ts';
+export type {
+  GatingMode,
+  PolicyDecision,
+  PolicyGate,
+  PolicyGateOptions,
+  PolicySettings,
+  ProjectPolicy,
+  RiskContext,
+} from './policy/gate.ts';
+export { assessCommand } from './policy/commands.ts';
+export type { CommandAssessment, CommandContext } from './policy/commands.ts';
+export {
+  DEFAULT_SENSITIVE_GLOBS,
+  createSensitivity,
+  globToRegExp,
+  pathScope,
+} from './policy/paths.ts';
+export type { PathScope, Sensitivity } from './policy/paths.ts';
+export { DEFAULT_THRESHOLDS, resolveThresholds } from './policy/thresholds.ts';
+export type { ResolvedThresholds, Thresholds } from './policy/thresholds.ts';
+export { decideWorkflow } from './policy/workflow.ts';
+export type {
+  WorkflowDecision,
+  WorkflowPolicyInput,
+  WorkflowPolicyOptions,
+} from './policy/workflow.ts';
+export { REASON_TEXT, describeReason } from './policy/reasons.ts';
+export { analyzeCommand } from './policy/shell.ts';
+export type { CommandAnalysis, SimpleCommand } from './policy/shell.ts';
