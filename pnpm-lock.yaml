@@ -263,6 +263,9 @@ importers:
 
   packages/orchestrator:
     dependencies:
+      '@desiide/jev':
+        specifier: workspace:*
+        version: link:../jev
       '@desiide/models':
         specifier: workspace:*
         version: link:../models

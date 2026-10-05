@@ -48,6 +48,13 @@ Workflow/cost:
 - Cascade escalates when `escalation_need ≥ 3`, verification fails, or the draft doesn't parse.
 - A policy override of Jev's choice is logged with reason `policy_override:<rule>`.
 
+Implementation (`packages/jev/src/policy/`, JEV-2):
+- `gate.ts`: `evaluateRiskState` (the order above) and `createPolicyGate`, which maps a tool call to a risk_gate state.
+- `commands.ts` + `shell.ts`: the deny-list runs on parsed commands (quotes, `sudo`/`env` prefixes, `bash -c`, `eval`, `xargs`, `find -exec`, `$(…)`), with a raw-regex backstop.
+- **Floors** force at least `confirm` whatever Jev says: sensitive or outside-workspace paths, multi-file edits, destructive/irreversible/migration commands, inline code (`python -c`, `| sh`), `sudo`, substitutions, background jobs, unparsable commands. Jev can only make a decision stricter.
+- Plain reads (`read_file`, `list_files`, `search`, `git_read`) of non-sensitive workspace paths, read-only commands, and the configured test/lint commands are **auto** (ADR-019).
+- `paths.ts`: `createSensitivity(globs)` = `DEFAULT_SENSITIVE_GLOBS` + `ProjectConfig.sensitiveGlobs`. COR-4 should use it for `FileMeta.sensitive`.
+
 Thresholds live in `packages/jev/src/policy/thresholds.ts` as one exported object. Users can make them stricter via `desiide.gating.*` but never looser than the deny-list.
 
 ## Logging

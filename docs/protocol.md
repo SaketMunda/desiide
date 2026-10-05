@@ -86,6 +86,11 @@ Task states: `queued → planning → running ⇄ awaiting_approval → verifyin
 
 Reason labels COR-2 adds: `tool_not_allowed` (the model called a tool outside `allowedTools`) and `gate_error` (the gate threw, so the call falls back to `confirm`).
 
+Reason labels JEV-2 adds (human text: `describeReason()` in `@desiide/jev`):
+- `deny_list:<rule>`. Rules: `rm_rf`, `mkfs`, `dd_device`, `fork_bomb`, `curl_pipe_sh`, `force_push_protected`, `chmod_system`, `chown_system`, `chgrp_system`, `find_delete_system`, `system_write`, `shutdown`.
+- Floors that force at least `confirm`: `outside_workspace`, `command_substitution`, `privileged`, `background_process`, `unparsable_command`, `inline_code`.
+- `policy_override:strict_mode`, plus the workflow overrides `policy_override:user_choice | cheap_success | complexity_floor | sensitive_floor | option_unavailable`. Also `option_unavailable:<workflow>` and `no_models_configured`.
+
 ## Error codes
 
 | Code | Name |
