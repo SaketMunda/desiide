@@ -52,3 +52,4 @@ export type {
   ProviderDefinitions,
 } from './registry.ts';
 export { BUILTIN_PROVIDERS } from './providers.ts';
+export { inferLocality } from './locality.ts';

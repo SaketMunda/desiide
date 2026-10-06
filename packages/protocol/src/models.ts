@@ -8,6 +8,13 @@ export type ModelProvider = z.infer<typeof ModelProvider>;
 export const ModelRole = z.enum(['cheap', 'strong', 'reviewer']);
 export type ModelRole = z.infer<typeof ModelRole>;
 
+/**
+ * Where a model runs. `local` means requests stay on this machine (or the user's own network),
+ * which routing and privacy decisions rely on; anything unknown counts as `cloud`.
+ */
+export const ModelLocality = z.enum(['local', 'cloud']);
+export type ModelLocality = z.infer<typeof ModelLocality>;
+
 export const ModelCapabilities = z.object({
   streaming: z.boolean(),
   toolCalls: z.boolean(),
@@ -24,6 +31,8 @@ export const ModelInfo = z.object({
   role: ModelRole.optional(),
   capabilities: ModelCapabilities,
   healthy: z.boolean(),
+  /** Optional for older servers; current ones always send it. */
+  locality: ModelLocality.optional(),
 });
 export type ModelInfo = z.infer<typeof ModelInfo>;
 
@@ -42,6 +51,8 @@ export const ModelConfig = z.strictObject({
   apiKey: SecretRef.optional(),
   costPerMTok: CostPerMTok.optional(),
   capabilities: ModelCapabilities.partial().optional(),
+  /** Overrides the inferred locality (Ollama or a loopback `baseUrl` → local, else cloud). */
+  locality: ModelLocality.optional(),
 });
 export type ModelConfig = z.infer<typeof ModelConfig>;
 

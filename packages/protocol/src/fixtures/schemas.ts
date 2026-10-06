@@ -158,20 +158,29 @@ export const schemaFixtures: Record<string, SchemaFixture> = {
   // models
   ModelProvider: { valid: ['ollama'], invalid: ['gemini'] },
   ModelRole: { valid: ['cheap', 'strong', 'reviewer'], invalid: ['fast'] },
+  ModelLocality: { valid: ['local', 'cloud'], invalid: ['remote'] },
   ModelCapabilities: {
     valid: [capabilities],
     invalid: [{ ...capabilities, contextTokens: 0 }],
   },
-  ModelInfo: { valid: [modelInfo], invalid: [{ ...modelInfo, provider: 'gemini' }] },
+  ModelInfo: {
+    valid: [modelInfo, { ...modelInfo, locality: 'cloud' }],
+    invalid: [
+      { ...modelInfo, provider: 'gemini' },
+      { ...modelInfo, locality: 'remote' },
+    ],
+  },
   CostPerMTok: { valid: [{ input: 0, output: 0 }], invalid: [{ input: -1, output: 1 }] },
   ModelConfig: {
     valid: [
       modelConfig,
       { id: 'local', provider: 'ollama', model: 'qwen', baseUrl: 'http://localhost:11434/v1' },
+      { ...modelConfig, locality: 'local' },
     ],
     invalid: [
       { ...modelConfig, apiKey: 'sk-ant-raw-key' },
       { ...modelConfig, baseUrl: 'not a url' },
+      { ...modelConfig, locality: 'onprem' },
     ],
   },
   ModelErrorKind: { valid: ['rate_limit'], invalid: ['boom'] },

@@ -20,7 +20,7 @@ Every result is tagged `engine: 'jev'|'rules'` and shown in the Decision panel.
 ## Packs (state = metadata only, never file contents)
 
 ### `workflow_select@1`
-State: `taskType, filesTouched[{path,sizeLines,language,sensitive}], estimatedDiffSize, lastRunStatus, userPreference, availableModels[{id,contextTokens,latencyMs,costTier}]`
+State: `taskType, filesTouched[{path,sizeLines,language,sensitive}], estimatedDiffSize, lastRunStatus, userPreference, availableModels[{id,contextTokens,latencyMs,costTier,locality?}]`
 - Choice "Which workflow should handle this task?" options: `local-single | cloud-single | local-cloud-cascade | cloud-with-critique`. Drop options whose models aren't configured.
 - Score "complexity" 0–4, Score "escalation_need" 0–4.
 

@@ -101,7 +101,7 @@ Reason labels COR-2 adds: `tool_not_allowed` (the model called a tool outside `a
 
 | Pack | State fields |
 |---|---|
-| `workflow_select@1` | `taskType, filesTouched: FileMeta[] (≤50), truncatedCount?, estimatedDiffSize, lastRunStatus, userPreference, availableModels[{id, contextTokens, latencyMs, costTier}]` |
+| `workflow_select@1` | `taskType, filesTouched: FileMeta[] (≤50), truncatedCount?, estimatedDiffSize, lastRunStatus, userPreference, availableModels[{id, contextTokens, latencyMs, costTier, locality?}]` |
 | `risk_gate@1` | `actionType, command? (≤500 chars), editFileCount?, context{branch, env, hasPendingMigrations}, filesTouched[{path, sensitive}] (≤50), truncatedCount?` |
 | `cost_route@1` | `taskType, filesTouchedCount, projectSizeLines, userCostBias, recentFailures` |
 

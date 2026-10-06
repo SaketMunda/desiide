@@ -11,6 +11,7 @@ import { ModelError, defaultHint } from './errors.ts';
 import { redact } from './redact.ts';
 import type { FetchLike, ModelLogger } from './http.ts';
 import { createSecretResolver, type RequestSecret, type SecretResolver } from './secrets.ts';
+import { inferLocality } from './locality.ts';
 import type { ModelAdapter } from './types.ts';
 
 export interface ProviderContext {
@@ -159,6 +160,7 @@ export function createModelRegistry(options: ModelRegistryOptions): ModelRegistr
       ...(role ? { role } : {}),
       capabilities: caps,
       healthy: e.adapter !== undefined && probeOk && health.get(e.config.id) !== false,
+      locality: inferLocality(e.config),
     };
   };
 
@@ -198,6 +200,7 @@ export function createModelRegistry(options: ModelRegistryOptions): ModelRegistr
             model: m.model,
             capabilities: ModelCapabilities.parse({ ...FALLBACK_CAPABILITIES, ...m.capabilities }),
             healthy: true,
+            locality: inferLocality({ provider, baseUrl }),
           });
         }
       } catch {

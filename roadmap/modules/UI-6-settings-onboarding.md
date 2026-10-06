@@ -19,6 +19,8 @@ Get a new user from install to first task in **under 2 minutes**, and give pros 
 - **Jev**: off by default. Endpoint, key, `redactPaths`, **Preview payload** (live sample state built by JEV-1 from the current workspace), and Test connection.
 - **Gating**: Conservative (default) / Strict. Sensitive-glob editor (writes `.desiide/project.json`). The deny-list is shown read-only.
 - **Project**: test and lint commands (auto-detected, editable).
+- **Path-redaction salt:** generate a random salt (≥32 bytes, `crypto.randomBytes`) per workspace on first use, keep it in `workspaceState`, and pass it to the orchestrator when `desiide.jev.redactPaths` is on. Never derive it from the workspace path, because that could be guessed (JEV-1 handoff, user decision 2026-10-05).
+- **Model locality:** show each model as Local / Cloud (`ModelInfo.locality`), and let the user override it per model (`ModelConfig.locality`, ADR-017).
 - Settings persist as VS Code settings (`desiide.*`). Secrets go only to SecretStorage. Changes push `config.update` to the orchestrator.
 
 ## Acceptance criteria

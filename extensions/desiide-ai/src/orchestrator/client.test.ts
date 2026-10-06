@@ -123,7 +123,14 @@ describe('OrchestratorClient: lifecycle', () => {
     expect(spawn.mock.calls[0]).toEqual([
       '/ext/dist/orchestrator.js',
       ['--log-level', 'info', '--log-dir', '/logs'],
+      undefined,
     ]);
+  });
+
+  it('passes the extra environment (e.g. the ripgrep path) to the process', async () => {
+    const { client, spawn } = setup({}, { env: { DESIIDE_RG_PATH: '/app/rg' } });
+    await client.request('health.ping', {});
+    expect(spawn.mock.calls[0]?.[2]).toEqual({ DESIIDE_RG_PATH: '/app/rg' });
   });
 
   it('spawns once for concurrent first requests and reports starting → ready', async () => {

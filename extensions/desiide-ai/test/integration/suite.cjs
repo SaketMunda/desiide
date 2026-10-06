@@ -17,7 +17,7 @@ async function waitFor(predicate, what, timeoutMs = 15000) {
 
 async function run() {
   const results = {};
-  const ext = vscode.extensions.getExtension('desiide-dev.desiide-ai');
+  const ext = vscode.extensions.getExtension('desiide.desiide-ai');
   assert.ok(ext, 'desiide-ai extension is installed in the dev host');
 
   // AC3: no activation on startup while no Desiide view is visible.

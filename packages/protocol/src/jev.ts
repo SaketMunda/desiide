@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import { Id, IsoDateTime } from './common.ts';
 import { FileMeta } from './context.ts';
+import { ModelLocality } from './models.ts';
 import { PolicyOutcome, ReasonLabel } from './reasons.ts';
 import { Preference, TaskKind, WorkflowOption } from './task.ts';
 
@@ -34,6 +35,8 @@ export const WorkflowSelectState = z.strictObject({
       contextTokens: z.int().positive(),
       latencyMs: z.int().nonnegative(),
       costTier: CostTier,
+      /** Absent in states built before it existed; consumers then fall back to `costTier`. */
+      locality: ModelLocality.optional(),
     }),
   ),
 });

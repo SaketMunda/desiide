@@ -69,6 +69,7 @@ describe('models.* and config.update over RPC', () => {
           model: 'qwen',
           role: 'cheap',
           healthy: true,
+          locality: 'local',
           capabilities: {
             streaming: true,
             toolCalls: true,

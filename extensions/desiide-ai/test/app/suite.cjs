@@ -26,7 +26,7 @@ async function run() {
   try {
     assert.equal(vscode.env.appName, 'Desiide', 'runs inside the Desiide app');
 
-    const ext = vscode.extensions.getExtension('desiide-dev.desiide-ai');
+    const ext = vscode.extensions.getExtension('desiide.desiide-ai');
     assert.ok(ext, 'desiide-ai is present');
     results.builtIn = ext.extensionPath.includes(`${sep}Resources${sep}app${sep}extensions${sep}`);
     assert.ok(results.builtIn, `desiide-ai is the app's built-in copy (${ext.extensionPath})`);

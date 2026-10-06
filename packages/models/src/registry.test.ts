@@ -155,11 +155,13 @@ describe('ModelRegistry', () => {
         id: 'local',
         role: 'cheap',
         healthy: true,
+        locality: 'local',
         capabilities: expect.objectContaining({ contextTokens: 16_000 }) as unknown,
       }),
       expect.objectContaining({
         id: 'cloud',
         healthy: false,
+        locality: 'cloud',
         capabilities: expect.objectContaining({ contextTokens: 8192, toolCalls: false }) as unknown,
       }),
     ]);
@@ -286,6 +288,7 @@ describe('ModelRegistry', () => {
         model: 'llama3',
         healthy: true,
         capabilities: { streaming: true, toolCalls: true, contextTokens: 8192, vision: false },
+        locality: 'local',
       },
     ]);
     await registry.list({ discover: false }, signal());

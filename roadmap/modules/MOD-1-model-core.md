@@ -1,6 +1,6 @@
 # MOD-1 · Model core
 
-**Status:** review · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-2 · **Skills:** ide-model-adapters
+**Status:** done · **Milestone:** Alpha · **Size:** M · **Depends on:** FND-2 · **Skills:** ide-model-adapters
 
 ## Purpose
 The provider-agnostic layer: adapter interface, registry, config, secrets, shared HTTP, and the test harness every adapter must pass.

@@ -5,6 +5,7 @@ import { shouldOpenWelcome, WALKTHROUGH_ID, WELCOME_SHOWN_KEY } from './appWelco
 import type { CommandHandlers } from './commands.ts';
 import type { Logger } from './log.ts';
 import { OrchestratorClient } from './orchestrator/client.ts';
+import { findEditorRipgrep } from './orchestrator/ripgrep.ts';
 import {
   RESTART_ACTION,
   SHOW_LOG_ACTION,
@@ -64,7 +65,12 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   setStatus({ runningTasks: 0 });
   status.show();
 
+  // The orchestrator's search tools use the editor's own ripgrep; an explicit env var still wins.
+  const rgPath = process.env.DESIIDE_RG_PATH ?? findEditorRipgrep(vscode.env.appRoot);
+  if (!rgPath)
+    log.warn('ripgrep not found in the editor install; search tools will be unavailable');
   const client = new OrchestratorClient({
+    ...(rgPath ? { env: { DESIIDE_RG_PATH: rgPath } } : {}),
     modulePath: vscode.Uri.joinPath(context.extensionUri, 'dist', 'orchestrator.js').fsPath,
     logDir: context.logUri.fsPath,
     logLevel: devMode ? 'debug' : 'info',

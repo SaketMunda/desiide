@@ -1,6 +1,6 @@
 # EDT-2 · Built-in extension & default layout
 
-**Status:** review · **Milestone:** Alpha (ADR-011) · **Size:** S · **Depends on:** EDT-1, UI-1 · **Skills:** ide-editor-shell
+**Status:** done · **Milestone:** Alpha (ADR-011) · **Size:** S · **Depends on:** EDT-1, UI-1 · **Skills:** ide-editor-shell
 
 ## Purpose
 Make the IDE feel AI-native out of the box: `desiide-ai` built in, and the panels placed where users expect them on first run.

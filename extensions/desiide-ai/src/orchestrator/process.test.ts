@@ -96,7 +96,7 @@ describe('OrchestratorClient with the bundled orchestrator process', () => {
     }
   }, 30_000);
 
-  it('Prompt Box send → Stop against the real orchestrator (UI-2 AC5, mock until COR-2)', async () => {
+  it('Prompt Box send goes through the real task engine (UI-2 AC5 with COR-2)', async () => {
     const client = new OrchestratorClient({
       modulePath: bundle,
       logDir: join(dir, 'logs-prompt'),
@@ -128,12 +128,17 @@ describe('OrchestratorClient with the bundled orchestrator process', () => {
       if (!built.ok) throw new Error(built.message);
       const task = await tasks.create(built.params);
       active.add(task.id, task.state);
-      // When COR-2 registers task.create this goes through the real engine instead.
-      expect(onFallback).toHaveBeenCalledTimes(1);
-      await vi.waitFor(() => expect(active.list()).toEqual([{ id: task.id, state: 'running' }]));
-      expect(await tasks.cancel(task.id)).toBe(true);
+      expect(onFallback).not.toHaveBeenCalled();
+      // The bundle has no model providers until MOD-2/3, so the task fails fast with the hint the
+      // user needs. Stop on a running task is covered against a real shell in COR-2's engine.test.ts.
+      await vi.waitFor(() =>
+        expect(events.at(-1)).toMatchObject({ type: 'state_changed', to: 'failed' }),
+      );
+      expect(events.find((e) => e.type === 'error')).toMatchObject({
+        message: expect.stringContaining('desiide.roles.cheap') as unknown,
+      });
       expect(active.list()).toEqual([]);
-      expect(events.at(-1)).toMatchObject({ type: 'state_changed', to: 'cancelled' });
+      expect(await tasks.cancel(task.id)).toBe(false);
     } finally {
       await client.dispose();
     }

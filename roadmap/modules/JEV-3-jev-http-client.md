@@ -14,6 +14,8 @@
 - `jev.test` RPC: health + a sample decision, returning latency.
 - **Update the `ide-jev-decisions` skill** with the real wire format and remove the "assumed" warning. Confirm Noul semantics.
 
+**Questions to settle when the docs arrive (ADR-020):** whether users bring their own Jev key or Desiide proxies it, Noul semantics, rate limits, and data retention. Record the answers as ADRs before coding.
+
 ## Acceptance criteria
 1. Fixture tests for each question type from the documented examples.
 2. Timeout, 5xx, 401, and malformed-body cases each fall back correctly with the right reason label.
