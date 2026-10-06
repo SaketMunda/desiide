@@ -39,7 +39,7 @@ Evaluated in this order. The first match wins.
 1. **Hard deny-list** (regex on normalized command: `rm -rf /`, `rm -rf ~`, `mkfs`, `dd of=/dev/`, `:(){`, `curl|sh`, `git push --force` to main/master, `chmod -R 777 /`, writes outside workspace) → **block**. Jev is not consulted.
 2. Read-only allow-list (`ls`, `cat`, `git status/diff/log`, configured test/lint commands) → **auto**.
 3. `apply_edit` touching >1 file or any sensitive file → **confirm**.
-4. Jev risk_gate: **auto** only if `safe_now.pYes ≥ 0.90` AND `reversible.pYes ≥ 0.80` AND `high_risk_area.pYes < 0.20` AND no sensitive files. If `safe_now.pYes < 0.30` or `answer = no` with a destructive actionType → **block**. Otherwise → **confirm**.
+4. Jev risk_gate: **auto** only if `safe_now.pYes ≥ 0.90` AND `reversible.pYes ≥ 0.80` AND `high_risk_area.pYes < 0.20` AND no sensitive files. Otherwise → **confirm**. Risk answers don't block by default (ADR-021): only the deny-list blocks. Raising `blockSafeNowBelow` (stricter) makes `safe_now.pYes` below it block.
 5. Jev unavailable → **confirm**.
 
 Workflow/cost:
@@ -47,6 +47,13 @@ Workflow/cost:
 - `complexity ≥ 3` or any sensitive file → at least `cloud-single`. With preference = quality → `cloud-with-critique`.
 - Cascade escalates when `escalation_need ≥ 3`, verification fails, or the draft doesn't parse.
 - A policy override of Jev's choice is logged with reason `policy_override:<rule>`.
+
+Implementation (`packages/jev/src/policy/`, JEV-2):
+- `gate.ts`: `evaluateRiskState` (the order above) and `createPolicyGate`, which maps a tool call to a risk_gate state.
+- `commands.ts` + `shell.ts`: the deny-list runs on parsed commands (quotes, `sudo`/`env` prefixes, `bash -c`, `eval`, `xargs`, `find -exec`, `$(…)`), with a raw-regex backstop.
+- **Floors** force at least `confirm` whatever Jev says: sensitive or outside-workspace paths, multi-file edits, destructive/irreversible/migration commands, inline code (`python -c`, `| sh`), `sudo`, substitutions, background jobs, unparsable commands. Jev can only make a decision stricter.
+- Plain reads (`read_file`, `list_files`, `search`, `git_read`) of non-sensitive workspace paths, read-only commands, and the configured test/lint commands are **auto** (ADR-019).
+- `paths.ts`: `createSensitivity(globs)` = `DEFAULT_SENSITIVE_GLOBS` + `ProjectConfig.sensitiveGlobs`. COR-4 should use it for `FileMeta.sensitive`.
 
 Thresholds live in `packages/jev/src/policy/thresholds.ts` as one exported object. Users can make them stricter via `desiide.gating.*` but never looser than the deny-list.
 

@@ -44,6 +44,8 @@ Short ADRs. Only the planning session adds or changes entries. A build session t
 
 **ADR-020 · Jev API questions belong to JEV-3.** API docs, the key model (bring-your-own vs proxied), Noul semantics, rate limits, and retention are resolved inside JEV-3 when the TypeSafe docs arrive. They don't block anything else: Alpha runs on the rules engine behind the same `JevEngine` interface. *Decided by the user, 2026-10-05.* (Resolves open #1.)
 
+**ADR-021 · Only the deny-list blocks; everything else that's doubtful is asked.** A risk_gate answer never blocks by default (`blockSafeNowBelow` = 0). Deletes such as `rm -rf dist`, migrations, `git reset --hard`, and other actions the engine judges unsafe go to `confirm` with their reasons. The hard deny-list still blocks without consulting Jev. Users who want engine-driven blocking can raise `desiide.gating.thresholds.blockSafeNowBelow` (e.g. 0.3), which counts as stricter. *Why:* blocking with no override in Alpha stopped legitimate work the user would approve (cleaning build output, running their own migration). Asking keeps the user in control without losing safety. *Decided by the user, 2026-10-06.* Refines ADR-006 and ADR-019.
+
 ## Open (need the user's call)
 
 None right now.
