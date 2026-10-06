@@ -39,7 +39,7 @@ Evaluated in this order. The first match wins.
 1. **Hard deny-list** (regex on normalized command: `rm -rf /`, `rm -rf ~`, `mkfs`, `dd of=/dev/`, `:(){`, `curl|sh`, `git push --force` to main/master, `chmod -R 777 /`, writes outside workspace) → **block**. Jev is not consulted.
 2. Read-only allow-list (`ls`, `cat`, `git status/diff/log`, configured test/lint commands) → **auto**.
 3. `apply_edit` touching >1 file or any sensitive file → **confirm**.
-4. Jev risk_gate: **auto** only if `safe_now.pYes ≥ 0.90` AND `reversible.pYes ≥ 0.80` AND `high_risk_area.pYes < 0.20` AND no sensitive files. If `safe_now.pYes < 0.30` or `answer = no` with a destructive actionType → **block**. Otherwise → **confirm**.
+4. Jev risk_gate: **auto** only if `safe_now.pYes ≥ 0.90` AND `reversible.pYes ≥ 0.80` AND `high_risk_area.pYes < 0.20` AND no sensitive files. Otherwise → **confirm**. Risk answers don't block by default (ADR-021): only the deny-list blocks. Raising `blockSafeNowBelow` (stricter) makes `safe_now.pYes` below it block.
 5. Jev unavailable → **confirm**.
 
 Workflow/cost:

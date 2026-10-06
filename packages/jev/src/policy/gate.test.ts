@@ -86,7 +86,8 @@ describe('AC1 goldens: example states under rules and an overconfident Jev', () 
         newId,
       });
       if (engine.kind === 'rules') {
-        expect(d).toMatchObject({ outcome: 'block' });
+        // Not deny-listed, so it asks rather than blocks (ADR-021).
+        expect(d).toMatchObject({ outcome: 'confirm' });
         expect(d.reasons).toEqual(expect.arrayContaining(['not_safe_now', 'sensitive_file']));
       } else {
         expect(d.outcome).toBe('confirm');
@@ -247,6 +248,30 @@ describe('AC3 Jev unavailable', () => {
     const p = g.evaluate(shell('pnpm build'), task, controller.signal);
     controller.abort(new Error('cancelled'));
     await expect(p).rejects.toThrow('cancelled');
+  });
+});
+
+describe('ADR-021: only the deny-list blocks by default', () => {
+  it.each(['rm -rf dist', 'npm run migrate', 'git reset --hard HEAD~3', 'kubectl delete ns prod'])(
+    '%s is asked, not blocked',
+    async (command) => {
+      const d = await gate(rules).g.evaluate(shell(command), task, signal);
+      expect(d.outcome, d.reasons.join(',')).toBe('confirm');
+    },
+  );
+
+  it('raising blockSafeNowBelow (stricter) brings blocking back', async () => {
+    const blocking = {
+      mode: 'conservative' as const,
+      thresholds: resolveThresholds({ blockSafeNowBelow: 0.3 }).thresholds,
+    };
+    const d = await gate(rules, { settings: () => blocking }).g.evaluate(
+      shell('rm -rf dist'),
+      task,
+      signal,
+    );
+    expect(d.outcome).toBe('block');
+    expect(d.reasons).toContain('not_safe_now');
   });
 });
 

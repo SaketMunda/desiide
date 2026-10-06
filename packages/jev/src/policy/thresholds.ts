@@ -11,7 +11,10 @@ export interface Thresholds {
   autoReversibleMin: number;
   /** `auto` needs `high_risk_area.pYes` below this. Lower is stricter. */
   autoHighRiskMax: number;
-  /** `safe_now.pYes` below this blocks. Higher is stricter. */
+  /**
+   * `safe_now.pYes` below this blocks. Higher is stricter. Off (0) by default: only the
+   * deny-list blocks, and everything else the engine doubts is asked (ADR-021).
+   */
   blockSafeNowBelow: number;
   /** Edits touching more files than this ask first. Lower is stricter. */
   maxAutoEditFiles: number;
@@ -21,7 +24,7 @@ export const DEFAULT_THRESHOLDS: Readonly<Thresholds> = Object.freeze({
   autoSafeNowMin: 0.9,
   autoReversibleMin: 0.8,
   autoHighRiskMax: 0.2,
-  blockSafeNowBelow: 0.3,
+  blockSafeNowBelow: 0,
   maxAutoEditFiles: 1,
 });
 

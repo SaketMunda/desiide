@@ -52,7 +52,7 @@ Turn Jev (or rules) answers into IDE behavior: `auto | confirm | block` for acti
 
 **Evidence** (`pnpm -F @desiide/jev test`, plus `@desiide/orchestrator` `src/policy`)
 1. AC1: `gate.test.ts` › "AC1 goldens". Each of the three risk_gate example states runs under the rules engine **and** an overconfident Jev (yes, p=0.99):
-   - The migration next to sensitive billing files gives block (rules) or confirm (Jev).
+   - The migration next to sensitive billing files → confirm under both engines (ADR-021: only the deny-list blocks).
    - `git status` → auto, without asking Jev.
    - `git push --force origin main` → blocked, Jev never called.
    
@@ -75,7 +75,7 @@ Turn Jev (or rules) answers into IDE behavior: `auto | confirm | block` for acti
 - **Policy-only decisions are logged as the pseudo-question `policy`.** These are deny, allow-list, floor-only, and strict decisions. The result is noul yes/no/unknown for auto/block/confirm, with engine `rules`, so every gate decision has a `decisionId`.
 - **The configured test/lint commands are allow-listed** (per the skill), after the deny-list. A repo's own `.desiide/project.json` therefore decides what `run_tests` runs unasked. Running tests runs repo code anyway; see Follow-ups (workspace trust).
 - **Strict mode** asks before every shell command and check, including read-only ones. Plain read tools still run unasked.
-- **Thresholds follow the skill exactly.** One consequence is that the rules engine *blocks* (safe_now < 0.3) any `rm -rf <dir>` and migration commands, with no override in Alpha. `rm -rf dist` is blocked, not confirmed. See "Needs a decision".
+- **Risk answers don't block by default (ADR-021, decided by the user 2026-10-06).** `blockSafeNowBelow` defaults to 0, not the skill's 0.3, so `rm -rf dist`, migrations, `git reset --hard` and the like are asked, not blocked. Only the deny-list blocks. Raising the threshold is a stricter override and brings blocking back. Tests: `gate.test.ts` › "ADR-021".
 - **`decideWorkflow`'s sensitive floor** raises to `cloud-single`, per the skill. Note this sends sensitive-file tasks to a cloud model.
 
 **Known gaps**
@@ -91,6 +91,3 @@ Turn Jev (or rules) answers into IDE behavior: `auto | confirm | block` for acti
 - **UI-5 / COR-2:** emit `decision_made` events for gate decisions (`approval_required.decisionId` already links them).
 - **UI-6:** show rejected-override warnings next to the gating settings (they arrive as `log` warnings today), and pass the redaction salt.
 - **Extension (workspace trust):** in an untrusted workspace, don't allow-list the repo-configured test/lint commands.
-
-**Needs a decision (planning)**
-- Should a rules-engine "destructive" answer that isn't on the deny-list (`rm -rf dist`, `npm run migrate`) **block** (current skill thresholds) or only **confirm**? Blocking is safer, but the agent can't clean build output even with the user's approval.
