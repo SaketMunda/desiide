@@ -208,9 +208,15 @@ export function createModelRegistry(options: ModelRegistryOptions): ModelRegistr
           signal,
         );
         for (const m of models) {
-          if (configured.has(`${provider} ${baseUrl} ${m.model}`)) continue;
+          const id = `${provider}:${m.model}`.slice(0, 128);
+          if (
+            configured.has(`${provider} ${baseUrl} ${m.model}`) ||
+            found.some((f) => f.id === id)
+          ) {
+            continue;
+          }
           found.push({
-            id: `${provider}:${m.model}`.slice(0, 128),
+            id,
             provider,
             model: m.model,
             capabilities: ModelCapabilities.parse({ ...FALLBACK_CAPABILITIES, ...m.capabilities }),

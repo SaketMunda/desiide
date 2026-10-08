@@ -1,3 +1,5 @@
+import { createServer } from 'node:net';
+import type { AddressInfo } from 'node:net';
 import type { ModelConfig } from '@desiide/protocol';
 import { describe, expect, it } from 'vitest';
 import {
@@ -189,13 +191,30 @@ describe('OllamaAdapter', () => {
   });
 
   it('Ollama not running, against a real closed local port (AC3)', async () => {
+    // A port that was just free: nothing listens there, so the connection is refused.
+    const server = createServer();
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const { port } = server.address() as AddressInfo;
+    await new Promise((resolve) => server.close(resolve));
     const adapter = createOllamaAdapter({
       ...context((url, init) => fetch(url, init)),
-      config: { id: 'local', provider: 'ollama', model: 'x', baseUrl: 'http://127.0.0.1:9/v1' },
+      config: {
+        id: 'local',
+        provider: 'ollama',
+        model: 'x',
+        baseUrl: `http://127.0.0.1:${port}/v1`,
+      },
     });
     const events = await collectEvents(adapter.chat(TOOLS, new AbortController().signal));
     expect(events).toMatchObject([
-      { type: 'error', error: { kind: 'network', hint: OLLAMA_NOT_RUNNING_HINT } },
+      {
+        type: 'error',
+        error: {
+          kind: 'network',
+          message: expect.stringContaining('ECONNREFUSED') as string,
+          hint: OLLAMA_NOT_RUNNING_HINT,
+        },
+      },
     ]);
   });
 

@@ -343,9 +343,12 @@ export async function discoverOllama(
     },
   );
   const tags = TagsWire.parse(await res.json());
+  // Ollama can list the same name twice (e.g. after a re-pull with a new architecture tag).
+  const seen = new Set<string>();
   return tags.models.flatMap((m): DiscoveredModel[] => {
     const caps = m.capabilities;
-    if (caps && !caps.includes('completion')) return [];
+    if ((caps && !caps.includes('completion')) || seen.has(m.name)) return [];
+    seen.add(m.name);
     const max = m.details?.context_length ?? undefined;
     return [
       {
