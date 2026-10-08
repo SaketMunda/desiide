@@ -30,7 +30,7 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [COR-4](modules/COR-4-context-engine.md) | Context engine | Alpha | M | COR-3 | todo |
 | [COR-5](modules/COR-5-workflows.md) | Workflows (single/cascade/critique) | Alpha + Beta | M | COR-2, JEV-2 | todo |
 | [MOD-1](modules/MOD-1-model-core.md) | Model core (interface, registry, HTTP) | Alpha | M | FND-2 | done |
-| [MOD-2](modules/MOD-2-openai-compat-adapter.md) | OpenAI-compatible + Ollama adapter | Alpha | M | MOD-1 | todo |
+| [MOD-2](modules/MOD-2-openai-compat-adapter.md) | OpenAI-compatible + Ollama adapter | Alpha | M | MOD-1 | review |
 | [MOD-3](modules/MOD-3-anthropic-adapter.md) | Anthropic adapter | Alpha | S | MOD-1 | todo |
 | [JEV-1](modules/JEV-1-jev-core.md) | Jev core (packs, rules engine, state) | Alpha | M | FND-2 | done |
 | [JEV-2](modules/JEV-2-policy-gate.md) | Policy & risk gate | Alpha | M | JEV-1 | review |
