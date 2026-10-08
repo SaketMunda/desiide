@@ -1,0 +1,2 @@
+{"response": {"status": 429, "headers": {"content-type": "application/json", "retry-after": "120"}}}
+{"chunk": "{\"error\": {\"message\": \"Rate limit reached\", \"type\": \"requests\", \"code\": \"rate_limit_exceeded\"}}"}

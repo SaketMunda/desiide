@@ -1,0 +1,4 @@
+{"response": {"status": 200, "headers": {"content-type": "application/json; charset=utf-8"}}}
+{"chunk": "{\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"qwen2\",\"families\":[\"qwen2\"],\"parameter_size\":\"7.6B\",\"quantization_level\":\"Q4_K_M\"},\"model_info\":{\"general.architecture\":\"qwen2\",\"qwen2.context_length\":32768},\"capabilities\":[\"completion\",\"tools\"]}"}
+{"response":{"status":404,"headers":{"content-type":"application/json; charset=utf-8"}}}
+{"chunk":"{\"error\":\"model 'nope' not found\"}"}
