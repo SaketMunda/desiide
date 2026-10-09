@@ -43,14 +43,32 @@ The `desiide.models` setting, pushed to the orchestrator with `config.update` (`
 - Workflows address models by role (`desiide.roles.cheap|strong|reviewer`), never by ID (ADR-007). With a single configured model, an unset role falls back to it.
 - Config-declared `capabilities` override probed ones.
 - `locality` (`local | cloud`, ADR-017) is optional: `inferLocality()` treats Ollama and loopback `baseUrl`s as local and everything else as cloud. Routing and privacy decisions rely on it.
+- `quirks` (`{streamUsage?, maxTokensField?}`, openai-compatible only) is optional. Leave it unset unless a server needs an override (see Providers).
 
 ## Registry (`src/registry.ts`)
-`createModelRegistry({providers, requestSecret})` gives `configure`, `get`, `forRole`, `capabilities`, `config`, `list({discover})`, `test`. New providers go in `BUILTIN_PROVIDERS` (`src/providers.ts`) as a `ProviderDefinition {create(ctx), discover?}`. The orchestrator picks them up with no other change.
+`createModelRegistry({providers, requestSecret})` gives `configure`, `get`, `forRole`, `capabilities`, `config`, `list({discover})`, `test`. New providers go in `BUILTIN_PROVIDERS` (`src/providers.ts`) as a `ProviderDefinition {create(ctx), discover?, defaultBaseUrl?}`. The orchestrator picks them up with no other change.
+- `create` may throw for an unusable config (e.g. openai-compatible without a `baseUrl`). The registry then lists the model as unavailable, with that reason.
+- `defaultBaseUrl` is used for models without a `baseUrl`. With `list({discover: true})`, a **loopback** default is also probed when nothing is configured: that's how onboarding (UI-6) finds a running Ollama. A non-loopback default is never probed. Otherwise discovery only touches configured base URLs.
+- Discovered ids are `<provider>:<model>` and are deduped.
 
 ## Providers
-- **openai-compatible**: `POST {baseUrl}/chat/completions` with `stream: true`, SSE parse, and accumulate `tool_calls` deltas by index. Covers OpenAI, OpenRouter, Gemini's OpenAI endpoint, vLLM, LM Studio, and llama.cpp server.
-- **ollama**: `openai-compatible` preset plus `GET /api/tags` for discovery and `/api/show` to detect tool support and context length. If the model can't call tools, fall back to the edit protocol.
-- **anthropic**: official `@anthropic-ai/sdk`. **Load the `claude-api` skill first** for current model IDs, params, and caching rules. Use prompt caching on the system prompt and the stable repo context.
+- **openai-compatible** (`openai-compat.ts`): `POST {baseUrl}/chat/completions`, SSE. Covers OpenAI, OpenRouter, Gemini's OpenAI endpoint, vLLM, LM Studio and llama.cpp. A `baseUrl` is required: there's no implicit `api.openai.com`, because no request goes to an endpoint the user didn't configure.
+  - Tool calls go through `createToolCallAccumulator` (`tool-calls.ts`): by `index`, else `id`, else onto the latest call. A new id on a reused index starts a new call. Calls are emitted after the text, before `usage` and `done`.
+  - **Quirks** (`quirks.ts`, `ModelConfig.quirks`): `streamUsage` (send `stream_options.include_usage`) and `maxTokensField` (`max_tokens | max_completion_tokens`). Explicit config wins, then the host table (OpenAI/Azure → `max_completion_tokens`, Mistral → no `stream_options`), then the defaults. If a server rejects one of these fields, `adaptQuirks` retries once with the other setting and keeps it. Add new servers to the host table, not to the adapter.
+  - Default capabilities: `toolCalls: true`, `contextTokens: 8192`. The server can't be asked, so users set `capabilities` in the config.
+- **ollama** (`ollama.ts`): **native API**, not `/v1`. Ollama's `/v1` ignores `num_ctx` and silently truncates at 4096 (measured on 0.40). A `/v1` `baseUrl` is accepted and stripped (`ollamaRoot`).
+  - `capabilities()` probes `POST /api/show`: tools and vision from `capabilities[]`, the window from `model_info.*.context_length`. A successful probe is cached; a failed one isn't.
+  - `num_ctx` is sent on every `/api/chat` and equals the reported `contextTokens`. Precedence: config `capabilities.contextTokens`, then a Modelfile `num_ctx`, then `OLLAMA_DEFAULT_CONTEXT` (32k). It's always capped at the model's maximum. Don't request the full 128k–256k window: the KV cache would take gigabytes.
+  - Stream: NDJSON (`parseNdjson`). Each tool call arrives whole, and `done_reason` is `"stop"` even after tool calls (mapped to `tool_calls`). `message.thinking` is dropped for now.
+  - Errors: an unreachable server gives `network` + `OLLAMA_NOT_RUNNING_HINT`. A 404 "not found" gives `bad_request` + "`ollama pull <model>`". Chat retries once, and probes and discovery don't retry, so "not running" shows up fast.
+  - Discovery: `GET /api/tags`. Embedding-only models are skipped, and names are deduped (Ollama really lists some twice).
+- **Models without native tool calls** (Ollama probe says no `tools`, or `capabilities.toolCalls: false`) use the text tool protocol in `text-tools.ts`:
+  - The tools are described in the system prompt, and the model writes `<tool_call>{"name","arguments"}</tool_call>` blocks (Qwen/Hermes format).
+  - `createTextToolParser` turns those blocks into normal `tool_call` events, so the loop can't tell the difference.
+  - `textToolsMessages` renders history as text.
+  - Edits use the search/replace fallback.
+- **anthropic**: official `@anthropic-ai/sdk`. **Load the `claude-api` skill first** for current model IDs, params, and caching rules. Use prompt caching on the system prompt and the stable repo context. Merge start and end usage into one `usage` event.
+- No adapter implements `complete` natively. The `complete()` helper (one tool-less chat turn) covers it.
 
 ## HTTP rules (shared `http.ts`)
 - Timeouts: connect 10 s, first token 60 s, idle between chunks 30 s.
@@ -59,12 +77,17 @@ The `desiide.models` setting, pushed to the orchestrator with `config.update` (`
 - Adapters yield `errorEvent(toModelError(e, signal, ctx.secrets()))` from a catch-all instead of throwing.
 
 ## Testing
-- `runAdapterContract(factory, fixtures)` from `@desiide/models/testing` runs against every adapter, replaying recorded fixtures (`test/fixtures/<provider>/*.jsonl`) via `replayFetch(loadFixture(...))`. Fixtures that record `authorization`, `x-api-key`, or cookie headers are refused.
+- `runAdapterContract(factory, fixtures)` from `@desiide/models/testing` (source in `src/testing/`) runs against every adapter: text, tool calls (mandatory if the adapter reports `toolCalls: true`), error kinds, pre-abort, and cancel mid-stream. It replays `packages/models/test/fixtures/<provider>/*.jsonl` via `replayFetch(loadFixture(...))`. Fixtures that record `authorization`, `x-api-key`, or cookie headers are refused.
+- Record fixtures from a real server when you can: a plain `fetch` that writes `{"response":…}`, then one `{"chunk":…}` line per body chunk. Trim large bodies to the fields the adapter reads. Write down where each fixture came from in `test/fixtures/README.md`.
+- An adapter that probes first (Ollama `/api/show`) needs that exchange **before** the chat exchange in the fixture. `replayFetch` serves exchanges in order, and running out is a loud error.
+- Cover both tool-call shapes (fragmented and single-chunk), a truncated stream (must end with `network`, never `done`), an error inside a 200 stream, and a sentinel key that never appears in events.
 - Orchestrator tests use `createFakeModelAdapter({turns})` from `@desiide/models/testing`.
-- Live tests only run with `DESIIDE_LIVE=1` and keys in the env.
+- Live tests are `*.live.test.ts` with `describe.skipIf(process.env.DESIIDE_LIVE !== '1')`. Pick the model with an env var (e.g. `DESIIDE_LIVE_OLLAMA_MODEL`, default `qwen2.5-coder:7b`). Keys come from the env and never from fixtures.
 
 ## Gotchas
-- Some OpenAI-compat servers send `tool_calls` arguments as full JSON in one chunk and others as fragments. Always accumulate by index.
-- Ollama silently truncates at `num_ctx`. Set it explicitly from the capabilities.
+- Some OpenAI-compat servers send `tool_calls` arguments as full JSON in one chunk and others as fragments, some without `index`. Always use the accumulator.
+- Ollama silently truncates at `num_ctx`, and `/v1` ignores it. Use the native API.
+- Some servers end a tool-call turn with `finish_reason: "stop"`. When calls were emitted, the stop reason is `tool_calls`.
+- A stream that closes with no `finish_reason`/`[DONE]` (OpenAI) or `done: true` (Ollama) was cut off. Report `network`.
 - Anthropic requires alternating user/assistant turns, and tool results are user-role content blocks. Normalize in the adapter, not the loop.
 - Token counts: use provider-reported `usage` for budgets. Only estimate (chars/4) for pre-flight context trimming.
