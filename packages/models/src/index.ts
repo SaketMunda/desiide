@@ -52,4 +52,19 @@ export type {
   ProviderDefinitions,
 } from './registry.ts';
 export { BUILTIN_PROVIDERS } from './providers.ts';
-export { inferLocality } from './locality.ts';
+export { inferLocality, isLoopback } from './locality.ts';
+export { parseNdjson } from './ndjson.ts';
+export { createToolCallAccumulator } from './tool-calls.ts';
+export type { ToolCallDelta } from './tool-calls.ts';
+export { createTextToolParser, textToolsMessages, textToolsSystem } from './text-tools.ts';
+export { adaptQuirks, resolveQuirks } from './quirks.ts';
+export type { ResolvedQuirks } from './quirks.ts';
+export { createOpenAICompatAdapter } from './openai-compat.ts';
+export {
+  OLLAMA_DEFAULT_BASE_URL,
+  OLLAMA_DEFAULT_CONTEXT,
+  OLLAMA_NOT_RUNNING_HINT,
+  createOllamaAdapter,
+  discoverOllama,
+  ollamaProvider,
+} from './ollama.ts';

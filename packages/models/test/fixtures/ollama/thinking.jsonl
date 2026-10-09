@@ -1,0 +1,11 @@
+{"response": {"status": 200, "headers": {"content-type": "application/json; charset=utf-8"}}}
+{"chunk": "{\"details\":{\"family\":\"qwen3\",\"parameter_size\":\"4.0B\"},\"model_info\":{\"general.architecture\":\"qwen3\",\"qwen3.context_length\":262144},\"parameters\":\"temperature                    0.6\\ntop_k                          20\",\"capabilities\":[\"completion\",\"tools\",\"thinking\"]}"}
+{"response":{"status":200,"headers":{"content-type":"application/x-ndjson"}}}
+{"chunk":"{\"model\":\"qwen3:4b\",\"created_at\":\"2026-10-08T11:55:35.081168Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\",\"thinking\":\"Okay\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen3:4b\",\"created_at\":\"2026-10-08T11:55:35.097573Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\",\"thinking\":\",\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen3:4b\",\"created_at\":\"2026-10-08T11:55:35.111408Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\",\"thinking\":\" the\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen3:4b\",\"created_at\":\"2026-10-08T11:55:35.125242Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\",\"thinking\":\" user\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen3:4b\",\"created_at\":\"2026-10-08T11:55:35.138798Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\",\"thinking\":\" said\"},\"done\":false}\n"}
+{"chunk": "{\"model\":\"qwen3:4b\",\"created_at\":\"2026-10-08T11:55:35.8Z\",\"message\":{\"role\":\"assistant\",\"content\":\"Hi\"},\"done\":false}\n"}
+{"chunk": "{\"model\":\"qwen3:4b\",\"created_at\":\"2026-10-08T11:55:35.8Z\",\"message\":{\"role\":\"assistant\",\"content\":\"!\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen3:4b\",\"created_at\":\"2026-10-08T11:55:35.881215Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\"},\"done\":true,\"done_reason\":\"length\",\"total_duration\":2924708750,\"load_duration\":2056919333,\"prompt_eval_count\":13,\"prompt_eval_cached_count\":0,\"prompt_eval_duration\":65628000,\"eval_count\":60,\"eval_duration\":799962000}\n"}

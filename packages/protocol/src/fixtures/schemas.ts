@@ -176,12 +176,18 @@ export const schemaFixtures: Record<string, SchemaFixture> = {
       modelConfig,
       { id: 'local', provider: 'ollama', model: 'qwen', baseUrl: 'http://localhost:11434/v1' },
       { ...modelConfig, locality: 'local' },
+      { ...modelConfig, provider: 'openai-compatible', quirks: { streamUsage: false } },
     ],
     invalid: [
       { ...modelConfig, apiKey: 'sk-ant-raw-key' },
       { ...modelConfig, baseUrl: 'not a url' },
       { ...modelConfig, locality: 'onprem' },
+      { ...modelConfig, quirks: { maxTokensField: 'max_output_tokens' } },
     ],
+  },
+  ModelQuirks: {
+    valid: [{}, { streamUsage: true, maxTokensField: 'max_completion_tokens' }],
+    invalid: [{ streamUsage: 'yes' }, { toolArgs: 'single' }],
   },
   ModelErrorKind: { valid: ['rate_limit'], invalid: ['boom'] },
 

@@ -1,0 +1,6 @@
+{"response": {"status": 200, "headers": {"content-type": "text/event-stream"}}}
+{"chunk": "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"model\":\"gpt-x\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Let me read it.\\n<tool\"},\"finish_reason\":null}]}\n\n"}
+{"chunk": "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"model\":\"gpt-x\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"_call>\\n{\\\"name\\\": \\\"read_file\\\", \\\"argu\"},\"finish_reason\":null}]}\n\n"}
+{"chunk": "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"model\":\"gpt-x\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"ments\\\": {\\\"path\\\": \\\"a.ts\\\"}}\\n</tool_call>\"},\"finish_reason\":null}]}\n\n"}
+{"chunk": "data: {\"id\":\"chatcmpl-x\",\"object\":\"chat.completion.chunk\",\"model\":\"gpt-x\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n"}
+{"chunk": "data: [DONE]\n\n"}

@@ -2,7 +2,8 @@ import type { ModelConfig, ModelLocality } from '@desiide/protocol';
 
 const LOOPBACK_HOSTS = new Set(['localhost', '[::1]', '::1']);
 
-function isLoopback(baseUrl: string): boolean {
+/** True for `localhost`, `*.localhost`, `127.x.x.x` and `::1`. */
+export function isLoopback(baseUrl: string): boolean {
   let host: string;
   try {
     host = new URL(baseUrl).hostname.toLowerCase();

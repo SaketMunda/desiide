@@ -1,17 +1,17 @@
 import {
   DesiideConfig,
   ModelCapabilities,
+  ModelProvider,
   ModelRole,
   type ModelConfig,
   type ModelInfo,
-  type ModelProvider,
   type ResultOf,
 } from '@desiide/protocol';
 import { ModelError, defaultHint } from './errors.ts';
 import { redact } from './redact.ts';
 import type { FetchLike, ModelLogger } from './http.ts';
 import { createSecretResolver, type RequestSecret, type SecretResolver } from './secrets.ts';
-import { inferLocality } from './locality.ts';
+import { inferLocality, isLoopback } from './locality.ts';
 import type { ModelAdapter } from './types.ts';
 
 export interface ProviderContext {
@@ -31,6 +31,12 @@ export interface DiscoveredModel {
 
 export interface ProviderDefinition {
   create(ctx: ProviderContext): ModelAdapter;
+  /**
+   * Where the provider's server runs when the config doesn't say (Ollama's loopback port). Used for
+   * models without a `baseUrl`, and probed by `list({discover: true})` so onboarding can find a
+   * running server. Must be a loopback URL: discovery never reaches beyond this machine on its own.
+   */
+  defaultBaseUrl?: string;
   /** Models a server offers (e.g. Ollama `/api/tags`). Only called for configured base URLs. */
   discover?(
     ctx: { baseUrl: string; fetch?: FetchLike; logger?: ModelLogger },
@@ -165,18 +171,27 @@ export function createModelRegistry(options: ModelRegistryOptions): ModelRegistr
   };
 
   const discover = async (signal: AbortSignal): Promise<ModelInfo[]> => {
+    const baseUrlOf = (config: Pick<ModelConfig, 'provider' | 'baseUrl'>): string | undefined =>
+      config.baseUrl ?? providers[config.provider]?.defaultBaseUrl;
     const configured = new Set(
       [...entries.values()].map(
-        (e) => `${e.config.provider} ${e.config.baseUrl ?? ''} ${e.config.model}`,
+        (e) => `${e.config.provider} ${baseUrlOf(e.config) ?? ''} ${e.config.model}`,
       ),
     );
     const targets = new Map<string, { provider: ModelProvider; baseUrl: string }>();
     for (const { config } of entries.values()) {
-      if (config.baseUrl && providers[config.provider]?.discover) {
-        targets.set(`${config.provider} ${config.baseUrl}`, {
-          provider: config.provider,
-          baseUrl: config.baseUrl,
-        });
+      const baseUrl = baseUrlOf(config);
+      if (baseUrl && providers[config.provider]?.discover) {
+        targets.set(`${config.provider} ${baseUrl}`, { provider: config.provider, baseUrl });
+      }
+    }
+    // Onboarding: find a server running at its default local address even before it's configured.
+    for (const [name, definition] of Object.entries(providers)) {
+      const provider = ModelProvider.parse(name);
+      const baseUrl = definition?.defaultBaseUrl;
+      if (!baseUrl || !definition.discover || !isLoopback(baseUrl)) continue;
+      if (![...targets.values()].some((t) => t.provider === provider)) {
+        targets.set(`${provider} ${baseUrl}`, { provider, baseUrl });
       }
     }
     const found: ModelInfo[] = [];
@@ -193,9 +208,15 @@ export function createModelRegistry(options: ModelRegistryOptions): ModelRegistr
           signal,
         );
         for (const m of models) {
-          if (configured.has(`${provider} ${baseUrl} ${m.model}`)) continue;
+          const id = `${provider}:${m.model}`.slice(0, 128);
+          if (
+            configured.has(`${provider} ${baseUrl} ${m.model}`) ||
+            found.some((f) => f.id === id)
+          ) {
+            continue;
+          }
           found.push({
-            id: `${provider}:${m.model}`.slice(0, 128),
+            id,
             provider,
             model: m.model,
             capabilities: ModelCapabilities.parse({ ...FALLBACK_CAPABILITIES, ...m.capabilities }),

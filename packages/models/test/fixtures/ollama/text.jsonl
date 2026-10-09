@@ -1,0 +1,9 @@
+{"response": {"status": 200, "headers": {"content-type": "application/json; charset=utf-8"}}}
+{"chunk": "{\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"qwen2\",\"families\":[\"qwen2\"],\"parameter_size\":\"7.6B\",\"quantization_level\":\"Q4_K_M\"},\"model_info\":{\"general.architecture\":\"qwen2\",\"qwen2.context_length\":32768},\"capabilities\":[\"completion\",\"tools\"]}"}
+{"response":{"status":200,"headers":{"content-type":"application/x-ndjson"}}}
+{"chunk":"{\"model\":\"qwen2.5:7b\",\"created_at\":\"2026-10-08T11:55:18.280103Z\",\"message\":{\"role\":\"assistant\",\"content\":\"Hello\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen2.5:7b\",\"created_at\":\"2026-10-08T11:55:18.301717Z\",\"message\":{\"role\":\"assistant\",\"content\":\" there\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen2.5:7b\",\"created_at\":\"2026-10-08T11:55:18.322542Z\",\"message\":{\"role\":\"assistant\",\"content\":\",\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen2.5:7b\",\"created_at\":\"2026-10-08T11:55:18.343411Z\",\"message\":{\"role\":\"assistant\",\"content\":\" friend\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen2.5:7b\",\"created_at\":\"2026-10-08T11:55:18.365091Z\",\"message\":{\"role\":\"assistant\",\"content\":\".\"},\"done\":false}\n"}
+{"chunk":"{\"model\":\"qwen2.5:7b\",\"created_at\":\"2026-10-08T11:55:18.385805Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\"},\"done\":true,\"done_reason\":\"stop\",\"total_duration\":13114516500,\"load_duration\":12863202334,\"prompt_eval_count\":24,\"prompt_eval_cached_count\":0,\"prompt_eval_duration\":143306000,\"eval_count\":6,\"eval_duration\":105645000}\n"}

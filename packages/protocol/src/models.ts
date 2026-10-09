@@ -42,6 +42,18 @@ export const CostPerMTok = z.strictObject({
 });
 export type CostPerMTok = z.infer<typeof CostPerMTok>;
 
+/**
+ * Provider wire differences an OpenAI-compatible server may have. Unset fields are inferred from
+ * the `baseUrl`; set them when a server needs something else.
+ */
+export const ModelQuirks = z.strictObject({
+  /** Send `stream_options.include_usage` so the stream reports token usage. */
+  streamUsage: z.boolean().optional(),
+  /** Which request field carries the output-token limit. */
+  maxTokensField: z.enum(['max_tokens', 'max_completion_tokens']).optional(),
+});
+export type ModelQuirks = z.infer<typeof ModelQuirks>;
+
 /** One entry of `desiide.models[]`, pushed to the orchestrator via `config.update`. */
 export const ModelConfig = z.strictObject({
   id: Id,
@@ -53,6 +65,7 @@ export const ModelConfig = z.strictObject({
   capabilities: ModelCapabilities.partial().optional(),
   /** Overrides the inferred locality (Ollama or a loopback `baseUrl` → local, else cloud). */
   locality: ModelLocality.optional(),
+  quirks: ModelQuirks.optional(),
 });
 export type ModelConfig = z.infer<typeof ModelConfig>;
 

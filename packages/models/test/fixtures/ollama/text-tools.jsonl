@@ -1,0 +1,6 @@
+{"response": {"status": 200, "headers": {"content-type": "application/json; charset=utf-8"}}}
+{"chunk": "{\"details\":{\"family\":\"qwen2\"},\"model_info\":{\"general.architecture\":\"qwen2\",\"qwen2.context_length\":128000},\"capabilities\":[\"completion\"]}"}
+{"response": {"status": 200, "headers": {"content-type": "application/x-ndjson"}}}
+{"chunk": "{\"model\":\"qwen2.5vl:3b\",\"message\":{\"role\":\"assistant\",\"content\":\"Reading.\\n<tool_\"},\"done\":false}\n"}
+{"chunk": "{\"model\":\"qwen2.5vl:3b\",\"message\":{\"role\":\"assistant\",\"content\":\"call>\\n{\\\"name\\\": \\\"read_file\\\", \\\"arguments\\\": {\\\"path\\\": \\\"a.ts\\\"}}\\n</tool_call>\"},\"done\":false}\n"}
+{"chunk": "{\"model\":\"qwen2.5vl:3b\",\"message\":{\"role\":\"assistant\",\"content\":\"\"},\"done\":true,\"done_reason\":\"stop\",\"prompt_eval_count\":210,\"eval_count\":30}\n"}

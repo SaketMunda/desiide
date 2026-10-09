@@ -294,6 +294,48 @@ describe('ModelRegistry', () => {
     await registry.list({ discover: false }, signal());
     expect(discover).toHaveBeenCalledTimes(2);
   });
+
+  it('with discover, finds a server at its default loopback URL even when nothing is configured', async () => {
+    const discover = vi.fn(() => Promise.resolve([{ model: 'qwen2.5-coder:7b' }]));
+    const remoteDefault = vi.fn(() => Promise.resolve([{ model: 'x' }]));
+    const registry = createModelRegistry({
+      providers: {
+        ollama: fakeProvider({}, { discover, defaultBaseUrl: 'http://localhost:11434/v1' }),
+        // A default that isn't loopback is never probed on its own.
+        'openai-compatible': fakeProvider(
+          {},
+          { discover: remoteDefault, defaultBaseUrl: 'https://api.example.test/v1' },
+        ),
+      },
+      requestSecret: () => Promise.resolve(null),
+    });
+    registry.configure(config({ models: [] }));
+    expect((await registry.list({ discover: false }, signal())).discovered).toEqual([]);
+    expect(discover).not.toHaveBeenCalled();
+    const { discovered } = await registry.list({ discover: true }, signal());
+    expect(discover).toHaveBeenCalledWith(
+      { baseUrl: 'http://localhost:11434/v1' },
+      expect.anything(),
+    );
+    expect(remoteDefault).not.toHaveBeenCalled();
+    expect(discovered).toMatchObject([
+      { id: 'ollama:qwen2.5-coder:7b', provider: 'ollama', locality: 'local' },
+    ]);
+  });
+
+  it('a configured Ollama without a baseUrl uses the default and is not rediscovered', async () => {
+    const discover = vi.fn(() => Promise.resolve([{ model: 'qwen' }, { model: 'other' }]));
+    const registry = createModelRegistry({
+      providers: {
+        ollama: fakeProvider({}, { discover, defaultBaseUrl: 'http://localhost:11434/v1' }),
+      },
+      requestSecret: () => Promise.resolve(null),
+    });
+    registry.configure(config({ models: [{ id: 'local', provider: 'ollama', model: 'qwen' }] }));
+    const { discovered } = await registry.list({ discover: true }, signal());
+    expect(discover).toHaveBeenCalledTimes(1);
+    expect(discovered.map((m) => m.model)).toEqual(['other']);
+  });
 });
 
 describe('sentinel key never leaks (registry + http end to end)', () => {
