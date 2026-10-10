@@ -56,7 +56,7 @@ A native Claude adapter using the official `@anthropic-ai/sdk`. It's the default
 1. AC1: `anthropic.test.ts` › `adapter contract` runs `runAdapterContract` over the `anthropic/*` fixtures: text, two tool calls with fragmented input, 401, 529, 429, prompt too long, overloaded mid-stream, truncated, refusal, pre-abort, cancel mid-stream.
 2. AC2: `anthropic.test.ts` › `message mapping (AC2)`: system separate, consecutive same-role messages merged, tool call/result pairing with results ahead of text, empty and malformed content, repaired pairing, provider state from another owner ignored.
 3. AC3: `anthropic.test.ts` › `prompt caching (AC3)`: markers only on the system prompt and the `cacheable` block (not on a message merged into the same turn), none when nothing is cacheable, at most 4 (latest kept), plus an inline snapshot of the request body as sent.
-4. AC4: `anthropic.live.test.ts` (`DESIIDE_LIVE=1 DESIIDE_LIVE_ANTHROPIC_KEY=…`, model from `DESIIDE_LIVE_ANTHROPIC_MODEL`, default `claude-opus-5-5`): a tool call, then the answer with the thinking blocks round-tripped. **Not run:** there's no Anthropic key on the build machine (see Known gaps).
+4. AC4: `anthropic.live.test.ts` (`DESIIDE_LIVE=1 DESIIDE_LIVE_ANTHROPIC_KEY=…`, model from `DESIIDE_LIVE_ANTHROPIC_MODEL`, default `claude-opus-5-5`) **passed on 2026-10-10 against the real API with `claude-opus-5-5`** (4.8 s; run by the user). It makes a `read_file` tool call at `reasoning: low`, then a second request with the tool result and the turn's thinking blocks replayed from `providerState`, and the answer names `add`.
 5. AC5:
    - Anthropic: `reasoning (ADR-022, AC5)` › "streams thinking as reasoning_delta…" and "thinking blocks survive a tool-use turn: replayed verbatim and in order" (the second request's assistant turn holds thinking + redacted_thinking + text + tool_use, byte for byte). "a different model gets no thinking blocks from history".
    - Ollama: `ollama.test.ts` › "streams message.thinking as reasoning_delta…" on the recorded `ollama/thinking` fixture, plus the `think` mapping tests.
@@ -91,7 +91,7 @@ A native Claude adapter using the official `@anthropic-ai/sdk`. It's the default
 - **The first commit also carries the SDK dependency** (`package.json` + lockfile), not only the protocol change.
 
 **Known gaps**
-- **AC4 hasn't run against the real API, and the `anthropic/*` fixtures are hand-built** from the documented SSE shapes (no key here). Run `DESIIDE_LIVE=1 DESIIDE_LIVE_ANTHROPIC_KEY=… pnpm -F @desiide/models test anthropic.live`, and re-record `text`, `tools` and `thinking-tool-turn` from a real stream.
+- **The `anthropic/*` fixtures are still hand-built** from the documented SSE shapes. The live run (AC4) confirmed the adapter against the real stream, but nothing was recorded. To re-record `text`, `tools` and `thinking-tool-turn`, capture with a key and swap them in.
 - `costOf` (COR-2) prices all input at the full rate. With caching, cache reads cost ~0.1× and writes ~1.25×. The usage events carry the split, but `Usage` (protocol) and `costOf` don't use it yet.
 - `ANTHROPIC_CUSTOM_HEADERS` in the environment is still applied by the SDK. It only adds headers to the configured endpoint, never credentials or a new destination.
 - The SDK roughly doubles the orchestrator bundle (615 KB). Cold start measured at 47 ms to `initialize`.
