@@ -163,6 +163,50 @@ describe('AC1 happy path', () => {
   });
 });
 
+describe('reasoning (ADR-022)', () => {
+  it("reaches the task stream but never the next request's history", async () => {
+    const model = createFakeModelAdapter({
+      id: 'claude',
+      turns: [
+        {
+          reasoning: ['I should read', ' a.ts first.'],
+          text: 'Reading.',
+          toolCalls: [call('c1', 'read_file', { path: 'src/a.ts' })],
+          providerState: { blocks: ['signed'] },
+        },
+        { reasoning: 'Looks fine.', text: 'Done.' },
+      ],
+    });
+    const h = createHarness({ model });
+    const t = h.create({
+      kind: 'explain',
+      instruction: 'Explain a.ts',
+      allowedTools: ['read_file'],
+    });
+    await h.tasks.settled(t.id);
+
+    const events = h.of(t.id);
+    const reasoning = events.flatMap((e) => (e.type === 'reasoning_delta' ? [e] : []));
+    expect(reasoning.map((e) => e.delta)).toEqual(['I should read', ' a.ts first.', 'Looks fine.']);
+    // Same messageId as the turn's text, so UI-3 groups them.
+    const firstText = events.find((e) => e.type === 'text_delta');
+    expect(reasoning[0]?.messageId).toBe(
+      firstText?.type === 'text_delta' ? firstText.messageId : '',
+    );
+
+    const second = model.calls[1];
+    expect(JSON.stringify(second?.messages)).not.toContain('I should read');
+    // The opaque provider state rides along unchanged for the same model.
+    expect(second?.messages[1]).toEqual({
+      role: 'assistant',
+      content: 'Reading.',
+      toolCalls: [{ id: 'c1', name: 'read_file', args: '{"path":"src/a.ts"}' }],
+      providerState: { owner: 'claude', data: { blocks: ['signed'] } },
+    });
+    expectWireValid(h.events);
+  });
+});
+
 describe('AC2 verification', () => {
   it('a failing test run goes back to the model; the second attempt passes', async () => {
     const model = createFakeModelAdapter({

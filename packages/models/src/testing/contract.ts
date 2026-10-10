@@ -57,6 +57,10 @@ export function assertStreamInvariants(events: unknown[]): StreamEvent[] {
     parsed.filter((e) => e.type === 'usage').length,
     'at most one usage event',
   ).toBeLessThanOrEqual(1);
+  expect(
+    parsed.filter((e) => e.type === 'provider_state').length,
+    'at most one provider_state event',
+  ).toBeLessThanOrEqual(1);
   const ids = parsed.flatMap((e) => (e.type === 'tool_call' ? [e.call.id] : []));
   expect(new Set(ids).size, 'tool call ids are unique').toBe(ids.length);
   return parsed;

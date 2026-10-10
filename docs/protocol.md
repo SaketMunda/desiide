@@ -53,6 +53,7 @@ Every event carries `taskId`, `seq` (monotonic per task, starting at 0), and `ts
 |---|---|---|
 | `state_changed` | `from: TaskState \| null, to: TaskState, reason?` | UI-3 header |
 | `text_delta` | `messageId, delta` | UI-3 transcript |
+| `reasoning_delta` | `messageId, delta` | UI-3 collapsed "Thinking…" block. Shown only; never fed back to the model, Jev, or the decision log (ADR-022) |
 | `tool_call_started` | `call: ToolCall` | UI-3 tool card |
 | `tool_call_finished` | `result: ToolResult` (blocked/rejected calls have `error.kind` + `reasons`) | UI-3 tool card, UI-4 blocked card |
 | `edit_proposed` | `proposal: EditProposal, files: FileMeta[]` | UI-4 review card |

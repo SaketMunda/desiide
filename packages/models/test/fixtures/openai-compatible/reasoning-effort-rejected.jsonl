@@ -1,0 +1,2 @@
+{"response": {"status": 400, "headers": {"content-type": "application/json"}}}
+{"chunk": "{\"error\": {\"message\": \"Unrecognized request argument supplied: reasoning_effort\", \"type\": \"invalid_request_error\"}}"}

@@ -24,6 +24,7 @@ export type {
   RetryPolicy,
 } from './http.ts';
 export { collectTurn } from './stream.ts';
+export { historyFor } from './history.ts';
 export type { CollectedTurn } from './stream.ts';
 export { complete } from './complete.ts';
 export {
@@ -67,4 +68,14 @@ export {
   createOllamaAdapter,
   discoverOllama,
   ollamaProvider,
+  ollamaThink,
 } from './ollama.ts';
+export {
+  ANTHROPIC_DEFAULT_BASE_URL,
+  ANTHROPIC_KEY_HINT,
+  anthropicProvider,
+  createAnthropicAdapter,
+} from './anthropic.ts';
+export type { AnthropicAdapterOptions } from './anthropic.ts';
+export { CLAUDE_MODELS, claudeCapabilities, claudeModel } from './anthropic-models.ts';
+export type { ClaudeModel, ThinkingStyle } from './anthropic-models.ts';

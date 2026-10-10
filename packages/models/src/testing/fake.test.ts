@@ -34,6 +34,20 @@ describe('createFakeModelAdapter', () => {
     expect(fake.remaining).toBe(0);
   });
 
+  it('streams scripted reasoning first and provider state it owns', async () => {
+    const fake = createFakeModelAdapter({
+      id: 'claude',
+      turns: [{ reasoning: ['Let me', ' look'], text: 'ok', providerState: { sig: 's' } }],
+    });
+    expect(await collect(fake.chat(req, new AbortController().signal))).toEqual([
+      { type: 'reasoning_delta', text: 'Let me' },
+      { type: 'reasoning_delta', text: ' look' },
+      { type: 'text_delta', text: 'ok' },
+      { type: 'provider_state', state: { owner: 'claude', data: { sig: 's' } } },
+      { type: 'done', stopReason: 'end' },
+    ]);
+  });
+
   it('keeps raw (possibly malformed) args strings as-is', async () => {
     const fake = createFakeModelAdapter({
       turns: [{ toolCalls: [{ id: 'c1', name: 'shell', args: '{"command": ' }] }],

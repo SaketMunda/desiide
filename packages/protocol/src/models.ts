@@ -54,6 +54,13 @@ export const ModelQuirks = z.strictObject({
 });
 export type ModelQuirks = z.infer<typeof ModelQuirks>;
 
+/**
+ * Whether and how hard a model reasons before answering (ADR-022). Unset means the provider's
+ * default and no extra request parameter; `off` asks the provider not to reason where it can.
+ */
+export const ReasoningLevel = z.enum(['off', 'low', 'medium', 'high']);
+export type ReasoningLevel = z.infer<typeof ReasoningLevel>;
+
 /** One entry of `desiide.models[]`, pushed to the orchestrator via `config.update`. */
 export const ModelConfig = z.strictObject({
   id: Id,
@@ -66,6 +73,8 @@ export const ModelConfig = z.strictObject({
   /** Overrides the inferred locality (Ollama or a loopback `baseUrl` → local, else cloud). */
   locality: ModelLocality.optional(),
   quirks: ModelQuirks.optional(),
+  /** Default reasoning for this model; a request can override it per call (ADR-022). */
+  reasoning: ReasoningLevel.optional(),
 });
 export type ModelConfig = z.infer<typeof ModelConfig>;
 

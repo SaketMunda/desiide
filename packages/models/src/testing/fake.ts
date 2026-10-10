@@ -12,8 +12,12 @@ import type {
 
 /** One scripted model turn. Fields are emitted in order: text, tool calls, usage, then done. */
 export interface FakeTurn {
+  /** Streamed as `reasoning_delta`s before the text. */
+  reasoning?: string | string[];
   /** A string is streamed as one delta; an array as one delta per item. */
   text?: string | string[];
+  /** Emitted as a `provider_state` event (owned by this adapter) after the tool calls. */
+  providerState?: unknown;
   toolCalls?: Array<Omit<ToolCallRequest, 'args'> & { args: string | Record<string, unknown> }>;
   usage?: { inputTokens: number; outputTokens: number };
   /** Ends the turn with this error instead of `done` (after any text/tool calls). */
@@ -72,15 +76,20 @@ export function createFakeModelAdapter(options: FakeModelAdapterOptions = {}): F
   const turns = [...(options.turns ?? [])];
   const calls: ChatRequest[] = [];
   const capabilities = { ...DEFAULT_CAPABILITIES, ...options.capabilities };
+  const id = options.id ?? 'fake';
   let callCount = 0;
 
   async function* play(turn: FakeTurn, signal: AbortSignal): AsyncGenerator<StreamEvent> {
     const events: StreamEvent[] = [];
-    const texts = turn.text === undefined ? [] : Array.isArray(turn.text) ? turn.text : [turn.text];
-    for (const text of texts) events.push({ type: 'text_delta', text });
+    const list = (v: string | string[] | undefined) => (v === undefined ? [] : [v].flat());
+    for (const text of list(turn.reasoning)) events.push({ type: 'reasoning_delta', text });
+    for (const text of list(turn.text)) events.push({ type: 'text_delta', text });
     for (const call of turn.toolCalls ?? []) {
       const args = typeof call.args === 'string' ? call.args : JSON.stringify(call.args);
       events.push({ type: 'tool_call', call: { id: call.id, name: call.name, args } });
+    }
+    if (turn.providerState !== undefined) {
+      events.push({ type: 'provider_state', state: { owner: id, data: turn.providerState } });
     }
 
     for (const event of events) {
@@ -102,7 +111,7 @@ export function createFakeModelAdapter(options: FakeModelAdapterOptions = {}): F
   }
 
   return {
-    id: options.id ?? 'fake',
+    id,
     provider: options.provider ?? 'openai-compatible',
     model: options.model ?? 'fake-model',
     calls,

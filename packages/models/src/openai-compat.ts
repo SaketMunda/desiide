@@ -13,6 +13,7 @@ import type {
   ChatRequest,
   ModelAdapter,
   ModelCapabilities,
+  ReasoningLevel,
   StopReason,
   StreamEvent,
 } from './types.ts';
@@ -42,6 +43,9 @@ const ChunkWire = z.looseObject({
         delta: z
           .looseObject({
             content: z.string().nullish(),
+            // DeepSeek, vLLM and llama.cpp say `reasoning_content`; OpenRouter and Ollama `reasoning`.
+            reasoning_content: z.string().nullish(),
+            reasoning: z.string().nullish(),
             tool_calls: z.array(ToolCallDeltaWire).nullish(),
           })
           .nullish(),
@@ -138,12 +142,23 @@ function toWireMessages(system: string | undefined, messages: readonly ChatMessa
   return out;
 }
 
+/**
+ * `reasoning_effort` for a reasoning level (ADR-022). Unset sends nothing; `off` is `none`, which
+ * current OpenAI reasoning models and OpenRouter accept. A server that rejects the field gets the
+ * request again without it (see `createOpenAICompatAdapter`).
+ */
+export function reasoningEffort(level: ReasoningLevel | undefined): string | undefined {
+  return level === 'off' ? 'none' : level;
+}
+
 export function buildChatBody(
   model: string,
   req: ChatRequest,
   quirks: ResolvedQuirks,
   textTools: boolean,
+  reasoning?: ReasoningLevel,
 ): Record<string, unknown> {
+  const effort = reasoningEffort(reasoning);
   const tools = req.tools ?? [];
   const system = textTools ? textToolsSystem(req.system, tools) : req.system;
   const messages = textTools ? textToolsMessages(req.messages) : req.messages;
@@ -162,7 +177,17 @@ export function buildChatBody(
     ...(req.maxTokens === undefined ? {} : { [quirks.maxTokensField]: req.maxTokens }),
     ...(req.temperature === undefined ? {} : { temperature: req.temperature }),
     ...(quirks.streamUsage ? { stream_options: { include_usage: true } } : {}),
+    ...(effort === undefined ? {} : { reasoning_effort: effort }),
   };
+}
+
+/** The server doesn't know `reasoning_effort` (or this value of it). */
+function rejectsReasoningEffort(error: unknown): boolean {
+  return (
+    error instanceof ModelError &&
+    error.kind === 'bad_request' &&
+    /reasoning[_ ]effort/i.test(error.message)
+  );
 }
 
 const newCallId = (): string => `call_${crypto.randomUUID().replaceAll('-', '').slice(0, 24)}`;
@@ -218,6 +243,8 @@ export async function* readChatStream(
     }
     const choice = chunk.choices?.[0];
     if (!choice) continue;
+    const reasoning = choice.delta?.reasoning_content ?? choice.delta?.reasoning;
+    if (reasoning) yield { type: 'reasoning_delta', text: reasoning };
     if (choice.delta?.content) yield* emitText(choice.delta.content);
     for (const delta of choice.delta?.tool_calls ?? []) {
       const args = delta.function?.arguments;
@@ -269,6 +296,8 @@ export function createOpenAICompatAdapter(ctx: ProviderContext): ModelAdapter {
   const url = `${config.baseUrl.replace(/\/+$/, '')}/chat/completions`;
   const timeouts = inferLocality(config) === 'local' ? LOCAL_TIMEOUTS : {};
   let quirks = resolveQuirks(config);
+  // Cleared for good once the server rejects `reasoning_effort`.
+  let sendEffort = true;
   const toolCalls = config.capabilities?.toolCalls ?? DEFAULT_CAPABILITIES.toolCalls;
 
   return {
@@ -283,12 +312,13 @@ export function createOpenAICompatAdapter(ctx: ProviderContext): ModelAdapter {
         if (signal.aborted) throw new ModelError('cancelled', 'Request cancelled');
         const textTools = (req.tools?.length ?? 0) > 0 && !toolCalls;
         const key = await ctx.apiKey(signal);
-        const send = (q: ResolvedQuirks) =>
+        const reasoning = sendEffort ? (req.reasoning ?? config.reasoning) : undefined;
+        const send = (q: ResolvedQuirks, level: ReasoningLevel | undefined) =>
           httpRequest(
             {
               url,
               headers: key ? { authorization: `Bearer ${key}` } : {},
-              body: buildChatBody(config.model, req, q, textTools),
+              body: buildChatBody(config.model, req, q, textTools, level),
             },
             {
               signal,
@@ -300,16 +330,22 @@ export function createOpenAICompatAdapter(ctx: ProviderContext): ModelAdapter {
           );
         let res: HttpResponse;
         try {
-          res = await send(quirks);
+          res = await send(quirks, reasoning);
         } catch (error) {
-          const adapted = adaptQuirks(error, quirks);
-          if (!adapted) throw error;
-          ctx.logger?.debug(
-            { modelId: config.id, quirks: adapted },
-            'retrying with adapted quirks',
-          );
-          quirks = adapted;
-          res = await send(quirks);
+          if (reasoning !== undefined && rejectsReasoningEffort(error)) {
+            ctx.logger?.debug({ modelId: config.id }, 'retrying without reasoning_effort');
+            sendEffort = false;
+            res = await send(quirks, undefined);
+          } else {
+            const adapted = adaptQuirks(error, quirks);
+            if (!adapted) throw error;
+            ctx.logger?.debug(
+              { modelId: config.id, quirks: adapted },
+              'retrying with adapted quirks',
+            );
+            quirks = adapted;
+            res = await send(quirks, reasoning);
+          }
         }
         yield* readChatStream(res, {
           url: redact(url, ctx.secrets()),

@@ -1,4 +1,11 @@
-import type { ChatMessage, ModelAdapter, StreamEvent, ToolCallRequest } from '@desiide/models';
+import {
+  historyFor,
+  type ChatMessage,
+  type ModelAdapter,
+  type ProviderState,
+  type StreamEvent,
+  type ToolCallRequest,
+} from '@desiide/models';
 import {
   ToolName,
   type CostPerMTok,
@@ -123,16 +130,26 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
     const messageId = newId();
     let text = '';
     const toolCalls: ToolCallRequest[] = [];
+    let providerState: ProviderState | undefined;
     let terminal: StreamEvent | undefined;
-    const stream = model.chat({ system: SYSTEM_PROMPT, messages: history, tools }, signal);
+    // Provider state from another model (e.g. before a cascade escalation) is dropped (ADR-022).
+    const messages = historyFor(history, model.id);
+    const stream = model.chat({ system: SYSTEM_PROMPT, messages, tools }, signal);
     for await (const event of stream) {
       switch (event.type) {
         case 'text_delta':
           text += event.text;
           io.emit({ type: 'text_delta', messageId, delta: event.text });
           break;
+        case 'reasoning_delta':
+          // Shown in the transcript only; never added to history (ADR-022).
+          io.emit({ type: 'reasoning_delta', messageId, delta: event.text });
+          break;
         case 'tool_call':
           toolCalls.push(event.call);
+          break;
+        case 'provider_state':
+          providerState = event.state;
           break;
         case 'usage': {
           const usage: Usage = {
@@ -163,6 +180,7 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
       role: 'assistant',
       content: text,
       ...(toolCalls.length > 0 ? { toolCalls } : {}),
+      ...(providerState ? { providerState } : {}),
     });
     return { text, toolCalls };
   }

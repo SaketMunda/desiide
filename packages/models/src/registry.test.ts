@@ -125,6 +125,24 @@ describe('ModelRegistry', () => {
     expect(registry.forRole('strong').id).toBe('local');
   });
 
+  it("config() fills in the provider's published cost unless the config sets one", () => {
+    const registry = createModelRegistry({
+      providers: {
+        anthropic: fakeProvider({}, { costPerMTok: () => ({ input: 4, output: 20 }) }),
+        ollama: fakeProvider(),
+      },
+      requestSecret: () => Promise.resolve(SENTINEL),
+    });
+    registry.configure(
+      config({
+        models: [cloud, { ...cloud, id: 'priced', costPerMTok: { input: 1, output: 2 } }, local],
+      }),
+    );
+    expect(registry.config('cloud')?.costPerMTok).toEqual({ input: 4, output: 20 });
+    expect(registry.config('priced')?.costPerMTok).toEqual({ input: 1, output: 2 });
+    expect(registry.config('local')?.costPerMTok).toBeUndefined();
+  });
+
   it('config-declared capabilities override adapter ones', async () => {
     const registry = createModelRegistry({
       providers: { ollama: fakeProvider() },

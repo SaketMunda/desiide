@@ -9,11 +9,12 @@ import {
   createOllamaAdapter,
   discoverOllama,
   ollamaRoot,
+  ollamaThink,
 } from './ollama.ts';
 import type { ProviderContext } from './registry.ts';
 import { collectEvents, runAdapterContract } from './testing/contract.ts';
 import { loadFixture, replayFetch, type ReplayFetch } from './testing/fixtures.ts';
-import type { ChatRequest, StreamEvent } from './types.ts';
+import type { ChatRequest, ReasoningLevel, StreamEvent } from './types.ts';
 import type { FetchLike } from './http.ts';
 
 const fixture = (name: string) =>
@@ -155,10 +156,48 @@ describe('OllamaAdapter', () => {
     expect(events.at(-1)).toEqual({ type: 'done', stopReason: 'tool_calls' });
   });
 
-  it('ignores thinking and reports the answer', async () => {
-    const { events } = await chat('thinking', TOOLS, { model: 'qwen3:4b' });
+  it('streams message.thinking as reasoning_delta, apart from the answer (ADR-022)', async () => {
+    const { events, replay } = await chat('thinking', TOOLS, { model: 'qwen3:4b' });
+    const reasoning = events.flatMap((e) => (e.type === 'reasoning_delta' ? [e.text] : []));
+    expect(reasoning.join('')).toBe('Okay, the user said');
     expect(textOf(events)).toBe('Hi!');
+    expect(events.findIndex((e) => e.type === 'text_delta')).toBeGreaterThan(
+      events.findLastIndex((e) => e.type === 'reasoning_delta'),
+    );
     expect(events.at(-1)).toEqual({ type: 'done', stopReason: 'max_tokens' });
+    // Unset reasoning sends nothing: the model's own default applies.
+    expect(chatBody(replay)).not.toHaveProperty('think');
+  });
+
+  it.each<[ReasoningLevel, unknown]>([
+    ['off', false],
+    ['low', true],
+    ['high', true],
+  ])('reasoning %s on a thinking model sends think: %s', async (level, think) => {
+    const { replay } = await chat('thinking', TOOLS, { model: 'qwen3:4b', reasoning: level });
+    expect(chatBody(replay).think).toBe(think);
+  });
+
+  it('a request overrides the configured reasoning', async () => {
+    const { replay } = await chat(
+      'thinking',
+      { ...TOOLS, reasoning: 'off' },
+      { model: 'qwen3:4b', reasoning: 'high' },
+    );
+    expect(chatBody(replay).think).toBe(false);
+  });
+
+  it('never sends think to a model without the thinking capability', async () => {
+    const { replay } = await chat('text', TOOLS, { reasoning: 'high' });
+    expect(chatBody(replay)).not.toHaveProperty('think');
+  });
+
+  it('ollamaThink: gpt-oss takes a level, other thinking models on/off', () => {
+    expect(ollamaThink('gpt-oss:20b', 'medium', true)).toBe('medium');
+    expect(ollamaThink('gpt-oss:20b', 'off', true)).toBe(false);
+    expect(ollamaThink('qwen3:4b', 'medium', true)).toBe(true);
+    expect(ollamaThink('qwen3:4b', undefined, true)).toBeUndefined();
+    expect(ollamaThink('qwen2.5:7b', 'off', false)).toBeUndefined();
   });
 
   it('models without tool support use the text tool protocol', async () => {

@@ -177,14 +177,18 @@ export const schemaFixtures: Record<string, SchemaFixture> = {
       { id: 'local', provider: 'ollama', model: 'qwen', baseUrl: 'http://localhost:11434/v1' },
       { ...modelConfig, locality: 'local' },
       { ...modelConfig, provider: 'openai-compatible', quirks: { streamUsage: false } },
+      { ...modelConfig, reasoning: 'off' },
+      { ...modelConfig, reasoning: 'high' },
     ],
     invalid: [
       { ...modelConfig, apiKey: 'sk-ant-raw-key' },
       { ...modelConfig, baseUrl: 'not a url' },
       { ...modelConfig, locality: 'onprem' },
       { ...modelConfig, quirks: { maxTokensField: 'max_output_tokens' } },
+      { ...modelConfig, reasoning: 'max' },
     ],
   },
+  ReasoningLevel: { valid: ['off', 'low', 'medium', 'high'], invalid: ['max', true] },
   ModelQuirks: {
     valid: [{}, { streamUsage: true, maxTokensField: 'max_completion_tokens' }],
     invalid: [{ streamUsage: 'yes' }, { toolArgs: 'single' }],
@@ -301,6 +305,10 @@ export const schemaFixtures: Record<string, SchemaFixture> = {
   TextDeltaEvent: {
     valid: [{ ...env, type: 'text_delta', messageId: 'm1', delta: 'Hel' }],
     invalid: [{ ...env, type: 'text_delta', delta: 'Hel' }],
+  },
+  ReasoningDeltaEvent: {
+    valid: [{ ...env, type: 'reasoning_delta', messageId: 'm1', delta: 'Let me check' }],
+    invalid: [{ ...env, type: 'reasoning_delta', delta: 'x' }],
   },
   ToolCallStartedEvent: {
     valid: [{ ...env, type: 'tool_call_started', call: toolCall }],
