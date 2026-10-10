@@ -7,7 +7,6 @@ import type { ChatMessage } from './types.ts';
 export function historyFor(messages: readonly ChatMessage[], adapterId: string): ChatMessage[] {
   return messages.map((m) => {
     if (m.role !== 'assistant' || !m.providerState || m.providerState.owner === adapterId) return m;
-    const { providerState: _dropped, ...rest } = m;
-    return rest;
+    return { role: m.role, content: m.content, ...(m.toolCalls ? { toolCalls: m.toolCalls } : {}) };
   });
 }

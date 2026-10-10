@@ -1,0 +1,2 @@
+{"response":{"status":401,"headers":{"content-type":"application/json","request-id":"req_fixture"}}}
+{"chunk":"{\"type\": \"error\", \"error\": {\"type\": \"authentication_error\", \"message\": \"invalid x-api-key\"}, \"request_id\": \"req_fixture\"}"}

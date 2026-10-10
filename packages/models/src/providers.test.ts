@@ -8,8 +8,56 @@ const fixture = (path: string) =>
   loadFixture(new URL(`../test/fixtures/${path}.jsonl`, import.meta.url).pathname);
 
 describe('BUILTIN_PROVIDERS through the registry', () => {
-  it('ships openai-compatible and ollama', () => {
-    expect(Object.keys(BUILTIN_PROVIDERS).sort()).toEqual(['ollama', 'openai-compatible']);
+  it('ships every provider the protocol names', () => {
+    expect(Object.keys(BUILTIN_PROVIDERS).sort()).toEqual([
+      'anthropic',
+      'ollama',
+      'openai-compatible',
+    ]);
+  });
+
+  it('Anthropic end to end: key via secrets.get, models.test, published cost, no discovery', async () => {
+    const replay = replayFetch(fixture('anthropic/text'));
+    const asked: string[] = [];
+    const registry = createModelRegistry({
+      providers: BUILTIN_PROVIDERS,
+      requestSecret: (name) => (asked.push(name), Promise.resolve('sk-ant-e2e')),
+      fetch: replay.fetch,
+    });
+    registry.configure(
+      DesiideConfig.parse({
+        models: [
+          {
+            id: 'claude',
+            provider: 'anthropic',
+            model: 'claude-opus-5-5',
+            apiKey: 'secret:anthropic',
+          },
+        ],
+      }),
+    );
+    expect(await registry.test('claude', new AbortController().signal)).toMatchObject({ ok: true });
+    expect(asked).toEqual(['secret:anthropic']);
+    expect(replay.requests[0]?.headers['x-api-key']).toBe('sk-ant-e2e');
+    expect(registry.config('claude')?.costPerMTok).toEqual({ input: 4, output: 20 });
+    const { models, discovered } = await registry.list(
+      { discover: true },
+      new AbortController().signal,
+    );
+    expect(models).toMatchObject([
+      {
+        id: 'claude',
+        healthy: true,
+        locality: 'cloud',
+        capabilities: { contextTokens: 1_000_000 },
+      },
+    ]);
+    // Only the test request went to Anthropic; discovery never asks a cloud provider.
+    const toAnthropic = replay.requests.filter((r) =>
+      r.url.startsWith('https://api.anthropic.com'),
+    );
+    expect(toAnthropic).toHaveLength(1);
+    expect(discovered.every((m) => m.provider !== 'anthropic')).toBe(true);
   });
 
   it('models.test against Ollama, and onboarding discovery of a running Ollama', async () => {

@@ -3,6 +3,7 @@ import {
   ModelCapabilities,
   ModelProvider,
   ModelRole,
+  type CostPerMTok,
   type ModelConfig,
   type ModelInfo,
   type ResultOf,
@@ -37,6 +38,8 @@ export interface ProviderDefinition {
    * running server. Must be a loopback URL: discovery never reaches beyond this machine on its own.
    */
   defaultBaseUrl?: string;
+  /** Published prices for a model, used when its config has no `costPerMTok`. */
+  costPerMTok?(model: string): CostPerMTok | undefined;
   /** Models a server offers (e.g. Ollama `/api/tags`). Only called for configured base URLs. */
   discover?(
     ctx: { baseUrl: string; fetch?: FetchLike; logger?: ModelLogger },
@@ -68,6 +71,7 @@ export interface ModelRegistry {
   forRole(role: ModelRole): ModelAdapter;
   /** Adapter capabilities with config-declared ones on top. */
   capabilities(id: string, signal?: AbortSignal): Promise<ModelCapabilities>;
+  /** The model's config, with the provider's published cost when the config has none. */
   config(id: string): ModelConfig | undefined;
   list(options: { discover: boolean }, signal: AbortSignal): Promise<ResultOf<'models.list'>>;
   /** A tiny request: latency to the first output, or the error kind. */
@@ -272,7 +276,10 @@ export function createModelRegistry(options: ModelRegistryOptions): ModelRegistr
     },
 
     config(id) {
-      return entries.get(id)?.config;
+      const config = entries.get(id)?.config;
+      if (!config || config.costPerMTok) return config;
+      const known = providers[config.provider]?.costPerMTok?.(config.model);
+      return known ? { ...config, costPerMTok: known } : config;
     },
 
     async list({ discover: wantDiscover }, signal) {

@@ -70,3 +70,12 @@ export {
   ollamaProvider,
   ollamaThink,
 } from './ollama.ts';
+export {
+  ANTHROPIC_DEFAULT_BASE_URL,
+  ANTHROPIC_KEY_HINT,
+  anthropicProvider,
+  createAnthropicAdapter,
+} from './anthropic.ts';
+export type { AnthropicAdapterOptions } from './anthropic.ts';
+export { CLAUDE_MODELS, claudeCapabilities, claudeModel } from './anthropic-models.ts';
+export type { ClaudeModel, ThinkingStyle } from './anthropic-models.ts';

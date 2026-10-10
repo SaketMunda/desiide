@@ -224,16 +224,19 @@ describe('OpenAICompatAdapter', () => {
     ['low', 'low'],
     ['medium', 'medium'],
     ['high', 'high'],
-  ])('reasoning %s sends reasoning_effort %s; a request overrides the config', async (level, effort) => {
-    const configured = await chat('text', { messages: TOOLS.messages }, { reasoning: level });
-    expect(bodyOf(configured.replay)).toMatchObject({ reasoning_effort: effort });
-    const overridden = await chat(
-      'text',
-      { messages: TOOLS.messages, reasoning: level },
-      { reasoning: level === 'off' ? 'high' : 'off' },
-    );
-    expect(bodyOf(overridden.replay)).toMatchObject({ reasoning_effort: effort });
-  });
+  ])(
+    'reasoning %s sends reasoning_effort %s; a request overrides the config',
+    async (level, effort) => {
+      const configured = await chat('text', { messages: TOOLS.messages }, { reasoning: level });
+      expect(bodyOf(configured.replay)).toMatchObject({ reasoning_effort: effort });
+      const overridden = await chat(
+        'text',
+        { messages: TOOLS.messages, reasoning: level },
+        { reasoning: level === 'off' ? 'high' : 'off' },
+      );
+      expect(bodyOf(overridden.replay)).toMatchObject({ reasoning_effort: effort });
+    },
+  );
 
   it('drops reasoning_effort for good when the server rejects it', async () => {
     const { adapter, replay } = setup(['reasoning-effort-rejected', 'text', 'text'], {

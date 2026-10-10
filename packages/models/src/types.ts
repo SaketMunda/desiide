@@ -36,7 +36,15 @@ export type ProviderState = z.infer<typeof ProviderState>;
 
 /** Provider-neutral history. Adapters normalize to their wire format (e.g. Anthropic turn rules). */
 export const ChatMessage = z.discriminatedUnion('role', [
-  z.object({ role: z.literal('user'), content: z.string() }),
+  z.object({
+    role: z.literal('user'),
+    content: z.string(),
+    /**
+     * The content is stable across calls (e.g. the repo map), so providers with prompt caching may
+     * cache the prefix up to and including it. The system prompt is always treated as stable.
+     */
+    cacheable: z.boolean().optional(),
+  }),
   z.object({
     role: z.literal('assistant'),
     content: z.string(),
