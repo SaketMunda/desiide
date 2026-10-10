@@ -15,6 +15,8 @@ export default defineConfig({
       input: 'webview/main.tsx',
       output: {
         entryFileNames: 'main.js',
+        // Lazily loaded highlight.js grammars.
+        chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: (asset) =>
           asset.names.some((n) => n.endsWith('.css')) ? 'main.css' : '[name][extname]',
       },

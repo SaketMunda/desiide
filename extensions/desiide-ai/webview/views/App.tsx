@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 import type { ExtensionToWebview, ViewId } from '../../shared/messages.ts';
 import { post, useBridge } from '../bridge.ts';
 import { PromptBox } from '../prompt/PromptBox.tsx';
+import { useTranscript } from '../transcript/store.ts';
+import { TaskStream } from '../transcript/TaskStream.tsx';
 import { Button, EmptyState } from '../ui/index.ts';
 import { Showcase } from './Showcase.tsx';
 
@@ -26,7 +28,7 @@ export function App({ view }: AppProps) {
   useEffect(() => post({ type: 'ready', view }), [view]);
 
   if (showcase) return <Showcase />;
-  if (view === 'panel') return <PromptBox />;
+  if (view === 'panel') return <Panel />;
 
   return (
     <EmptyState
@@ -46,4 +48,9 @@ export function App({ view }: AppProps) {
       }
     />
   );
+}
+
+function Panel() {
+  const { state } = useTranscript();
+  return <PromptBox stream={<TaskStream />} hasTasks={state.order.length > 0} />;
 }
