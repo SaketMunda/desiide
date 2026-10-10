@@ -23,9 +23,12 @@ export async function resolveRgPath(
   }
 }
 
-/** Walk rules shared by list_files and search: gitignore-aware, skip .git and node_modules. */
-function walkArgs(ctx: ToolContext): string[] {
-  const ignores = ['.git', 'node_modules', ...(ctx.projectConfig.ignoreGlobs ?? [])];
+/**
+ * Walk rules shared by list_files, search, and the context engine: gitignore-aware, skip .git and
+ * node_modules plus the project's `ignoreGlobs`.
+ */
+export function rgWalkArgs(ignoreGlobs: readonly string[] = []): string[] {
+  const ignores = ['.git', 'node_modules', ...ignoreGlobs];
   // --no-config: RIPGREP_CONFIG_PATH must not inject flags (e.g. --follow).
   return [
     '--no-config',
@@ -93,7 +96,15 @@ export const listFilesTool = defineTool({
     }
     const target = resolved.rel === '.' ? [] : ['--', resolved.rel];
     const r = await runRg(
-      ['--files', '--sort', 'path', '--max-depth', String(args.depth), ...walkArgs(ctx), ...target],
+      [
+        '--files',
+        '--sort',
+        'path',
+        '--max-depth',
+        String(args.depth),
+        ...rgWalkArgs(ctx.projectConfig.ignoreGlobs),
+        ...target,
+      ],
       resolved.root,
       ctx,
       signal,
@@ -175,7 +186,7 @@ export const searchTool = defineTool({
       String(args.maxResults + 1),
       caseFlag,
       ...(args.regex ? [] : ['--fixed-strings']),
-      ...walkArgs(ctx),
+      ...rgWalkArgs(ctx.projectConfig.ignoreGlobs),
       ...(args.glob ? ['--glob', args.glob] : []),
       // -e keeps a query like "--files" from being read as a flag.
       '-e',

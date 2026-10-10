@@ -1,0 +1,125 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AC4 snapshot of the fixture repo > renders refs, selection, diff, open editors, and the repo map in priority order 2`] = `
+{
+  "budgetTokens": 8192,
+  "files": [
+    {
+      "language": "typescript",
+      "path": "src/app.ts",
+      "sensitive": false,
+      "sizeLines": 6,
+    },
+    {
+      "language": "typescript",
+      "path": "src/billing/invoice.ts",
+      "sensitive": true,
+      "sizeLines": 3,
+    },
+    {
+      "language": "typescript",
+      "path": "src/billing/tax.ts",
+      "sensitive": true,
+      "sizeLines": 1,
+    },
+    {
+      "language": "dotenv",
+      "path": ".env",
+      "sensitive": true,
+      "sizeLines": 2,
+    },
+    {
+      "language": "typescript",
+      "path": "src/parser.ts",
+      "sensitive": false,
+      "sizeLines": 400,
+    },
+    {
+      "language": "json",
+      "path": "package-lock.json",
+      "sensitive": false,
+      "sizeLines": 4,
+    },
+    {
+      "language": "typescript",
+      "path": "src/auth/session.ts",
+      "sensitive": true,
+      "sizeLines": 1,
+    },
+    {
+      "language": "markdown",
+      "path": "README.md",
+      "sensitive": false,
+      "sizeLines": 3,
+    },
+  ],
+  "omitted": [
+    {
+      "label": ".env",
+      "reason": "may contain secrets, not shown; read_file asks the user first",
+    },
+    {
+      "label": "package-lock.json",
+      "reason": "lockfile, not shown",
+    },
+  ],
+  "sections": [
+    {
+      "kind": "file",
+      "path": "src/app.ts",
+      "truncated": false,
+    },
+    {
+      "kind": "folder",
+      "path": "src/billing",
+      "truncated": false,
+    },
+    {
+      "kind": "selection",
+      "path": "src/parser.ts",
+      "truncated": true,
+    },
+    {
+      "kind": "diff",
+      "path": undefined,
+      "truncated": false,
+    },
+    {
+      "kind": "diff",
+      "path": undefined,
+      "truncated": false,
+    },
+    {
+      "kind": "file",
+      "path": "src/billing/invoice.ts",
+      "truncated": false,
+    },
+    {
+      "kind": "file",
+      "path": "src/billing/tax.ts",
+      "truncated": false,
+    },
+    {
+      "kind": "open_editor",
+      "path": "README.md",
+      "truncated": false,
+    },
+    {
+      "kind": "open_editor",
+      "path": "src/auth/session.ts",
+      "truncated": false,
+    },
+    {
+      "kind": "repo_map",
+      "path": undefined,
+      "truncated": false,
+    },
+    {
+      "kind": "omitted",
+      "path": undefined,
+      "truncated": false,
+    },
+  ],
+  "tokenEstimate": 1205,
+}
+`;
