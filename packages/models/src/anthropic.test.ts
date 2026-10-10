@@ -98,6 +98,23 @@ describe('AnthropicAdapter', () => {
     expect(req?.headers).not.toHaveProperty('authorization');
   });
 
+  it('ignores ANTHROPIC_* environment credentials and base URL (keys come from SecretStorage only)', async () => {
+    const saved = { ...process.env };
+    process.env.ANTHROPIC_BASE_URL = 'https://env-host.example.test';
+    process.env.ANTHROPIC_AUTH_TOKEN = 'env-token';
+    process.env.ANTHROPIC_API_KEY = 'env-key';
+    try {
+      const { replay } = await chat('text');
+      const req = replay.requests[0];
+      expect(req?.url).toBe('https://api.anthropic.com/v1/messages');
+      expect(req?.headers['x-api-key']).toBe(KEY);
+      expect(req?.headers).not.toHaveProperty('authorization');
+      expect(JSON.stringify(req?.headers)).not.toMatch(/env-(token|key)/);
+    } finally {
+      process.env = saved;
+    }
+  });
+
   it('uses a configured base URL', async () => {
     const { replay } = await chat('text', TOOLS, { baseUrl: 'https://proxy.example.test/' });
     expect(replay.requests[0]?.url).toBe('https://proxy.example.test/v1/messages');
