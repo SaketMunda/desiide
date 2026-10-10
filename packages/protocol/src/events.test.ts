@@ -39,6 +39,7 @@ describe('parseTaskEvent', () => {
       [
         'state_changed',
         'text_delta',
+        'reasoning_delta',
         'tool_call_started',
         'tool_call_finished',
         'edit_proposed',

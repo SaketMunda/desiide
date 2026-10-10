@@ -35,6 +35,17 @@ export const TextDeltaEvent = z.object({
   delta: z.string(),
 });
 
+/**
+ * Model reasoning ("thinking") as it streams (ADR-022). Shown, never fed back to the model, and
+ * never sent to Jev or the decision log. `messageId` matches the turn's `text_delta`s.
+ */
+export const ReasoningDeltaEvent = z.object({
+  ...envelope,
+  type: z.literal('reasoning_delta'),
+  messageId: Id,
+  delta: z.string(),
+});
+
 export const ToolCallStartedEvent = z.object({
   ...envelope,
   type: z.literal('tool_call_started'),
@@ -93,6 +104,7 @@ export const ErrorEvent = z.object({
 export const TaskEvent = z.discriminatedUnion('type', [
   StateChangedEvent,
   TextDeltaEvent,
+  ReasoningDeltaEvent,
   ToolCallStartedEvent,
   ToolCallFinishedEvent,
   EditProposedEvent,
