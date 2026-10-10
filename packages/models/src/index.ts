@@ -24,6 +24,7 @@ export type {
   RetryPolicy,
 } from './http.ts';
 export { collectTurn } from './stream.ts';
+export { historyFor } from './history.ts';
 export type { CollectedTurn } from './stream.ts';
 export { complete } from './complete.ts';
 export {

@@ -318,7 +318,12 @@ export function createModelRegistry(options: ModelRegistryOptions): ModelRegistr
             };
             break;
           }
-          if (event.type === 'text_delta' || event.type === 'tool_call' || event.type === 'done') {
+          if (
+            event.type === 'text_delta' ||
+            event.type === 'reasoning_delta' ||
+            event.type === 'tool_call' ||
+            event.type === 'done'
+          ) {
             result = { ok: true, latencyMs: Math.max(0, Math.round(now() - started)) };
             break;
           }

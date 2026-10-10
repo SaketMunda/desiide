@@ -161,6 +161,14 @@ describe('contract invariants catch broken adapters', () => {
         { type: 'done', stopReason: 'end' },
       ],
     ],
+    [
+      'two provider_state events',
+      [
+        { type: 'provider_state', state: { owner: 'a', data: 1 } },
+        { type: 'provider_state', state: { owner: 'a', data: 2 } },
+        { type: 'done', stopReason: 'end' },
+      ],
+    ],
   ])('rejects %s', async (_label, events) => {
     await expect(run(events)).rejects.toThrow();
   });

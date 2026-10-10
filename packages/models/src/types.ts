@@ -2,12 +2,13 @@ import {
   FileEdit,
   ModelCapabilities,
   ModelErrorKind,
+  ReasoningLevel,
   WorkspacePath,
   type ModelProvider,
 } from '@desiide/protocol';
 import * as z from 'zod';
 
-export { ModelCapabilities, ModelErrorKind };
+export { ModelCapabilities, ModelErrorKind, ReasoningLevel };
 
 /** Model-facing tool spec. COR-3's `toolSpecs()` output is assignable to it. */
 export const ToolSpec = z.object({
@@ -25,6 +26,14 @@ export const ToolCallRequest = z.object({
 });
 export type ToolCallRequest = z.infer<typeof ToolCallRequest>;
 
+/**
+ * Opaque, provider-owned data attached to an assistant turn, e.g. Anthropic's signed thinking
+ * blocks, which must be sent back during tool use (ADR-022). Only the adapter whose `id` is
+ * `owner` reads it; every other adapter ignores it, and `historyFor` drops it on a model change.
+ */
+export const ProviderState = z.object({ owner: z.string().min(1), data: z.unknown() });
+export type ProviderState = z.infer<typeof ProviderState>;
+
 /** Provider-neutral history. Adapters normalize to their wire format (e.g. Anthropic turn rules). */
 export const ChatMessage = z.discriminatedUnion('role', [
   z.object({ role: z.literal('user'), content: z.string() }),
@@ -32,6 +41,8 @@ export const ChatMessage = z.discriminatedUnion('role', [
     role: z.literal('assistant'),
     content: z.string(),
     toolCalls: z.array(ToolCallRequest).optional(),
+    /** Never reasoning text in the clear; see `ProviderState`. */
+    providerState: ProviderState.optional(),
   }),
   z.object({
     role: z.literal('tool'),
@@ -49,6 +60,8 @@ export interface ChatRequest {
   tools?: ToolSpec[];
   maxTokens?: number;
   temperature?: number;
+  /** Overrides the model's configured `reasoning` for this call (ADR-022). */
+  reasoning?: ReasoningLevel;
 }
 
 export const StopReason = z.enum(['end', 'tool_calls', 'max_tokens', 'other']);
@@ -68,7 +81,11 @@ export type ModelErrorInfo = z.infer<typeof ModelErrorInfo>;
  */
 export const StreamEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('text_delta'), text: z.string() }),
+  /** Reasoning ("thinking") text: shown to the user, never put back into history (ADR-022). */
+  z.object({ type: z.literal('reasoning_delta'), text: z.string() }),
   z.object({ type: z.literal('tool_call'), call: ToolCallRequest }),
+  /** At most one, before the terminal event: store it on the assistant turn's `providerState`. */
+  z.object({ type: z.literal('provider_state'), state: ProviderState }),
   z.object({
     type: z.literal('usage'),
     inputTokens: z.int().nonnegative(),
