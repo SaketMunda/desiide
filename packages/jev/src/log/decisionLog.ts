@@ -18,13 +18,14 @@ export interface DecisionLogOptions {
   onInvalidLine?(file: string, line: number): void;
 }
 
+/** `decisions.list` params as parsed, so `undefined` stands for "no filter". */
 export interface DecisionQuery {
-  taskId?: string;
-  pack?: PackId;
-  outcome?: PolicyOutcome;
+  taskId?: string | undefined;
+  pack?: PackId | undefined;
+  outcome?: PolicyOutcome | undefined;
   limit: number;
   /** Opaque, from a previous page's `nextCursor`. */
-  cursor?: string;
+  cursor?: string | undefined;
 }
 
 export interface DecisionPage {
