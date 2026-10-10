@@ -1,6 +1,6 @@
 # UI-3 · Task stream (transcript)
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, FND-2 · **Skills:** ide-editor-shell
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, FND-2 · **Skills:** ide-editor-shell
 
 ## Purpose
 Render a running or finished task from the `task.event` stream: what the agent is saying, doing, and costing.

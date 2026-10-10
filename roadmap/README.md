@@ -38,7 +38,7 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [JEV-4](modules/JEV-4-decision-log.md) | Decision log & replay | Alpha | S | JEV-1 | review |
 | [UI-1](modules/UI-1-extension-shell.md) | Extension shell & UI kit | Alpha | M | FND-1 | done |
 | [UI-2](modules/UI-2-prompt-box.md) | Prompt Box | Alpha | M | UI-1, FND-2 | done |
-| [UI-3](modules/UI-3-task-stream.md) | Task stream (transcript) | Alpha | M | UI-1, FND-2 | todo |
+| [UI-3](modules/UI-3-task-stream.md) | Task stream (transcript) | Alpha | M | UI-1, FND-2 | in-progress |
 | [UI-4](modules/UI-4-review-gate.md) | Review & approval (diffs, commands) | Alpha | L | UI-3, COR-2 | todo |
 | [UI-5](modules/UI-5-decision-panel.md) | Decision panel | Alpha | M | UI-1, JEV-4 | todo |
 | [UI-6](modules/UI-6-settings-onboarding.md) | Settings & onboarding | Alpha | M | UI-1, MOD-1, JEV-1 | todo |

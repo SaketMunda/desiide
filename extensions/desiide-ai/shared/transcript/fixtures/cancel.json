@@ -1,0 +1,91 @@
+{
+  "description": "Cancelled by the user while the answer was streaming.",
+  "summary": {
+    "id": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+    "kind": "explain",
+    "instruction": "Explain the whole module",
+    "state": "queued",
+    "models": [],
+    "iteration": 0,
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "createdAt": "2026-10-10T14:20:37.370Z",
+    "updatedAt": "2026-10-10T14:20:37.370Z"
+  },
+  "events": [
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 0,
+      "ts": "2026-10-10T14:20:37.370Z",
+      "type": "state_changed",
+      "from": null,
+      "to": "queued"
+    },
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 1,
+      "ts": "2026-10-10T14:20:37.371Z",
+      "type": "state_changed",
+      "from": "queued",
+      "to": "planning"
+    },
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 2,
+      "ts": "2026-10-10T14:20:37.382Z",
+      "type": "state_changed",
+      "from": "planning",
+      "to": "running"
+    },
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 3,
+      "ts": "2026-10-10T14:20:37.396Z",
+      "type": "reasoning_delta",
+      "messageId": "5cebbab9-4996-4618-8136-adaa4c27614f",
+      "delta": "Thinking about the "
+    },
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 4,
+      "ts": "2026-10-10T14:20:37.396Z",
+      "type": "reasoning_delta",
+      "messageId": "5cebbab9-4996-4618-8136-adaa4c27614f",
+      "delta": "whole module."
+    },
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 5,
+      "ts": "2026-10-10T14:20:37.396Z",
+      "type": "text_delta",
+      "messageId": "5cebbab9-4996-4618-8136-adaa4c27614f",
+      "delta": "Here is "
+    },
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 6,
+      "ts": "2026-10-10T14:20:37.396Z",
+      "type": "text_delta",
+      "messageId": "5cebbab9-4996-4618-8136-adaa4c27614f",
+      "delta": "a long "
+    },
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 7,
+      "ts": "2026-10-10T14:20:37.396Z",
+      "type": "text_delta",
+      "messageId": "5cebbab9-4996-4618-8136-adaa4c27614f",
+      "delta": "explanation"
+    },
+    {
+      "taskId": "174a43f6-880b-4b5f-86f7-43a653ef04e6",
+      "seq": 8,
+      "ts": "2026-10-10T14:20:37.399Z",
+      "type": "state_changed",
+      "from": "running",
+      "to": "cancelled"
+    }
+  ]
+}

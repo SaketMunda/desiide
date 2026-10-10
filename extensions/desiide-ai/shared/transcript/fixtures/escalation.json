@@ -1,0 +1,445 @@
+{
+  "description": "Two shell commands escalated to the user: one approved, one rejected → done.",
+  "summary": {
+    "id": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+    "kind": "infra_change",
+    "instruction": "Clean dist and publish",
+    "state": "queued",
+    "models": [],
+    "iteration": 0,
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "createdAt": "2026-10-10T14:20:37.172Z",
+    "updatedAt": "2026-10-10T14:20:37.173Z"
+  },
+  "events": [
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 0,
+      "ts": "2026-10-10T14:20:37.173Z",
+      "type": "state_changed",
+      "from": null,
+      "to": "queued"
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 1,
+      "ts": "2026-10-10T14:20:37.173Z",
+      "type": "state_changed",
+      "from": "queued",
+      "to": "planning"
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 2,
+      "ts": "2026-10-10T14:20:37.184Z",
+      "type": "state_changed",
+      "from": "planning",
+      "to": "running"
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 3,
+      "ts": "2026-10-10T14:20:37.200Z",
+      "type": "text_delta",
+      "messageId": "b4c5ad61-633f-4c02-b5b1-f65905e08921",
+      "delta": "Cleaning the build output first."
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 4,
+      "ts": "2026-10-10T14:20:37.201Z",
+      "type": "usage",
+      "modelId": "qwen-local",
+      "usage": {
+        "inputTokens": 1200,
+        "outputTokens": 85,
+        "costUsd": 0.000616
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 5,
+      "ts": "2026-10-10T14:20:37.201Z",
+      "type": "tool_call_started",
+      "call": {
+        "id": "call_rm",
+        "tool": "shell",
+        "args": {
+          "command": "rm -rf dist"
+        },
+        "sideEffect": "external"
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 6,
+      "ts": "2026-10-10T14:20:37.212Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "a13dc3c3-fb96-4d11-814b-5b04f674d44d",
+        "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+        "pack": "risk_gate@1",
+        "question": "safe_now",
+        "engine": "rules",
+        "stateHash": "8ed3b6523d87e544cc81234d4195289a7a781e3e7ff3c8a5e6adb1d63aed7ed1",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "run_command",
+          "command": "rm -rf dist",
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": []
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "no",
+          "pYes": 0.03
+        },
+        "policyOutcome": "confirm",
+        "reasons": ["not_safe_now", "irreversible", "destructive_action"],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.212Z"
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 7,
+      "ts": "2026-10-10T14:20:37.213Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "095ba79b-3c7f-4b3e-929a-f46f42032d42",
+        "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+        "pack": "risk_gate@1",
+        "question": "reversible",
+        "engine": "rules",
+        "stateHash": "8ed3b6523d87e544cc81234d4195289a7a781e3e7ff3c8a5e6adb1d63aed7ed1",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "run_command",
+          "command": "rm -rf dist",
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": []
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "no",
+          "pYes": 0.03
+        },
+        "policyOutcome": "confirm",
+        "reasons": ["not_safe_now", "irreversible", "destructive_action"],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.213Z"
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 8,
+      "ts": "2026-10-10T14:20:37.213Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "16e0bf26-7266-4ba0-a9cc-e2d273abb1f2",
+        "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+        "pack": "risk_gate@1",
+        "question": "high_risk_area",
+        "engine": "rules",
+        "stateHash": "8ed3b6523d87e544cc81234d4195289a7a781e3e7ff3c8a5e6adb1d63aed7ed1",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "run_command",
+          "command": "rm -rf dist",
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": []
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "no",
+          "pYes": 0.05
+        },
+        "policyOutcome": "confirm",
+        "reasons": ["not_safe_now", "irreversible", "destructive_action"],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.213Z"
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 9,
+      "ts": "2026-10-10T14:20:37.213Z",
+      "type": "state_changed",
+      "from": "running",
+      "to": "awaiting_approval"
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 10,
+      "ts": "2026-10-10T14:20:37.213Z",
+      "type": "approval_required",
+      "approvalId": "8cbd6e9b-2497-4172-9028-1ed0e734f493",
+      "call": {
+        "id": "call_rm",
+        "tool": "shell",
+        "args": {
+          "command": "rm -rf dist"
+        },
+        "sideEffect": "external"
+      },
+      "outcome": "confirm",
+      "reasons": ["not_safe_now", "irreversible", "destructive_action"],
+      "decisionId": "a13dc3c3-fb96-4d11-814b-5b04f674d44d",
+      "paths": []
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 11,
+      "ts": "2026-10-10T14:20:37.215Z",
+      "type": "state_changed",
+      "from": "awaiting_approval",
+      "to": "running"
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 12,
+      "ts": "2026-10-10T14:20:37.219Z",
+      "type": "tool_call_finished",
+      "result": {
+        "callId": "call_rm",
+        "ok": true,
+        "output": "(no output)",
+        "truncated": false,
+        "exitCode": 0,
+        "durationMs": 4
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 13,
+      "ts": "2026-10-10T14:20:37.221Z",
+      "type": "text_delta",
+      "messageId": "2ae320eb-60fb-4496-bd2a-2f49d5a7b3e3",
+      "delta": "Now publishing."
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 14,
+      "ts": "2026-10-10T14:20:37.221Z",
+      "type": "usage",
+      "modelId": "qwen-local",
+      "usage": {
+        "inputTokens": 1200,
+        "outputTokens": 85,
+        "costUsd": 0.000616
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 15,
+      "ts": "2026-10-10T14:20:37.221Z",
+      "type": "tool_call_started",
+      "call": {
+        "id": "call_push",
+        "tool": "shell",
+        "args": {
+          "command": "git push origin main"
+        },
+        "sideEffect": "external"
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 16,
+      "ts": "2026-10-10T14:20:37.230Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "0e203ec2-05a6-472b-b4db-c60be8e3d6af",
+        "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+        "pack": "risk_gate@1",
+        "question": "safe_now",
+        "engine": "rules",
+        "stateHash": "d0d417c56d850d67cc8dbabd3033b9df814acc8091d6d518da386613e29ba72f",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "git_push",
+          "command": "git push origin main",
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": []
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "unknown",
+          "pYes": 0.4
+        },
+        "policyOutcome": "confirm",
+        "reasons": ["not_safe_now", "irreversible"],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.230Z"
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 17,
+      "ts": "2026-10-10T14:20:37.230Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "38756f79-3510-4bf5-acf2-e330e579a592",
+        "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+        "pack": "risk_gate@1",
+        "question": "reversible",
+        "engine": "rules",
+        "stateHash": "d0d417c56d850d67cc8dbabd3033b9df814acc8091d6d518da386613e29ba72f",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "git_push",
+          "command": "git push origin main",
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": []
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "no",
+          "pYes": 0.1
+        },
+        "policyOutcome": "confirm",
+        "reasons": ["not_safe_now", "irreversible"],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.230Z"
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 18,
+      "ts": "2026-10-10T14:20:37.230Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "0866a7e0-845a-4fcc-91d5-f013c49ba099",
+        "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+        "pack": "risk_gate@1",
+        "question": "high_risk_area",
+        "engine": "rules",
+        "stateHash": "d0d417c56d850d67cc8dbabd3033b9df814acc8091d6d518da386613e29ba72f",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "git_push",
+          "command": "git push origin main",
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": []
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "no",
+          "pYes": 0.05
+        },
+        "policyOutcome": "confirm",
+        "reasons": ["not_safe_now", "irreversible"],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.230Z"
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 19,
+      "ts": "2026-10-10T14:20:37.230Z",
+      "type": "state_changed",
+      "from": "running",
+      "to": "awaiting_approval"
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 20,
+      "ts": "2026-10-10T14:20:37.230Z",
+      "type": "approval_required",
+      "approvalId": "a60c7c39-6842-426f-9ff8-2c4a0f1244c6",
+      "call": {
+        "id": "call_push",
+        "tool": "shell",
+        "args": {
+          "command": "git push origin main"
+        },
+        "sideEffect": "external"
+      },
+      "outcome": "confirm",
+      "reasons": ["not_safe_now", "irreversible"],
+      "decisionId": "0e203ec2-05a6-472b-b4db-c60be8e3d6af",
+      "paths": []
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 21,
+      "ts": "2026-10-10T14:20:37.231Z",
+      "type": "state_changed",
+      "from": "awaiting_approval",
+      "to": "running"
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 22,
+      "ts": "2026-10-10T14:20:37.231Z",
+      "type": "tool_call_finished",
+      "result": {
+        "callId": "call_push",
+        "ok": false,
+        "output": "User rejected this shell call: not now",
+        "truncated": false,
+        "durationMs": 10,
+        "error": {
+          "kind": "rejected",
+          "message": "User rejected this shell call: not now",
+          "reasons": ["user_rejected"]
+        }
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 23,
+      "ts": "2026-10-10T14:20:37.232Z",
+      "type": "text_delta",
+      "messageId": "378c8dae-4d3a-4a7a-8f1f-c405d961f0cb",
+      "delta": "Skipped the push as you asked. The build output is clean."
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 24,
+      "ts": "2026-10-10T14:20:37.232Z",
+      "type": "usage",
+      "modelId": "qwen-local",
+      "usage": {
+        "inputTokens": 1200,
+        "outputTokens": 85,
+        "costUsd": 0.000616
+      }
+    },
+    {
+      "taskId": "28f66056-5127-45c6-abc0-e02d5dc67a90",
+      "seq": 25,
+      "ts": "2026-10-10T14:20:37.232Z",
+      "type": "state_changed",
+      "from": "running",
+      "to": "done"
+    }
+  ]
+}
