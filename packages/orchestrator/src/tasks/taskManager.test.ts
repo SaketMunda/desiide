@@ -84,6 +84,7 @@ describe('AC1 happy path', () => {
       toolCallId: 'c1',
       name: 'propose_edit',
       content: 'src/a.ts: applied',
+      cacheable: true,
     });
     const text = h.of(t.id).flatMap((e) => (e.type === 'text_delta' ? [e.delta] : []));
     expect(text.join('')).toBe('Fixing the bug.Done.');
@@ -196,6 +197,11 @@ describe('reasoning (ADR-022)', () => {
 
     const second = model.calls[1];
     expect(JSON.stringify(second?.messages)).not.toContain('I should read');
+    // The loop only appends, so every message it sends is marked cacheable.
+    expect(second?.messages.filter((m) => m.role !== 'assistant')).toEqual([
+      expect.objectContaining({ role: 'user', cacheable: true }),
+      expect.objectContaining({ role: 'tool', toolCallId: 'c1', cacheable: true }),
+    ]);
     // The opaque provider state rides along unchanged for the same model.
     expect(second?.messages[1]).toEqual({
       role: 'assistant',
@@ -457,6 +463,7 @@ describe('AC6 approvals', () => {
       name: 'shell',
       content: 'User rejected this shell call: no new dependencies',
       isError: true,
+      cacheable: true,
     });
     expect(h.of(t.id).find((e) => e.type === 'tool_call_finished')).toMatchObject({
       result: { ok: false, error: { kind: 'rejected', reasons: ['user_rejected'] } },

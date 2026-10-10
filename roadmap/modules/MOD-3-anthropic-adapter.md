@@ -42,7 +42,7 @@ A native Claude adapter using the official `@anthropic-ai/sdk`. It's the default
   - Official `@anthropic-ai/sdk` (0.132), raw `messages.create({stream: true})`. The SDK retries 408/409/429/5xx up to 3× and honors `retry-after`. A watchdog adds the first-token (60 s) and idle (30 s) timeouts.
   - **Credentials:** a subclass turns off the SDK's ambient credential chain (env, `ant` profiles, workload identity). The key and base URL are always passed explicitly, `authToken: null`, and SDK logging is off, because stdout is the JSON-RPC channel. Without a key: `auth` + hint, and no request is sent.
   - **Mapping:** system prompt separate, consecutive same-role messages merged, `tool_result`s first in the user turn after their `tool_use`, empty text dropped. Broken pairing is repaired: an unanswered `tool_use` gets an error result, and an orphan result becomes text.
-  - **Caching:** `cache_control` on the system prompt (which also covers the tools) and on `cacheable` user messages only, the latest first, at most 4.
+  - **Caching:** `cache_control` on the system prompt (which also covers the tools) and on `cacheable` user/tool messages only: the last flagged block of each of the latest turns, at most 4 breakpoints in all.
   - **Stream:** text and reasoning stream live. Tool calls (raw JSON, `eager_input_streaming`), `provider_state`, then one `usage` follow. `inputTokens` = input + cache read + cache write, with `cacheReadTokens` / `cacheWriteTokens` broken out.
   - **Errors:** overloaded (529 or in-stream) → `rate_limit`; prompt too long / 413 → `context_length`; 401/403 → `auth` + key hint; refusal → `bad_request` with the category; a stream without `message_stop` → `network`; a user abort → `cancelled`.
   - **Reasoning:** per-model `ThinkingStyle` (see Deviations). Thinking deltas → `reasoning_delta`. When a turn has thinking, all its blocks are kept verbatim as `providerState` and replayed by the same adapter id.
@@ -50,7 +50,7 @@ A native Claude adapter using the official `@anthropic-ai/sdk`. It's the default
   - Ollama: `message.thinking` → `reasoning_delta`. `reasoning` → `think` (`ollamaThink`): `false` for off, `true` for a level, the level itself for gpt-oss, and nothing for models whose `/api/show` lacks the `thinking` capability.
   - OpenAI-compatible: `delta.reasoning_content` / `delta.reasoning` → `reasoning_delta`. `reasoning` → `reasoning_effort` (`off` → `none`). If the server rejects the field, the request is sent once more without it, and later requests leave it out.
   - Unset reasoning sends nothing anywhere.
-- **COR-2 agent loop:** forwards `reasoning_delta` as a task event, never puts reasoning text into history, stores `providerState` on the assistant turn, and sends `historyFor(history, model.id)`.
+- **COR-2 agent loop:** forwards `reasoning_delta` as a task event, never puts reasoning text into history, stores `providerState` on the assistant turn, and sends `historyFor(history, model.id)`. Every user and tool message it appends is `cacheable` (the history only grows).
 
 **Evidence**
 1. AC1: `anthropic.test.ts` › `adapter contract` runs `runAdapterContract` over the `anthropic/*` fixtures: text, two tool calls with fragmented input, 401, 529, 429, prompt too long, overloaded mid-stream, truncated, refusal, pre-abort, cancel mid-stream.
@@ -72,7 +72,7 @@ A native Claude adapter using the official `@anthropic-ai/sdk`. It's the default
   - `config.update` with an Anthropic model, then `models.list` lists it healthy with the table's capabilities.
   - `models.test` with no stored key gives `auth` + hint. The env key was not used, and nothing was logged to stdout.
   - `initialize` answered in 47 ms. The bundle is 615 KB (SDK included).
-- `scripts/verify.sh` green: 1574 tests, 3 live tests skipped.
+- `scripts/verify.sh` green: 1575 tests, 3 live tests skipped.
 
 **Deviations**
 - **No thinking budgets on current models.** Every current Claude model rejects `budget_tokens` (400). Levels map to adaptive thinking + `output_config.effort` instead, and only `budget`-style models (Haiku 4.5) get `low/medium/high` = 2k/8k/24k tokens, with `max_tokens` raised by the budget. `off` depends on the model:
@@ -86,7 +86,8 @@ A native Claude adapter using the official `@anthropic-ai/sdk`. It's the default
 - **`temperature` is sent only to models that accept it** (Opus 4.6, Sonnet 4.6, Haiku 4.5) and never with thinking on. Elsewhere it's a 400.
 - **Tool input streams eagerly** (`eager_input_streaming: true`). Buffered, a large `propose_edit` looks like a stalled stream to the 30 s idle timeout. Input cut off by `max_tokens` reaches the loop raw, and COR-2's AC7 path reports it to the model.
 - **A refusal is an error** (`bad_request`, with the category), not `done: other`. Otherwise the loop would treat it as a finished answer and run the checks.
-- **Cache marking.** "Cacheable section" is a user message with `cacheable: true`. Nothing in the loop sets it yet: COR-2's first message mixes the task instruction with the context, so it isn't stable. COR-4 should send the repo map as its own `cacheable` message ahead of the instruction. Today only the system prompt (and the tools) are cached.
+- **Prompt caching covers the whole agent loop, not just the repo map.** In a long autonomous run, each turn re-sends the whole growing history, so caching only the system prompt would waste most of the input cost. The loop only ever appends to history, so it marks every message `cacheable` (user and tool messages; `cacheable` was added to tool messages too). The adapter keeps breakpoints on the system prompt and on the last cacheable block of each of the latest three turns. AC3 still holds: markers go only where the caller marked stable content. Test: `anthropic.test.ts` › "an append-only agent loop keeps rolling breakpoints…" and `taskManager.test.ts` › `reasoning (ADR-022)`.
+- **User decision (2026-10-10):** the user reviewed the deviations above and said to do what's best for the project: a fully autonomous, "build first, review after" agent. On that basis, the effort-based levels, the summarized display when unset, `provider_state`, and the rolling loop cache stand. The planning session may want to record the "summarized when unset" point in ADR-022.
 - **The first commit also carries the SDK dependency** (`package.json` + lockfile), not only the protocol change.
 
 **Known gaps**
@@ -96,7 +97,7 @@ A native Claude adapter using the official `@anthropic-ai/sdk`. It's the default
 - The SDK roughly doubles the orchestrator bundle (615 KB). Cold start measured at 47 ms to `initialize`.
 
 **Follow-ups**
-- **COR-4:** send the stable repo map as a separate `{role: 'user', content, cacheable: true}` message before the instruction (AC3's mechanism is ready).
+- **COR-4:** the loop already caches the whole task history. If the repo map should also be reused *across* tasks, send it as its own `cacheable` message ahead of the task instruction. Today the first message mixes the two.
 - **UI-3:** render `reasoning_delta` as a collapsed "Thinking…" block grouped by `messageId`.
 - **UI-6:** add `reasoning` (`off|low|medium|high`, unset = provider default) to the `desiide.models` settings schema, and explain that `off` on Opus 5.5 / Fable means "minimal".
 - **COR-5 / JEV:** cost routing can set `ChatRequest.reasoning` per call. Cascades must keep calling `historyFor` (the loop already does) when the model changes.

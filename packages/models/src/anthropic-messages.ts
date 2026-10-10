@@ -48,6 +48,7 @@ function parseInput(args: string): Record<string, unknown> {
 }
 
 type Block = Anthropic.ContentBlockParam;
+type CacheableBlock = Anthropic.TextBlockParam | Anthropic.ToolResultBlockParam;
 interface Turn {
   role: 'user' | 'assistant';
   content: Block[];
@@ -66,10 +67,10 @@ interface Turn {
 export function toAnthropicMessages(
   messages: readonly ChatMessage[],
   owner: string,
-): { messages: Anthropic.MessageParam[]; cacheable: Anthropic.TextBlockParam[] } {
+): { messages: Anthropic.MessageParam[]; cacheable: CacheableBlock[] } {
   const turns: Turn[] = [];
-  // The blocks of `cacheable` messages, in order: candidates for a cache breakpoint.
-  const cacheable: Anthropic.TextBlockParam[] = [];
+  // Blocks of `cacheable` messages: candidates for a cache breakpoint.
+  const flagged = new Set<Block>();
   const push = (role: Turn['role'], blocks: Block[]): void => {
     if (blocks.length === 0) return;
     const last = turns.at(-1);
@@ -94,7 +95,7 @@ export function toAnthropicMessages(
     if (m.role === 'user') {
       if (m.content === '') continue;
       const block: Anthropic.TextBlockParam = { type: 'text', text: m.content };
-      if (m.cacheable) cacheable.push(block);
+      if (m.cacheable) flagged.add(block);
       push('user', [block]);
     } else if (m.role === 'assistant') {
       const replay = replayBlocks(m.providerState, owner);
@@ -113,24 +114,25 @@ export function toAnthropicMessages(
       }
       push('assistant', blocks);
     } else {
-      push('user', [
-        {
-          type: 'tool_result',
-          tool_use_id: m.toolCallId,
-          content: m.content === '' ? '(no output)' : m.content,
-          ...(m.isError ? { is_error: true } : {}),
-        },
-      ]);
+      const block: Anthropic.ToolResultBlockParam = {
+        type: 'tool_result',
+        tool_use_id: m.toolCallId,
+        content: m.content === '' ? '(no output)' : m.content,
+        ...(m.isError ? { is_error: true } : {}),
+      };
+      if (m.cacheable) flagged.add(block);
+      push('user', [block]);
     }
   }
 
   repairPairing(turns);
-  return {
-    messages: turns
-      .filter((t) => t.content.length > 0)
-      .map((t) => ({ role: t.role, content: t.content })),
-    cacheable,
-  };
+  const sent = turns.filter((t) => t.content.length > 0);
+  // One candidate per turn, its last flagged block: two breakpoints in one turn waste one.
+  const cacheable = sent.flatMap((t) => {
+    const last = t.content.findLast((b): b is CacheableBlock => flagged.has(b));
+    return last ? [last] : [];
+  });
+  return { messages: sent.map((t) => ({ role: t.role, content: t.content })), cacheable };
 }
 
 function toParam(block: ReplayBlock): Block {
@@ -196,12 +198,12 @@ export function toAnthropicTools(tools: readonly ToolSpec[]): Anthropic.Tool[] {
 
 /**
  * Prompt-cache breakpoints, only on sections the caller marked stable: the system prompt (which
- * also covers the tools rendered before it) and `cacheable` user messages, latest first, up to
+ * also covers the tools rendered before it) and `cacheable` messages, latest first, up to
  * the API's limit. Mutates the blocks in place.
  */
 export function placeCacheBreakpoints(
   system: Anthropic.TextBlockParam[],
-  cacheable: readonly Anthropic.TextBlockParam[],
+  cacheable: readonly CacheableBlock[],
 ): void {
   const lastSystem = system.at(-1);
   if (lastSystem) lastSystem.cache_control = EPHEMERAL;

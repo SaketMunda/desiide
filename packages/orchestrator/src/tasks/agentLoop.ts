@@ -97,7 +97,11 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
   const tools = toolSpecs(task.allowedTools);
 
   const context = await opts.context.gather(task, signal);
-  const messages: ChatMessage[] = [{ role: 'user', content: firstMessage(task, context.text) }];
+  // The loop only appends to history, so every message ends a prefix later calls repeat: all are
+  // cacheable, and providers with prompt caching keep their breakpoints on the latest ones.
+  const messages: ChatMessage[] = [
+    { role: 'user', content: firstMessage(task, context.text), cacheable: true },
+  ];
   io.setState('running');
   io.setIteration(budget.iteration);
 
@@ -108,7 +112,11 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
       if (failures.length === 0) return;
       budget.nextIteration();
       io.setIteration(budget.iteration);
-      messages.push({ role: 'user', content: verificationFailedMessage(failures) });
+      messages.push({
+        role: 'user',
+        content: verificationFailedMessage(failures),
+        cacheable: true,
+      });
       io.setState('running');
       continue;
     }
@@ -121,6 +129,7 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
         name: call.name,
         content: result.output,
         ...(result.ok ? {} : { isError: true }),
+        cacheable: true,
       });
     }
   }

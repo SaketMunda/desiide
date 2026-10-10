@@ -417,6 +417,44 @@ describe('prompt caching (AC3)', () => {
     expect(p).not.toHaveProperty('cache_control');
   });
 
+  it('an append-only agent loop keeps rolling breakpoints on its latest turns, one per turn', () => {
+    const p = buildAnthropicParams(
+      'claude-opus-5-5',
+      {
+        system: 'S',
+        messages: [
+          { role: 'user', content: 'task', cacheable: true },
+          { role: 'assistant', content: '', toolCalls: [{ id: 't1', name: 'x', args: '{}' }] },
+          { role: 'tool', toolCallId: 't1', name: 'x', content: 'r1', cacheable: true },
+          {
+            role: 'assistant',
+            content: '',
+            toolCalls: [
+              { id: 't2', name: 'x', args: '{}' },
+              { id: 't3', name: 'x', args: '{}' },
+            ],
+          },
+          { role: 'tool', toolCallId: 't2', name: 'x', content: 'r2', cacheable: true },
+          { role: 'tool', toolCallId: 't3', name: 'x', content: 'r3', cacheable: true },
+        ],
+      },
+      'claude',
+      undefined,
+    );
+    const marks = p.messages.flatMap((m) =>
+      Array.isArray(m.content)
+        ? m.content.flatMap((b) =>
+            'cache_control' in b && b.cache_control
+              ? [b.type === 'tool_result' ? b.content : b.type === 'text' ? b.text : '?']
+              : [],
+          )
+        : [],
+    );
+    // System + the last block of each of the three cacheable turns; r2 shares a turn with r3.
+    expect(marks).toEqual(['task', 'r1', 'r3']);
+    expect(p.system?.[0]).toHaveProperty('cache_control');
+  });
+
   it('adds no markers when nothing is cacheable', () => {
     const p = buildAnthropicParams(
       'claude-opus-5-5',

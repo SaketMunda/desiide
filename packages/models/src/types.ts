@@ -40,8 +40,9 @@ export const ChatMessage = z.discriminatedUnion('role', [
     role: z.literal('user'),
     content: z.string(),
     /**
-     * The content is stable across calls (e.g. the repo map), so providers with prompt caching may
-     * cache the prefix up to and including it. The system prompt is always treated as stable.
+     * Everything up to and including this message stays the same in later calls (a repo map, or
+     * any turn of an append-only agent loop), so providers with prompt caching may cache that
+     * prefix. The system prompt is always treated as stable.
      */
     cacheable: z.boolean().optional(),
   }),
@@ -58,6 +59,8 @@ export const ChatMessage = z.discriminatedUnion('role', [
     name: z.string().min(1),
     content: z.string(),
     isError: z.boolean().optional(),
+    /** As on user messages. */
+    cacheable: z.boolean().optional(),
   }),
 ]);
 export type ChatMessage = z.infer<typeof ChatMessage>;
