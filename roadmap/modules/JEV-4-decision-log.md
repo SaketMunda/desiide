@@ -1,6 +1,6 @@
 # JEV-4 · Decision log & replay
 
-**Status:** todo · **Milestone:** Alpha · **Size:** S · **Depends on:** JEV-1 · **Skills:** ide-jev-decisions
+**Status:** in-progress · **Milestone:** Alpha · **Size:** S · **Depends on:** JEV-1 · **Skills:** ide-jev-decisions
 
 ## Purpose
 Every decision is recorded, inspectable, and replayable. This is the transparency promise and the debugging tool.
