@@ -27,7 +27,7 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [COR-1](modules/COR-1-orchestrator-host.md) | Orchestrator host & RPC | Alpha | M | FND-2 | done |
 | [COR-2](modules/COR-2-task-engine.md) | Task engine & agent loop | Alpha | L | FND-2, COR-1, MOD-1 | done |
 | [COR-3](modules/COR-3-tool-runner.md) | Tool runner | Alpha | M | FND-2 | done |
-| [COR-4](modules/COR-4-context-engine.md) | Context engine | Alpha | M | COR-3 | in-progress |
+| [COR-4](modules/COR-4-context-engine.md) | Context engine | Alpha | M | COR-3 | review |
 | [COR-5](modules/COR-5-workflows.md) | Workflows (single/cascade/critique) | Alpha + Beta | M | COR-2, JEV-2 | todo |
 | [MOD-1](modules/MOD-1-model-core.md) | Model core (interface, registry, HTTP) | Alpha | M | FND-2 | done |
 | [MOD-2](modules/MOD-2-openai-compat-adapter.md) | OpenAI-compatible + Ollama adapter | Alpha | M | MOD-1 | review |
