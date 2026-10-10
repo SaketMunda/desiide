@@ -59,6 +59,8 @@ export interface BundleInputs {
 
 // Smallest useful slice of a file (~300 tokens); smaller ones are left out instead.
 const MIN_FILE_CHARS = 1200;
+// A few lines around a selection are useful even when a whole slice of file isn't.
+const MIN_FOCUSED_CHARS = 600;
 const SELECTION_WINDOW_LINES = 40;
 const MAX_FOLDER_FILES = 40;
 const MAX_FOLDER_LISTING = 200;
@@ -135,7 +137,7 @@ function fileItem(
   };
   return {
     fullChars,
-    minChars: Math.min(MIN_FILE_CHARS, fullChars),
+    minChars: Math.min(focus ? MIN_FOCUSED_CHARS : MIN_FILE_CHARS, fullChars),
     render,
   };
 }
@@ -242,9 +244,18 @@ export async function buildContextBundle(inputs: BundleInputs): Promise<ContextB
   // ── Tier 1: files and folders the user attached, in their order; then their test files ──
   const tier1: Candidate[] = [];
   const mergedSelections = new Set<ContextRef>();
-  const addFile = (file: LoadedFile, title: string, focus?: LineRange, extra = ''): void => {
+  // Contents of an attached folder's files: after the explicit asks (refs, selections, diffs), so a
+  // big folder can't crowd those out.
+  const folderFiles: Candidate[] = [];
+  const addFile = (
+    tier: Candidate[],
+    file: LoadedFile,
+    title: string,
+    focus?: LineRange,
+    extra = '',
+  ): void => {
     included.add(file.path);
-    tier1.push({
+    tier.push({
       kind: 'file',
       path: file.path,
       label: file.path,
@@ -272,7 +283,7 @@ export async function buildContextBundle(inputs: BundleInputs): Promise<ContextB
       if (sel) mergedSelections.add(sel);
       const focus = sel ? selectionLines(sel.range) : undefined;
       const extra = focus ? `, selection lines ${focus.start + 1}-${focus.end + 1}` : '';
-      addFile(loaded.file, 'File', focus, extra);
+      addFile(tier1, loaded.file, 'File', focus, extra);
       continue;
     }
     // A folder: list what's in it, then add its files' contents in path order.
@@ -310,7 +321,7 @@ export async function buildContextBundle(inputs: BundleInputs): Promise<ContextB
       if (excludedByName(f) || sensitivity.secret(f)) continue;
       const l = await load(f);
       if (l.kind !== 'file') continue;
-      addFile(l.file, 'File');
+      addFile(folderFiles, l.file, 'File');
       added++;
     }
   }
@@ -411,8 +422,11 @@ export async function buildContextBundle(inputs: BundleInputs): Promise<ContextB
 
   // ── Pack ──
   const budgetChars = inputs.budgetTokens * 4;
-  const omittedReserve = Math.floor(budgetChars * OMITTED_RESERVE_SHARE);
-  const tiers = [tier1, tier2, tier3, tier4, tier5];
+  // Enough for a heading and a few entries even on a small budget.
+  const omittedReserve = Math.floor(
+    Math.max(budgetChars * OMITTED_RESERVE_SHARE, Math.min(400, budgetChars * 0.25)),
+  );
+  const tiers = [tier1, tier2, tier3, folderFiles, tier4, tier5];
   const packed = packTiers(
     tiers.map((t) => t.map((c) => c.item)),
     budgetChars - omittedReserve,

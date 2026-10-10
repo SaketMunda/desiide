@@ -87,7 +87,7 @@ export function buildRepoMap(allPaths: readonly string[], options: RepoMapOption
     .map(([lang, n]) => `${lang} ${n}`)
     .join(', ');
   const header =
-    `Repository map (${plural(paths.length, 'file')}, gitignored files left out` +
+    `### Repository map (${plural(paths.length, 'file')}, gitignored files left out` +
     `${languages ? `; ${languages}` : ''}):`;
   return { header, lines: renderTree(buildTree(paths), 0, opts) };
 }

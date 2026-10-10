@@ -55,8 +55,10 @@ export interface PackResult {
 }
 
 /**
- * Packs tiers in priority order: a tier gets what earlier tiers left over. Every rendered section
- * is charged its separator, so the joined text never exceeds `budgetChars`.
+ * Packs tiers in priority order: a tier gets what earlier tiers left over. Priority is strict:
+ * once a tier had to leave something out, later tiers get nothing, so a small open editor can't
+ * take the place of a file the user attached. Every rendered section is charged its separator,
+ * so the joined text never exceeds `budgetChars`.
  */
 export function packTiers(
   tiers: readonly (readonly PackItem[])[],
@@ -64,14 +66,16 @@ export function packTiers(
 ): PackResult {
   const sep = SECTION_SEPARATOR.length;
   let left = budgetChars;
+  let full = false;
   const rendered = tiers.map((items) => {
+    if (full) return items.map(() => undefined);
     const charged = items.map((item) => ({
       fullChars: item.fullChars + sep,
       minChars: item.minChars + sep,
       render: item.render,
     }));
     const alloc = allocate(charged, left);
-    return items.map((item, i) => {
+    const out = items.map((item, i) => {
       const a = alloc[i] ?? 0;
       if (a <= sep) return undefined;
       const text = item.render(a - sep);
@@ -79,6 +83,8 @@ export function packTiers(
       left -= text.length + sep;
       return text;
     });
+    full = out.includes(undefined);
+    return out;
   });
   return { rendered, usedChars: budgetChars - left };
 }

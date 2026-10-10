@@ -68,6 +68,11 @@ describe('packTiers', () => {
     expect(r.rendered[1]?.[0]).toHaveLength(1200 - 1002 - 2);
   });
 
+  it('gives later tiers nothing once a tier had to leave something out', () => {
+    const r = packTiers([[item(1000, 900, 'a'), item(1000, 900, 'b')], [item(10, 10, 'c')]], 1200);
+    expect(r.rendered).toEqual([['a'.repeat(1000), undefined], [undefined]]);
+  });
+
   it('leaves an item out when its share is below its minimum', () => {
     const r = packTiers([[item(1000, 100, 'a')], [item(1000, 500, 'b')]], 1300);
     expect(r.rendered[1]?.[0]).toBeUndefined();

@@ -94,6 +94,6 @@ export const EXCLUSION_TEXT: Readonly<Record<ExclusionReason, string>> = {
   lockfile: 'lockfile, not shown',
   binary: 'binary file, not shown',
   generated: 'generated file, not shown',
-  gitignored: 'ignored by .gitignore, not shown',
+  gitignored: 'ignored (.gitignore or ignoreGlobs), not shown',
   secret: 'may contain secrets, not shown; read_file asks the user first',
 };

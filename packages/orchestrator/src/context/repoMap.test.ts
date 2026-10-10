@@ -16,7 +16,7 @@ describe('buildRepoMap', () => {
   it('summarizes languages and a depth-limited tree, without lockfiles or binaries', () => {
     const map = buildRepoMap(files, { maxDepth: 2, maxFilesPerDir: 3 });
     expect([map.header, ...map.lines].join('\n')).toMatchInlineSnapshot(`
-      "Repository map (25 files, gitignored files left out; python 20, typescript 3, json 1, markdown 1):
+      "### Repository map (25 files, gitignored files left out; python 20, typescript 3, json 1, markdown 1):
       src/ (23 files)
         deep/ (1 file)
         many/ (20 files)
