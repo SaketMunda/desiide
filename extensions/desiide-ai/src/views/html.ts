@@ -17,7 +17,9 @@ export function buildCsp(nonce: string, cspSource: string): string {
     `img-src ${cspSource} data:`,
     `font-src ${cspSource}`,
     `style-src ${cspSource}`,
-    `script-src 'nonce-${nonce}'`,
+    // 'strict-dynamic': chunks the nonce'd bundle imports (highlight.js grammars) may load; no
+    // other script can.
+    `script-src 'nonce-${nonce}' 'strict-dynamic'`,
   ].join('; ');
 }
 

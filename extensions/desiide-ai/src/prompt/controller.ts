@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks';
 import * as vscode from 'vscode';
-import type { Range } from '@desiide/protocol';
+import type { Range, TaskInput, TaskSummary } from '@desiide/protocol';
 import type { ExtensionToWebview, MentionItem, WebviewToExtension } from '../../shared/messages.ts';
 import type { MessageRouter } from '../bridge/router.ts';
 import type { Logger } from '../log.ts';
@@ -51,6 +51,8 @@ export class PromptController implements vscode.Disposable {
     private readonly tasks: FallbackTaskClient,
     private readonly state: vscode.Memento,
     private readonly log: Logger,
+    /** Called after `task.create` succeeds (the task stream retains the params for Retry). */
+    private readonly onCreated: (task: TaskSummary, params: TaskInput) => void = () => {},
   ) {
     this.index = new FileIndex((signal) => this.listFiles(signal));
     const r = view.router;
@@ -88,6 +90,12 @@ export class PromptController implements vscode.Disposable {
 
   focus(): void {
     this.send({ type: 'prompt.focus' });
+  }
+
+  /** A task started elsewhere (Retry in the transcript) joins the active list, so Stop covers it. */
+  track(task: TaskSummary): void {
+    this.active.add(task.id, task.state);
+    this.send({ type: 'prompt.tasks', active: this.active.list() });
   }
 
   fill(text: string): void {
@@ -165,6 +173,7 @@ export class PromptController implements vscode.Disposable {
     try {
       const task = await this.tasks.create(built.params);
       this.active.add(task.id, task.state);
+      this.onCreated(task, built.params);
       const history = pushHistory(readHistory(this.state.get(HISTORY_KEY)), m.instruction);
       await this.state.update(HISTORY_KEY, history);
       await this.state.update(DRAFT_KEY, EMPTY_DRAFT);

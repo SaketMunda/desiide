@@ -1,0 +1,61 @@
+{
+  "description": "The model answers 401 → an auth error, then failed.",
+  "summary": {
+    "id": "07b924c4-38d4-4c90-b106-20ca01b49aee",
+    "kind": "explain",
+    "instruction": "Explain src/a.ts",
+    "state": "queued",
+    "models": [],
+    "iteration": 0,
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "createdAt": "2026-10-10T14:20:37.293Z",
+    "updatedAt": "2026-10-10T14:20:37.294Z"
+  },
+  "events": [
+    {
+      "taskId": "07b924c4-38d4-4c90-b106-20ca01b49aee",
+      "seq": 0,
+      "ts": "2026-10-10T14:20:37.294Z",
+      "type": "state_changed",
+      "from": null,
+      "to": "queued"
+    },
+    {
+      "taskId": "07b924c4-38d4-4c90-b106-20ca01b49aee",
+      "seq": 1,
+      "ts": "2026-10-10T14:20:37.294Z",
+      "type": "state_changed",
+      "from": "queued",
+      "to": "planning"
+    },
+    {
+      "taskId": "07b924c4-38d4-4c90-b106-20ca01b49aee",
+      "seq": 2,
+      "ts": "2026-10-10T14:20:37.305Z",
+      "type": "state_changed",
+      "from": "planning",
+      "to": "running"
+    },
+    {
+      "taskId": "07b924c4-38d4-4c90-b106-20ca01b49aee",
+      "seq": 3,
+      "ts": "2026-10-10T14:20:37.318Z",
+      "type": "error",
+      "kind": "auth",
+      "message": "HTTP 401 from http://127.0.0.1:51502/v1/chat/completions: {\"error\":{\"message\":\"Incorrect API key provided.\",\"type\":\"invalid_request_error\"}} Check the API key for this model in Desiide settings.",
+      "retryable": false
+    },
+    {
+      "taskId": "07b924c4-38d4-4c90-b106-20ca01b49aee",
+      "seq": 4,
+      "ts": "2026-10-10T14:20:37.319Z",
+      "type": "state_changed",
+      "from": "running",
+      "to": "failed",
+      "reason": "model_error:auth"
+    }
+  ]
+}

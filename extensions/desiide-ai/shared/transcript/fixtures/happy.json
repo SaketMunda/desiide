@@ -1,0 +1,431 @@
+{
+  "description": "Reasoning, a read, an applied edit proposal, a final answer → done.",
+  "summary": {
+    "id": "49a1906f-398f-437a-9317-babf950c06d0",
+    "kind": "bug_fix",
+    "instruction": "Fix the bug in add() in src/a.ts",
+    "state": "queued",
+    "models": [],
+    "iteration": 0,
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "createdAt": "2026-10-10T14:20:37.061Z",
+    "updatedAt": "2026-10-10T14:20:37.061Z"
+  },
+  "events": [
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 0,
+      "ts": "2026-10-10T14:20:37.061Z",
+      "type": "state_changed",
+      "from": null,
+      "to": "queued"
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 1,
+      "ts": "2026-10-10T14:20:37.062Z",
+      "type": "state_changed",
+      "from": "queued",
+      "to": "planning"
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 2,
+      "ts": "2026-10-10T14:20:37.074Z",
+      "type": "state_changed",
+      "from": "planning",
+      "to": "running"
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 3,
+      "ts": "2026-10-10T14:20:37.090Z",
+      "type": "reasoning_delta",
+      "messageId": "f032db19-204d-4dde-86cb-cd2965430047",
+      "delta": "The user says "
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 4,
+      "ts": "2026-10-10T14:20:37.091Z",
+      "type": "reasoning_delta",
+      "messageId": "f032db19-204d-4dde-86cb-cd2965430047",
+      "delta": "`add` is wrong. "
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 5,
+      "ts": "2026-10-10T14:20:37.091Z",
+      "type": "reasoning_delta",
+      "messageId": "f032db19-204d-4dde-86cb-cd2965430047",
+      "delta": "I should read src/a.ts first."
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 6,
+      "ts": "2026-10-10T14:20:37.091Z",
+      "type": "text_delta",
+      "messageId": "f032db19-204d-4dde-86cb-cd2965430047",
+      "delta": "I'll look at "
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 7,
+      "ts": "2026-10-10T14:20:37.091Z",
+      "type": "text_delta",
+      "messageId": "f032db19-204d-4dde-86cb-cd2965430047",
+      "delta": "`src/a.ts` first."
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 8,
+      "ts": "2026-10-10T14:20:37.092Z",
+      "type": "usage",
+      "modelId": "qwen-local",
+      "usage": {
+        "inputTokens": 1200,
+        "outputTokens": 85,
+        "costUsd": 0.000616
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 9,
+      "ts": "2026-10-10T14:20:37.092Z",
+      "type": "tool_call_started",
+      "call": {
+        "id": "call_read",
+        "tool": "read_file",
+        "args": {
+          "path": "src/a.ts"
+        },
+        "sideEffect": "none"
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 10,
+      "ts": "2026-10-10T14:20:37.095Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "1d6af79f-c1c9-474f-b776-18a44aabf823",
+        "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+        "pack": "risk_gate@1",
+        "question": "policy",
+        "engine": "rules",
+        "stateHash": "5561f83881bc002d0c6ade894c4fb042fefb41c999a71ee9c9229c85aa29134b",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "other",
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": [
+            {
+              "path": "src/a.ts",
+              "sensitive": false
+            }
+          ]
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "yes",
+          "pYes": 1
+        },
+        "policyOutcome": "auto",
+        "reasons": ["read_only_allow"],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.094Z"
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 11,
+      "ts": "2026-10-10T14:20:37.096Z",
+      "type": "tool_call_finished",
+      "result": {
+        "callId": "call_read",
+        "ok": true,
+        "output": "src/a.ts (lines 1-1 of 1)\n     1\texport const add = (a: number, b: number) => a - b; // bug",
+        "truncated": false,
+        "durationMs": 1
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 12,
+      "ts": "2026-10-10T14:20:37.097Z",
+      "type": "text_delta",
+      "messageId": "efb82b14-05a8-47a0-aaab-f59a16d31c9a",
+      "delta": "`add` subtracts instead of adding:\n\n"
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 13,
+      "ts": "2026-10-10T14:20:37.097Z",
+      "type": "text_delta",
+      "messageId": "efb82b14-05a8-47a0-aaab-f59a16d31c9a",
+      "delta": "```ts\nexport const add = (a: number, b: number) => a - b;\n```\n\n"
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 14,
+      "ts": "2026-10-10T14:20:37.097Z",
+      "type": "text_delta",
+      "messageId": "efb82b14-05a8-47a0-aaab-f59a16d31c9a",
+      "delta": "Proposing the fix."
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 15,
+      "ts": "2026-10-10T14:20:37.098Z",
+      "type": "usage",
+      "modelId": "qwen-local",
+      "usage": {
+        "inputTokens": 1200,
+        "outputTokens": 85,
+        "costUsd": 0.000616
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 16,
+      "ts": "2026-10-10T14:20:37.098Z",
+      "type": "tool_call_started",
+      "call": {
+        "id": "call_edit",
+        "tool": "propose_edit",
+        "args": {
+          "files": [
+            {
+              "path": "src/a.ts",
+              "edits": [
+                {
+                  "search": "a - b; // bug",
+                  "replace": "a + b;"
+                }
+              ]
+            }
+          ]
+        },
+        "sideEffect": "workspace"
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 17,
+      "ts": "2026-10-10T14:20:37.107Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "dd89d166-07bf-456b-b755-120457dbc857",
+        "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+        "pack": "risk_gate@1",
+        "question": "safe_now",
+        "engine": "rules",
+        "stateHash": "57396aa50e3f96759b525524f9671d4843adf168c7866dc9139e9e649d367852",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "apply_edit",
+          "editFileCount": 1,
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": [
+            {
+              "path": "src/a.ts",
+              "sensitive": false
+            }
+          ]
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "yes",
+          "pYes": 0.9
+        },
+        "policyOutcome": "auto",
+        "reasons": [],
+        "latencyMs": 1,
+        "ts": "2026-10-10T14:20:37.107Z"
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 18,
+      "ts": "2026-10-10T14:20:37.107Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "c0c3a0fc-bfaa-4458-a0cd-8953f8d6e2f5",
+        "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+        "pack": "risk_gate@1",
+        "question": "reversible",
+        "engine": "rules",
+        "stateHash": "57396aa50e3f96759b525524f9671d4843adf168c7866dc9139e9e649d367852",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "apply_edit",
+          "editFileCount": 1,
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": [
+            {
+              "path": "src/a.ts",
+              "sensitive": false
+            }
+          ]
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "yes",
+          "pYes": 0.9
+        },
+        "policyOutcome": "auto",
+        "reasons": [],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.107Z"
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 19,
+      "ts": "2026-10-10T14:20:37.107Z",
+      "type": "decision_made",
+      "decision": {
+        "id": "e5402d54-6c01-4354-a8d6-ef50c2bfe3c4",
+        "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+        "pack": "risk_gate@1",
+        "question": "high_risk_area",
+        "engine": "rules",
+        "stateHash": "57396aa50e3f96759b525524f9671d4843adf168c7866dc9139e9e649d367852",
+        "state": {
+          "pack": "risk_gate@1",
+          "actionType": "apply_edit",
+          "editFileCount": 1,
+          "context": {
+            "branch": null,
+            "env": "local",
+            "hasPendingMigrations": false
+          },
+          "filesTouched": [
+            {
+              "path": "src/a.ts",
+              "sensitive": false
+            }
+          ]
+        },
+        "result": {
+          "kind": "noul",
+          "answer": "no",
+          "pYes": 0.05
+        },
+        "policyOutcome": "auto",
+        "reasons": [],
+        "latencyMs": 0,
+        "ts": "2026-10-10T14:20:37.107Z"
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 20,
+      "ts": "2026-10-10T14:20:37.109Z",
+      "type": "state_changed",
+      "from": "running",
+      "to": "awaiting_approval"
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 21,
+      "ts": "2026-10-10T14:20:37.109Z",
+      "type": "edit_proposed",
+      "proposal": {
+        "id": "093e6911-d286-48d3-8140-7b5b65e8a79a",
+        "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+        "files": [
+          {
+            "path": "src/a.ts",
+            "edits": [
+              {
+                "search": "a - b; // bug",
+                "replace": "a + b;"
+              }
+            ]
+          }
+        ]
+      },
+      "files": [
+        {
+          "path": "src/a.ts",
+          "sizeLines": 1,
+          "language": "typescript",
+          "sensitive": false
+        }
+      ]
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 22,
+      "ts": "2026-10-10T14:20:37.111Z",
+      "type": "state_changed",
+      "from": "awaiting_approval",
+      "to": "running"
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 23,
+      "ts": "2026-10-10T14:20:37.111Z",
+      "type": "tool_call_finished",
+      "result": {
+        "callId": "call_edit",
+        "ok": true,
+        "output": "src/a.ts: applied",
+        "truncated": false,
+        "durationMs": 13
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 24,
+      "ts": "2026-10-10T14:20:37.112Z",
+      "type": "text_delta",
+      "messageId": "cf446bf9-3cf4-41b5-ba45-171bb5c973f5",
+      "delta": "Fixed: `add` now returns "
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 25,
+      "ts": "2026-10-10T14:20:37.112Z",
+      "type": "text_delta",
+      "messageId": "cf446bf9-3cf4-41b5-ba45-171bb5c973f5",
+      "delta": "`a + b`."
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 26,
+      "ts": "2026-10-10T14:20:37.112Z",
+      "type": "usage",
+      "modelId": "qwen-local",
+      "usage": {
+        "inputTokens": 1200,
+        "outputTokens": 85,
+        "costUsd": 0.000616
+      }
+    },
+    {
+      "taskId": "49a1906f-398f-437a-9317-babf950c06d0",
+      "seq": 27,
+      "ts": "2026-10-10T14:20:37.112Z",
+      "type": "state_changed",
+      "from": "running",
+      "to": "done"
+    }
+  ]
+}

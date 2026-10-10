@@ -1,4 +1,5 @@
 import type { Preference } from '@desiide/protocol';
+import type { ComponentChildren } from 'preact';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type {
   ActiveTask,
@@ -55,8 +56,14 @@ const isPreference = (v: unknown): v is Preference =>
 const isWorkflow = (v: unknown): v is WorkflowChoice =>
   typeof v === 'string' && v in WORKFLOW_LABELS;
 
+export interface PromptBoxProps {
+  /** The task stream (UI-3), shown above the composer once there is a task. */
+  stream?: ComponentChildren;
+  hasTasks?: boolean;
+}
+
 /** The composer: input, @-mentions, chips, routing controls, Send/Stop. */
-export function PromptBox() {
+export function PromptBox({ stream, hasTasks = false }: PromptBoxProps = {}) {
   const [text, setText] = useState('');
   const [chips, setChips] = useState<PromptChip[]>([]);
   const [restored, setRestored] = useState(false);
@@ -303,11 +310,13 @@ export function PromptBox() {
         ...(w.enabled ? {} : { disabledReason: w.reason ?? 'Not configured' }),
       })),
   ];
-  const showExamples = text.length === 0 && chips.length === 0 && !running && echo === undefined;
+  const showExamples =
+    !hasTasks && text.length === 0 && chips.length === 0 && !running && echo === undefined;
 
   return (
     <div class="desiide-prompt-panel">
-      <div class="desiide-prompt-panel__main">
+      <div class={`desiide-prompt-panel__main${hasTasks ? ' has-stream' : ''}`}>
+        {hasTasks && stream}
         {!hasModels ? (
           <Card tone="ai" title="Connect a model to start">
             <p class="desiide-prompt__muted">

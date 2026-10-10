@@ -9,10 +9,12 @@ import {
 import { ResponseError } from 'vscode-jsonrpc';
 import type { Disposable } from '../orchestrator/client.ts';
 
-/** The slice of the orchestrator the Prompt Box needs. */
+/** The slice of the orchestrator the Prompt Box and the task stream need. */
 export interface TaskClient {
   create(params: TaskInput, signal?: AbortSignal): Promise<TaskSummary>;
   cancel(taskId: string): Promise<boolean>;
+  /** Summaries of the tasks the engine still retains. */
+  list(): Promise<TaskSummary[]>;
   onEvent(listener: (event: TaskEvent) => void): Disposable;
 }
 
@@ -24,6 +26,7 @@ export interface RequestClient {
     signal?: AbortSignal,
   ): Promise<{ task: TaskSummary }>;
   request(method: 'task.cancel', params: { taskId: string }): Promise<{ cancelled: boolean }>;
+  request(method: 'task.list', params: Record<string, never>): Promise<{ tasks: TaskSummary[] }>;
   onEvent(listener: (event: TaskEvent) => void): Disposable;
 }
 
@@ -31,6 +34,7 @@ export function orchestratorTaskClient(client: RequestClient): TaskClient {
   return {
     create: async (params, signal) => (await client.request('task.create', params, signal)).task,
     cancel: async (taskId) => (await client.request('task.cancel', { taskId })).cancelled,
+    list: async () => (await client.request('task.list', {})).tasks,
     onEvent: (listener) => client.onEvent(listener),
   };
 }
@@ -44,6 +48,7 @@ export const MOCK_ID_PREFIX = 'mock-';
 export class MockTaskClient implements TaskClient {
   private readonly listeners = new Set<(event: TaskEvent) => void>();
   private readonly states = new Map<string, { state: TaskState; seq: number }>();
+  private readonly summaries = new Map<string, TaskSummary>();
   private counter = 0;
 
   constructor(private readonly now: () => Date = () => new Date()) {}
@@ -54,7 +59,7 @@ export class MockTaskClient implements TaskClient {
     this.states.set(id, { state: 'queued', seq: 0 });
     // Emit after returning, like the real engine (the id is known before events arrive).
     queueMicrotask(() => this.transition(id, 'running'));
-    return Promise.resolve({
+    const summary: TaskSummary = {
       id,
       kind: params.kind,
       instruction: params.instruction,
@@ -65,7 +70,18 @@ export class MockTaskClient implements TaskClient {
       usage: { inputTokens: 0, outputTokens: 0 },
       createdAt: ts,
       updatedAt: ts,
-    });
+    };
+    this.summaries.set(id, summary);
+    return Promise.resolve(summary);
+  }
+
+  list(): Promise<TaskSummary[]> {
+    return Promise.resolve(
+      [...this.summaries.values()].map((s) => ({
+        ...s,
+        state: this.states.get(s.id)?.state ?? s.state,
+      })),
+    );
   }
 
   cancel(taskId: string): Promise<boolean> {
@@ -134,6 +150,10 @@ export class FallbackTaskClient implements TaskClient {
 
   cancel(taskId: string): Promise<boolean> {
     return (taskId.startsWith(MOCK_ID_PREFIX) ? this.mock : this.real).cancel(taskId);
+  }
+
+  list(): Promise<TaskSummary[]> {
+    return this.useMock ? this.mock.list() : this.real.list();
   }
 
   onEvent(listener: (event: TaskEvent) => void): Disposable {

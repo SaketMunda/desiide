@@ -32,15 +32,18 @@ function ensureListening(): void {
   });
 }
 
+/** Subscribe to validated messages from the extension, outside a component (stores). */
+export function subscribe(listener: Listener): () => void {
+  ensureListening();
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 /** Subscribe to validated messages from the extension. */
 export function useBridge(listener: Listener): { post: typeof post } {
-  useEffect(() => {
-    ensureListening();
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  }, [listener]);
+  useEffect(() => subscribe(listener), [listener]);
   return { post };
 }
 

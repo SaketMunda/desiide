@@ -136,6 +136,13 @@ function cssVars(colors) {
 }
 
 const origin = 'https://desiide-webview.test';
+// UI-3: the transcript of two recorded tasks (happy path selected), with Thinking and a tool open.
+const fixture = (name) =>
+  JSON.parse(readFileSync(join(root, 'shared/transcript/fixtures', `${name}.json`), 'utf8'));
+const streamTasks = ['escalation', 'happy'].map((name) => {
+  const f = fixture(name);
+  return { id: f.summary.id, summary: f.summary, events: f.events, retryable: true };
+});
 const types = { '.js': 'text/javascript', '.css': 'text/css', '.ttf': 'font/ttf' };
 
 mkdirSync(out, { recursive: true });
@@ -146,6 +153,7 @@ try {
     for (const [view, showcase, name = view] of [
       ['panel', true],
       ['panel', false, 'prompt'],
+      ['panel', false, 'stream'],
       ['decisions', false],
     ]) {
       const page = await browser.newPage({
@@ -171,25 +179,32 @@ try {
         });
       });
       await page.addInitScript(
-        ({ view, showcase }) => {
+        ({ view, showcase, tasks }) => {
           window.acquireVsCodeApi = () => ({
             postMessage: (m) => {
               if (m?.type === 'ready') {
                 setTimeout(() =>
                   window.postMessage({ type: 'init', view, devMode: true, showcase }, '*'),
                 );
+                if (tasks)
+                  setTimeout(() => window.postMessage({ type: 'tasks.snapshot', tasks }, '*'));
               }
             },
             getState: () => undefined,
             setState: () => undefined,
           });
         },
-        { view, showcase },
+        { view, showcase, tasks: name === 'stream' ? streamTasks : undefined },
       );
       await page.goto(`${origin}/index.html`);
       await page.waitForSelector(
         showcase ? '.desiide-card' : view === 'panel' ? '.desiide-prompt' : '.desiide-empty',
       );
+      if (name === 'stream') {
+        await page.waitForSelector('.desiide-code .hljs-keyword');
+        await page.click('.desiide-thinking__toggle');
+        await page.click('.desiide-tool__head');
+      }
       await page.evaluate(() => document.fonts.ready);
       const target = join(out, `${theme.name}-${name}.png`);
       await page.screenshot({ path: target, fullPage: true });
