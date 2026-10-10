@@ -7,6 +7,7 @@ import {
   type GitInfo,
   type PolicyGate,
   type ProjectPolicy,
+  type ReplayOptions,
   type Thresholds,
 } from '@desiide/jev';
 import type { DecisionRecord, DesiideConfig, Task } from '@desiide/protocol';
@@ -29,6 +30,8 @@ export interface WorkspacePolicy {
   gate: PolicyGate;
   /** Subscribe to `config.update`: gating mode, thresholds, Jev settings. */
   onConfig: ConfigListener;
+  /** Engines and current settings for `decisions.replay` (JEV-4). */
+  replayOptions(): ReplayOptions;
 }
 
 const MAX_CACHED_PROJECTS = 32;
@@ -39,8 +42,9 @@ const MAX_CACHED_PROJECTS = 32;
  * sensitive globs and check commands, and the current branch for force-push rules.
  */
 export function createWorkspacePolicy(host: Host, opts: WorkspacePolicyOptions): WorkspacePolicy {
+  const rules = createRuleJevEngine();
   const engine = createEngineSelector({
-    rules: createRuleJevEngine(),
+    rules,
     config: { enabled: false },
   });
   let mode: GatingMode = 'conservative';
@@ -129,5 +133,8 @@ export function createWorkspacePolicy(host: Host, opts: WorkspacePolicyOptions):
     }
   };
 
-  return { gate, onConfig };
+  // JEV-3 adds the HTTP engine here once it exists; until then replay runs rules only.
+  const replayOptions = (): ReplayOptions => ({ rules, settings: { mode, thresholds } });
+
+  return { gate, onConfig, replayOptions };
 }

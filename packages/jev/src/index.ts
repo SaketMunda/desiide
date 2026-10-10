@@ -70,3 +70,19 @@ export type {
 export { REASON_TEXT, describeReason } from './policy/reasons.ts';
 export { analyzeCommand } from './policy/shell.ts';
 export type { CommandAnalysis, SimpleCommand } from './policy/shell.ts';
+export {
+  DECISION_LOG_DIR,
+  DECISION_LOG_FILE,
+  DEFAULT_DECISION_LOG_KEEP,
+  DEFAULT_DECISION_LOG_MAX_BYTES,
+  InvalidCursorError,
+  createDecisionLog,
+} from './log/decisionLog.ts';
+export type {
+  DecisionLog,
+  DecisionLogOptions,
+  DecisionPage,
+  DecisionQuery,
+} from './log/decisionLog.ts';
+export { ReplayError, replayDecision } from './log/replay.ts';
+export type { EngineRun, ReplayOptions, ReplayResult } from './log/replay.ts';

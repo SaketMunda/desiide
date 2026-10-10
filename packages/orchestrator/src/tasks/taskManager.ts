@@ -3,6 +3,7 @@ import {
   TERMINAL_TASK_STATES,
   WorkspacePath,
   type CostPerMTok,
+  type DecisionRecord,
   type EditProposal,
   type FileApplyResult,
   type FileMeta,
@@ -85,6 +86,11 @@ export interface TaskManager {
   /** Resolves when the task reaches a terminal state. */
   settled(taskId: string): Promise<TaskSummary>;
   cancelAll(reason: string): Promise<void>;
+  /**
+   * Emits `decision_made` in the decision's task stream, so it lands before the
+   * `approval_required` it explains. Ignored for unknown or task-less decisions.
+   */
+  publishDecision(record: DecisionRecord): void;
 }
 
 interface PendingEdits {
@@ -329,6 +335,10 @@ export function createTaskManager(opts: TaskManagerOptions): TaskManager {
   }
 
   return {
+    publishDecision(record) {
+      const run = record.taskId === null ? undefined : runs.get(record.taskId);
+      if (run) emit(run, { type: 'decision_made', decision: record });
+    },
     create(input) {
       const id = opts.newId();
       const task: Task = { id, ...input };
