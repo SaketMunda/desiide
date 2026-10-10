@@ -200,7 +200,7 @@
     "test:app": "node test/app/run.mjs",
     "screenshots": "node scripts/build.mjs && node scripts/screenshots.mjs",
     "package": "node scripts/build.mjs --production && vsce package --no-dependencies --out desiide-ai.vsix",
-    "test:webview": "node scripts/build.mjs && node test/webview/prompt.mjs"
+    "test:webview": "node scripts/build.mjs && node test/webview/prompt.mjs && node test/webview/stream.mjs"
   },
   "dependencies": {
     "@desiide/protocol": "workspace:*",

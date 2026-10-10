@@ -162,6 +162,7 @@
 
 .desiide-turn--user {
   padding: var(--desiide-space-2) var(--desiide-space-3);
+  border: 1px solid var(--vscode-input-border, var(--desiide-border));
   border-radius: var(--desiide-radius);
   background: var(--vscode-input-background, var(--desiide-surface));
 }
@@ -249,39 +250,59 @@
 }
 
 /* Syntax colors: VS Code exposes no per-token theme variables to webviews, so these borrow the
- * debug-console token colors, which every theme (including high contrast) defines. */
+ * debug-console token colors, which themes (including high contrast) define. The fallbacks are
+ * Dark+/Light+ values for themes that don't. */
+:root {
+  --desiide-syn-keyword: var(--vscode-debugTokenExpression-name, #c586c0);
+  --desiide-syn-string: var(--vscode-debugTokenExpression-string, #ce9178);
+  --desiide-syn-number: var(--vscode-debugTokenExpression-number, #b5cea8);
+  --desiide-syn-function: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
+  --desiide-syn-type: var(--vscode-symbolIcon-classForeground, #4ec9b0);
+  --desiide-syn-variable: var(--vscode-debugTokenExpression-value, #9cdcfe);
+  --desiide-syn-deletion: var(--vscode-debugTokenExpression-error, #f48771);
+}
+body.vscode-light,
+body.vscode-high-contrast-light {
+  --desiide-syn-keyword: var(--vscode-debugTokenExpression-name, #af00db);
+  --desiide-syn-string: var(--vscode-debugTokenExpression-string, #a31515);
+  --desiide-syn-number: var(--vscode-debugTokenExpression-number, #098658);
+  --desiide-syn-function: var(--vscode-symbolIcon-functionForeground, #795e26);
+  --desiide-syn-type: var(--vscode-symbolIcon-classForeground, #267f99);
+  --desiide-syn-variable: var(--vscode-debugTokenExpression-value, #001080);
+  --desiide-syn-deletion: var(--vscode-debugTokenExpression-error, #e51400);
+}
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-built_in,
 .hljs-meta .hljs-keyword {
-  color: var(--vscode-debugTokenExpression-name, #c586c0);
+  color: var(--desiide-syn-keyword);
 }
 .hljs-string,
 .hljs-regexp,
 .hljs-attr .hljs-string,
 .hljs-addition {
-  color: var(--vscode-debugTokenExpression-string, #ce9178);
+  color: var(--desiide-syn-string);
 }
 .hljs-number,
 .hljs-literal {
-  color: var(--vscode-debugTokenExpression-number, #b5cea8);
+  color: var(--desiide-syn-number);
 }
 .hljs-title,
 .hljs-title.function_,
 .hljs-section {
-  color: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
+  color: var(--desiide-syn-function);
 }
 .hljs-type,
 .hljs-title.class_,
 .hljs-class .hljs-title {
-  color: var(--vscode-symbolIcon-classForeground, #4ec9b0);
+  color: var(--desiide-syn-type);
 }
 .hljs-attr,
 .hljs-attribute,
 .hljs-variable,
 .hljs-params,
 .hljs-property {
-  color: var(--vscode-debugTokenExpression-value, #9cdcfe);
+  color: var(--desiide-syn-variable);
 }
 .hljs-comment,
 .hljs-quote {
@@ -289,7 +310,7 @@
   font-style: italic;
 }
 .hljs-deletion {
-  color: var(--vscode-debugTokenExpression-error, #f48771);
+  color: var(--desiide-syn-deletion);
 }
 .hljs-meta {
   color: var(--desiide-fg-muted);
