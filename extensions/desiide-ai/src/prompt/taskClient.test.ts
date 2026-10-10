@@ -46,6 +46,7 @@ describe('FallbackTaskClient', () => {
     const real: TaskClient = {
       create: vi.fn().mockRejectedValue(notImplemented),
       cancel: vi.fn(),
+      list: vi.fn(),
       onEvent: () => ({ dispose: () => undefined }),
     };
     const onFallback = vi.fn();
@@ -59,12 +60,18 @@ describe('FallbackTaskClient', () => {
     expect(client.mocked).toBe(true);
     expect(await client.cancel(t1.id)).toBe(true);
     expect(real.cancel).not.toHaveBeenCalled();
+    expect((await client.list()).map((t) => [t.id, t.state])).toEqual([
+      [t1.id, 'cancelled'],
+      [t2.id, 'running'],
+    ]);
+    expect(real.list).not.toHaveBeenCalled();
   });
 
   it('passes other errors through and stays on the real client', async () => {
     const real: TaskClient = {
       create: vi.fn().mockRejectedValue(new Error('offline')),
       cancel: vi.fn().mockResolvedValue(true),
+      list: vi.fn().mockResolvedValue([]),
       onEvent: () => ({ dispose: () => undefined }),
     };
     const client = new FallbackTaskClient(real, new MockTaskClient(), vi.fn());
@@ -77,7 +84,13 @@ describe('FallbackTaskClient', () => {
 describe('orchestratorTaskClient', () => {
   it('maps task.create / task.cancel onto requests', async () => {
     const request = vi.fn((method: string) =>
-      Promise.resolve(method === 'task.create' ? { task: { id: 't1' } } : { cancelled: true }),
+      Promise.resolve(
+        method === 'task.create'
+          ? { task: { id: 't1' } }
+          : method === 'task.list'
+            ? { tasks: [{ id: 't1' }] }
+            : { cancelled: true },
+      ),
     );
     const client = orchestratorTaskClient({
       request: request as never,
@@ -86,6 +99,8 @@ describe('orchestratorTaskClient', () => {
     expect((await client.create(params)).id).toBe('t1');
     expect(await client.cancel('t1')).toBe(true);
     expect(request).toHaveBeenLastCalledWith('task.cancel', { taskId: 't1' });
+    expect((await client.list()).map((t) => t.id)).toEqual(['t1']);
+    expect(request).toHaveBeenLastCalledWith('task.list', {});
   });
 });
 

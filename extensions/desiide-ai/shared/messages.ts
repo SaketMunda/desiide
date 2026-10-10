@@ -1,4 +1,11 @@
-import { ContextRef, Preference, TaskState, WorkflowOption } from '@desiide/protocol';
+import {
+  ContextRef,
+  Id,
+  Preference,
+  TaskState,
+  TaskSummary,
+  WorkflowOption,
+} from '@desiide/protocol';
 import * as z from 'zod';
 
 /**
@@ -74,6 +81,25 @@ export type PromptConfig = z.infer<typeof PromptConfig>;
 export const ActiveTask = z.object({ id: z.string(), state: TaskState });
 export type ActiveTask = z.infer<typeof ActiveTask>;
 
+// --- Task stream (UI-3) ---
+
+/**
+ * One task as the host retains it. `events` are raw `task.event` payloads (compacted: deltas of a
+ * message merged); the webview validates each through the shared reducer, which ignores unknown
+ * types. `summary` is absent until `task.create` answers.
+ */
+export const TaskRecord = z.object({
+  id: Id,
+  summary: TaskSummary.optional(),
+  events: z.array(z.unknown()),
+  /** True when the host still has the `task.create` params, so Retry can re-create the task. */
+  retryable: z.boolean(),
+});
+export type TaskRecord = z.infer<typeof TaskRecord>;
+
+/** Code copied out of the transcript into the active editor; capped like a prompt. */
+const InsertedCode = z.string().min(1).max(1_000_000);
+
 export const WebviewToExtension = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('ready'), view: ViewId }),
   z.strictObject({ type: z.literal('command'), command: WebviewCommand }),
@@ -99,6 +125,13 @@ export const WebviewToExtension = z.discriminatedUnion('type', [
   }),
   /** The user picked a popup item; the host turns it into a chip (or an error). */
   z.strictObject({ type: z.literal('mention.pick'), item: MentionItem }),
+  z.strictObject({ type: z.literal('task.cancel'), taskId: Id }),
+  /** Re-create the task with the same `task.create` params. */
+  z.strictObject({ type: z.literal('task.retry'), taskId: Id }),
+  /** Insert a transcript code block at the cursor of the active editor. */
+  z.strictObject({ type: z.literal('code.insert'), code: InsertedCode }),
+  /** Show a tool call's whole retained output in the "Desiide: Tool Output" channel. */
+  z.strictObject({ type: z.literal('tool.openOutput'), taskId: Id, callId: Id }),
 ]);
 export type WebviewToExtension = z.infer<typeof WebviewToExtension>;
 export type WebviewMessageType = WebviewToExtension['type'];
@@ -136,5 +169,15 @@ export const ExtensionToWebview = z.discriminatedUnion('type', [
     requestId: z.int().nonnegative(),
     items: z.array(MentionItem),
   }),
+  /** Every retained task, oldest first: sent when the panel (re)loads. */
+  z.object({ type: z.literal('tasks.snapshot'), tasks: z.array(TaskRecord) }),
+  /** New events since the last batch, in arrival order (batched by the host per ~frame). */
+  z.object({ type: z.literal('tasks.events'), events: z.array(z.unknown()) }),
+  /** A task was created, or its summary refreshed (`task.create` / `task.list`). */
+  z.object({ type: z.literal('tasks.summary'), summary: TaskSummary, retryable: z.boolean() }),
+  /** The host dropped these tasks (retention limit). */
+  z.object({ type: z.literal('tasks.removed'), taskIds: z.array(Id) }),
+  /** Show this task in the transcript (e.g. after Retry). */
+  z.object({ type: z.literal('tasks.select'), taskId: Id }),
 ]);
 export type ExtensionToWebview = z.infer<typeof ExtensionToWebview>;

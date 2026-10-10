@@ -15,6 +15,7 @@ import {
 import { PromptController } from './prompt/controller.ts';
 import { FallbackTaskClient, MockTaskClient, orchestratorTaskClient } from './prompt/taskClient.ts';
 import { formatStatus, type StatusState } from './status.ts';
+import { TranscriptController } from './transcript/controller.ts';
 import { DesiideViewProvider, VIEW_TYPES } from './views/DesiideViewProvider.ts';
 
 /** Returned from `activate` so integration tests (and later modules) can observe the shell. */
@@ -40,13 +41,16 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   const readyViews = new Set<ViewId>();
 
   // Views are constructed before the controller that listens to them; it is attached below.
-  const late: { prompt?: PromptController } = {};
+  const late: { prompt?: PromptController; transcript?: TranscriptController } = {};
   const host = {
     devMode,
     showcase: false,
     onReady: (view: ViewId) => {
       readyViews.add(view);
-      if (view === 'panel') late.prompt?.onReady();
+      if (view === 'panel') {
+        late.prompt?.onReady();
+        late.transcript?.onReady();
+      }
     },
   };
   const providers = {
@@ -109,8 +113,16 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     tasks,
     context.workspaceState,
     log,
+    (task, params) => late.transcript?.created(task, params),
   );
   late.prompt = promptController;
+  const transcript = new TranscriptController(
+    providers.panel,
+    tasks,
+    (task) => promptController.track(task),
+    log,
+  );
+  late.transcript = transcript;
   const focusPanel = () => vscode.commands.executeCommand(`${VIEW_TYPES.panel}.focus`);
 
   const focusPrompt = async (): Promise<void> => {
@@ -155,6 +167,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     channel,
     status,
     promptController,
+    transcript,
     { dispose: () => void client.dispose() },
     ...(Object.keys(providers) as ViewId[]).map((view) =>
       vscode.window.registerWebviewViewProvider(VIEW_TYPES[view], providers[view]),
