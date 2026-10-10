@@ -4,7 +4,7 @@ import { createOpenAICompatAdapter } from './openai-compat.ts';
 import type { ProviderContext } from './registry.ts';
 import { collectEvents, runAdapterContract } from './testing/contract.ts';
 import { loadFixture, replayFetch, type ReplayFetch } from './testing/fixtures.ts';
-import type { ChatRequest, StreamEvent } from './types.ts';
+import type { ChatRequest, ReasoningLevel, StreamEvent } from './types.ts';
 
 const fixture = (name: string) =>
   loadFixture(
@@ -179,6 +179,74 @@ describe('OpenAICompatAdapter', () => {
     expect(next.at(-1)).toEqual({ type: 'done', stopReason: 'end' });
     expect(replay.requests).toHaveLength(3);
     expect(bodyOf(replay, 2)).not.toHaveProperty('stream_options');
+  });
+
+  it('streams reasoning deltas apart from the answer (recorded from Ollama /v1, ADR-022)', async () => {
+    const { events, replay } = await chat('reasoning', { messages: TOOLS.messages });
+    const reasoning = events.flatMap((e) => (e.type === 'reasoning_delta' ? [e.text] : []));
+    expect(reasoning.join('')).toBe('Okay, the user is asking number 5.\n');
+    const text = events.flatMap((e) => (e.type === 'text_delta' ? [e.text] : [])).join('');
+    expect(text).toBe('5');
+    expect(events.at(-1)).toEqual({ type: 'done', stopReason: 'end' });
+    // Unset reasoning sends nothing.
+    expect(bodyOf(replay)).not.toHaveProperty('reasoning_effort');
+  });
+
+  it('accepts reasoning_content (DeepSeek / vLLM shape)', async () => {
+    const replay = replayFetch([
+      {
+        status: 200,
+        headers: { 'content-type': 'text/event-stream' },
+        body: [
+          'data: {"choices":[{"delta":{"reasoning_content":"hmm"}}]}\n\n',
+          'data: {"choices":[{"delta":{"content":"ok"},"finish_reason":"stop"}]}\n\n',
+          'data: [DONE]\n\n',
+        ],
+      },
+    ]);
+    const adapter = createOpenAICompatAdapter({
+      config: { id: 'ds', provider: 'openai-compatible', model: 'r1', baseUrl: 'http://x.test/v1' },
+      apiKey: () => Promise.resolve(undefined),
+      secrets: () => [],
+      fetch: replay.fetch,
+    });
+    const events = await collectEvents(
+      adapter.chat({ messages: TOOLS.messages }, new AbortController().signal),
+    );
+    expect(events.slice(0, 2)).toEqual([
+      { type: 'reasoning_delta', text: 'hmm' },
+      { type: 'text_delta', text: 'ok' },
+    ]);
+  });
+
+  it.each<[ReasoningLevel, string]>([
+    ['off', 'none'],
+    ['low', 'low'],
+    ['medium', 'medium'],
+    ['high', 'high'],
+  ])('reasoning %s sends reasoning_effort %s; a request overrides the config', async (level, effort) => {
+    const configured = await chat('text', { messages: TOOLS.messages }, { reasoning: level });
+    expect(bodyOf(configured.replay)).toMatchObject({ reasoning_effort: effort });
+    const overridden = await chat(
+      'text',
+      { messages: TOOLS.messages, reasoning: level },
+      { reasoning: level === 'off' ? 'high' : 'off' },
+    );
+    expect(bodyOf(overridden.replay)).toMatchObject({ reasoning_effort: effort });
+  });
+
+  it('drops reasoning_effort for good when the server rejects it', async () => {
+    const { adapter, replay } = setup(['reasoning-effort-rejected', 'text', 'text'], {
+      reasoning: 'low',
+    });
+    const req = { messages: TOOLS.messages };
+    const events = await collectEvents(adapter.chat(req, new AbortController().signal));
+    expect(events.at(-1)).toEqual({ type: 'done', stopReason: 'end' });
+    expect(bodyOf(replay, 0)).toHaveProperty('reasoning_effort', 'low');
+    expect(bodyOf(replay, 1)).not.toHaveProperty('reasoning_effort');
+    await collectEvents(adapter.chat(req, new AbortController().signal));
+    expect(replay.requests).toHaveLength(3);
+    expect(bodyOf(replay, 2)).not.toHaveProperty('reasoning_effort');
   });
 
   it('uses the text tool protocol when the config says the model cannot call tools', async () => {

@@ -68,4 +68,5 @@ export {
   createOllamaAdapter,
   discoverOllama,
   ollamaProvider,
+  ollamaThink,
 } from './ollama.ts';

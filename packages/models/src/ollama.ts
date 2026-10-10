@@ -11,6 +11,7 @@ import type {
   ChatRequest,
   ModelAdapter,
   ModelCapabilities,
+  ReasoningLevel,
   StopReason,
   StreamEvent,
 } from './types.ts';
@@ -82,10 +83,31 @@ export function capabilitiesFromShow(raw: unknown, configured?: number): ModelCa
   };
 }
 
+/** Whether `/api/show` lists the `thinking` capability (Ollama rejects `think` otherwise). */
+export function thinksFromShow(raw: unknown): boolean {
+  return ShowWire.parse(raw).capabilities?.includes('thinking') ?? false;
+}
+
+/**
+ * Ollama's `think` for a reasoning level (ADR-022). Unset sends nothing (the model's default).
+ * A model without the `thinking` capability gets nothing either: Ollama rejects `think` there, and
+ * there is nothing to turn off. gpt-oss takes a level; other models only on/off.
+ */
+export function ollamaThink(
+  model: string,
+  level: ReasoningLevel | undefined,
+  thinks: boolean,
+): boolean | ReasoningLevel | undefined {
+  if (level === undefined || !thinks) return undefined;
+  if (level === 'off') return false;
+  return /^gpt-oss/i.test(model) ? level : true;
+}
+
 const ChunkWire = z.looseObject({
   message: z
     .looseObject({
       content: z.string().nullish(),
+      thinking: z.string().nullish(),
       tool_calls: z
         .array(
           z.looseObject({
@@ -144,6 +166,7 @@ export function buildOllamaBody(
   req: ChatRequest,
   numCtx: number,
   textTools: boolean,
+  think?: boolean | ReasoningLevel,
 ): Record<string, unknown> {
   const tools = req.tools ?? [];
   const system = textTools ? textToolsSystem(req.system, tools) : req.system;
@@ -160,6 +183,7 @@ export function buildOllamaBody(
           })),
         }
       : {}),
+    ...(think === undefined ? {} : { think }),
     options: {
       num_ctx: numCtx,
       ...(req.maxTokens === undefined ? {} : { num_predict: req.maxTokens }),
@@ -187,9 +211,9 @@ export function createOllamaAdapter(ctx: ProviderContext): ModelAdapter {
     ...(ctx.fetch ? { fetch: ctx.fetch } : {}),
     ...(ctx.logger ? { logger: ctx.logger } : {}),
   };
-  let probe: Promise<ModelCapabilities> | undefined;
+  let probe: Promise<{ caps: ModelCapabilities; thinks: boolean }> | undefined;
 
-  const capabilities = (signal?: AbortSignal): Promise<ModelCapabilities> => {
+  const probeShow = (signal?: AbortSignal) => {
     probe ??= (async () => {
       const own = signal ?? new AbortController().signal;
       try {
@@ -197,7 +221,11 @@ export function createOllamaAdapter(ctx: ProviderContext): ModelAdapter {
           { url: `${root}/api/show`, body: { model: config.model } },
           { signal: own, retry: { maxRetries: 0 }, ...http },
         );
-        return capabilitiesFromShow(await res.json(), config.capabilities?.contextTokens);
+        const show: unknown = await res.json();
+        return {
+          caps: capabilitiesFromShow(show, config.capabilities?.contextTokens),
+          thinks: thinksFromShow(show),
+        };
       } catch (error) {
         throw ollamaError(error, config.model, own);
       }
@@ -206,6 +234,8 @@ export function createOllamaAdapter(ctx: ProviderContext): ModelAdapter {
     probe.catch(() => (probe = undefined));
     return probe;
   };
+  const capabilities = (signal?: AbortSignal): Promise<ModelCapabilities> =>
+    probeShow(signal).then((p) => p.caps);
 
   return {
     id: config.id,
@@ -216,7 +246,7 @@ export function createOllamaAdapter(ctx: ProviderContext): ModelAdapter {
     async *chat(req, signal) {
       try {
         if (signal.aborted) throw new ModelError('cancelled', 'Request cancelled');
-        const probed = await capabilities(signal);
+        const { caps: probed, thinks } = await probeShow(signal);
         const toolCalls = config.capabilities?.toolCalls ?? probed.toolCalls;
         const textTools = (req.tools?.length ?? 0) > 0 && !toolCalls;
         const url = `${root}/api/chat`;
@@ -226,7 +256,13 @@ export function createOllamaAdapter(ctx: ProviderContext): ModelAdapter {
           {
             url,
             headers: key ? { authorization: `Bearer ${key}` } : {},
-            body: buildOllamaBody(config.model, req, probed.contextTokens, textTools),
+            body: buildOllamaBody(
+              config.model,
+              req,
+              probed.contextTokens,
+              textTools,
+              ollamaThink(config.model, req.reasoning ?? config.reasoning, thinks),
+            ),
           },
           {
             signal,
@@ -274,6 +310,7 @@ export async function* readOllamaStream(
       const kind = classifyStatus(400, chunk.error);
       throw new ModelError(kind === 'context_length' ? kind : 'server', `Ollama: ${chunk.error}`);
     }
+    if (chunk.message?.thinking) yield { type: 'reasoning_delta', text: chunk.message.thinking };
     if (chunk.message?.content) yield* text(chunk.message.content);
     // Ollama sends each tool call whole, in one chunk.
     for (const call of chunk.message?.tool_calls ?? []) {
