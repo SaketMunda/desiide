@@ -85,6 +85,19 @@ const CHECKS = [
   { field: 'lintClean', tool: 'lint', label: 'Lint' },
 ] as const;
 
+/** The model's context window, or undefined when it can't be probed (the context engine then uses a default). */
+async function contextWindow(
+  model: ModelAdapter,
+  signal: AbortSignal,
+): Promise<number | undefined> {
+  try {
+    return (await model.capabilities(signal)).contextTokens;
+  } catch {
+    signal.throwIfAborted();
+    return undefined;
+  }
+}
+
 /**
  * Runs one model through the task until it finishes and the success checks pass. Resolves on
  * success; throws `TaskFailure` for a failed task, or the signal's reason once it's aborted.
@@ -96,7 +109,13 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
   const approvedForTask = new Set<string>();
   const tools = toolSpecs(task.allowedTools);
 
-  const context = await opts.context.gather(task, signal);
+  const modelWindow = await contextWindow(model, signal);
+  const context = await opts.context.gather(
+    task,
+    signal,
+    modelWindow === undefined ? {} : { modelContextTokens: modelWindow },
+  );
+  const system = context.system ? `${SYSTEM_PROMPT}\n\n${context.system}` : SYSTEM_PROMPT;
   // The loop only appends to history, so every message ends a prefix later calls repeat: all are
   // cacheable, and providers with prompt caching keep their breakpoints on the latest ones.
   const messages: ChatMessage[] = [
@@ -143,7 +162,7 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
     let terminal: StreamEvent | undefined;
     // Provider state from another model (e.g. before a cascade escalation) is dropped (ADR-022).
     const messages = historyFor(history, model.id);
-    const stream = model.chat({ system: SYSTEM_PROMPT, messages, tools }, signal);
+    const stream = model.chat({ system, messages, tools }, signal);
     for await (const event of stream) {
       switch (event.type) {
         case 'text_delta':

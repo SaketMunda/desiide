@@ -1,6 +1,6 @@
 # COR-4 · Context engine
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** COR-3 · **Skills:** ide-orchestration-core
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** COR-3 · **Skills:** ide-orchestration-core
 
 ## Purpose
 Turn a task's context refs plus the editor state into a token-budgeted `ContextBundle` for the model, and the file **metadata** that Jev state builders need.

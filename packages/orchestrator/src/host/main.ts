@@ -3,6 +3,7 @@
 import { BUILTIN_PROVIDERS, createModelRegistry } from '@desiide/models';
 import { randomUUID } from 'node:crypto';
 import { registerConfigUpdate } from '../config/handler.ts';
+import { createContextEngine } from '../context/engine.ts';
 import { registerModelHandlers } from '../models/handlers.ts';
 import { createWorkspacePolicy } from '../policy/workspacePolicy.ts';
 import { registerTaskEngine } from '../tasks/engine.ts';
@@ -22,9 +23,15 @@ startOrchestrator({
       newId: () => randomUUID(),
     });
     registerConfigUpdate(host, [(config) => models.configure(config), policy.onConfig]);
+    const context = createContextEngine({
+      workspaceRoots: () => host.session?.workspaceRoots,
+      trackProcessGroup: (pid) => host.trackProcessGroup(pid),
+      logger: logger.child({ component: 'context' }),
+    });
     registerTaskEngine(host, {
       models,
       gate: () => policy.gate,
+      context,
       logger: logger.child({ component: 'tasks' }),
     });
   },

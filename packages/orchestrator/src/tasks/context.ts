@@ -4,6 +4,13 @@ import type { FileMeta, Task, WorkspacePath } from '@desiide/protocol';
 export interface GatheredContext {
   /** Text appended to the user's instruction in the first message. */
   text: string;
+  /** Guidance appended to the system prompt, e.g. how to read the gathered context. */
+  system?: string;
+}
+
+export interface GatherOptions {
+  /** The model's context window, which sizes the context budget. Unknown when absent. */
+  modelContextTokens?: number;
 }
 
 /**
@@ -11,7 +18,7 @@ export interface GatheredContext {
  * file metadata for edit proposals.
  */
 export interface ContextProvider {
-  gather(task: Task, signal: AbortSignal): Promise<GatheredContext>;
+  gather(task: Task, signal: AbortSignal, options?: GatherOptions): Promise<GatheredContext>;
   /** Metadata only, never contents (ADR-005). */
   describeFiles(paths: WorkspacePath[], signal: AbortSignal): Promise<FileMeta[]>;
 }

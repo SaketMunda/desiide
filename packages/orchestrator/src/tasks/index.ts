@@ -16,7 +16,7 @@ export {
 } from './budget.ts';
 export type { BudgetTracker, WallClock } from './budget.ts';
 export { pathOnlyContext } from './context.ts';
-export type { ContextProvider, GatheredContext } from './context.ts';
+export type { ContextProvider, GatherOptions, GatheredContext } from './context.ts';
 export { registerTaskEngine, roleForTask } from './engine.ts';
 export type { TaskEngineOptions } from './engine.ts';
 export { confirmAllGate } from './gate.ts';
