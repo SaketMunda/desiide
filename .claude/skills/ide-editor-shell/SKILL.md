@@ -43,7 +43,14 @@ Each patch does one thing, has a header comment (purpose, upstream files touched
 - Data locations: user data `~/Library/Application Support/Desiide`, extensions `~/.desiide/extensions`. Neither collides with VS Code or VSCodium.
 - Dev loop: develop `desiide-ai` in **stock VS Code** (F5 Extension Development Host). Only build the fork to test patches or packaging.
 
+## Releasing (REL-1)
+- `scripts/package-app.sh <version>` turns a build into release assets in `dist/app/`: macOS `.dmg` + `.zip` (ad-hoc signed, not Developer ID), Linux x64 `.tar.gz`, `.deb`, `.AppImage`. `scripts/smoke-app.sh <version>` installs each asset as a user would and runs `test:app` against it (Linux: under `xvfb-run`; the `.deb` only with passwordless sudo).
+- Release = push a tag `app-v<semver>` (`release-app.yml`). `-alpha`/`-beta` tags become pre-releases. PRs touching the build or packaging run the same workflow without publishing. The extension alone: `ext-v<semver>` (`release-extension.yml`, Beta), where the tag's `x.y.z` must equal `extensions/desiide-ai/package.json`'s version.
+- `.deb` privacy: upstream's postinst registers Microsoft's apt repo for any package name but `code-oss`. `apply.sh` step 4 disables that, `check-editor-patches.sh` checks the anchor line still exists, and `package-app.sh` refuses a `.deb` without the guard.
+- Linux is built on Ubuntu 22.04, so the app needs glibc ≥ 2.35.
+
 ## Upstream sync
+- Automated weekly by `upstream-sync.yml`: it merges a newer VSCodium release into `sync/vscodium-<tag>` on the fork, dry-runs patches, builds, runs `test:app`, and opens a bump PR here (a draft if anything failed), or an issue on merge conflicts. Pushing to the fork needs the `EDITOR_FORK_TOKEN` secret. After merging the PR, fast-forward the fork: `git -C editor push origin sync/vscodium-<tag>:desiide`.
 - Dry-run first: `scripts/check-editor-patches.sh <vscode-tag>` downloads only the files our patches touch and runs `git apply --check` (seconds, no build). It also checks that upstream still supports local-VSIX built-ins.
 - Merge the new VSCodium tag into the fork's `desiide` branch, update `patches/desiide/base-version`, re-run the build, and fix patches that fail to apply. Patches that touch `src/vs/workbench/**` break most often, which is one more reason to keep them tiny.
 - Never hand-edit files inside the cloned `vscode/` tree. Regenerate the patch instead (`git diff > patches/desiide/NN-x.patch`). After a build, `vscode/` holds every patch applied, so diff pristine copies (`git show HEAD:<file>`) rather than the working tree.
