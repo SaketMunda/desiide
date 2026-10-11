@@ -28,35 +28,10 @@ echo "Packaging desiide-ai"
 DESIIDE_AI_VSIX="${ROOT}/extensions/desiide-ai/desiide-ai.vsix"
 # }}}
 
-# {{{ platform
-case "${OSTYPE}" in
-  darwin*) export OS_NAME="osx"; NODE_OS="darwin" ;;
-  linux*) export OS_NAME="linux"; NODE_OS="linux" ;;
-  *) echo "unsupported OS: ${OSTYPE} (Windows builds are 1.0 scope)" >&2; exit 1 ;;
-esac
-case "$( uname -m )" in
-  arm64 | aarch64) export VSCODE_ARCH="arm64"; NODE_ARCH="arm64" ;;
-  x86_64) export VSCODE_ARCH="x64"; NODE_ARCH="x64" ;;
-  *) echo "unsupported arch: $( uname -m )" >&2; exit 1 ;;
-esac
-# }}}
-
-# {{{ node: VSCodium's pinned version, not the repo root's
-NODE_VERSION="$( tr -d '[:space:]v' < "${EDITOR}/.nvmrc" )"
-if [[ "$( node -v 2> /dev/null )" != "v${NODE_VERSION}" ]]; then
-  NODE_DIR="${HOME}/.cache/desiide/node-v${NODE_VERSION}-${NODE_OS}-${NODE_ARCH}"
-  if [[ ! -x "${NODE_DIR}/bin/node" ]]; then
-    echo "Downloading Node ${NODE_VERSION} to ${NODE_DIR}"
-    mkdir -p "$( dirname "${NODE_DIR}" )"
-    TARBALL="node-v${NODE_VERSION}-${NODE_OS}-${NODE_ARCH}.tar.gz"
-    ( cd "$( dirname "${NODE_DIR}" )" \
-      && curl -sfO "https://nodejs.org/dist/v${NODE_VERSION}/${TARBALL}" \
-      && curl -sf "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" | grep " ${TARBALL}\$" | shasum -a 256 -c - \
-      && tar xzf "${TARBALL}" && rm "${TARBALL}" )
-  fi
-  export PATH="${NODE_DIR}/bin:${PATH}"
-fi
-echo "node $( node -v )"
+# {{{ platform + node: OS_NAME, VSCODE_ARCH, and VSCodium's pinned Node (not the repo root's)
+# shellcheck source=scripts/lib/editor-env.sh
+. "${ROOT}/scripts/lib/editor-env.sh"
+use_editor_node
 # }}}
 
 # {{{ build environment
