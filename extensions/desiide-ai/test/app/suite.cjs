@@ -5,7 +5,9 @@ const { mkdirSync, writeFileSync } = require('node:fs');
 const { dirname } = require('node:path');
 const vscode = require('vscode');
 
-async function waitFor(predicate, what, timeoutMs = 20000) {
+// Generous: the first launch of freshly built or downloaded code is slow (macOS scans new binaries;
+// CI runners are cold), and a webview can take ~20 s to report ready there.
+async function waitFor(predicate, what, timeoutMs = 60000) {
   const start = Date.now();
   while (!predicate()) {
     if (Date.now() - start > timeoutMs) throw new Error(`Timed out waiting for ${what}`);

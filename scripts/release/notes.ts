@@ -64,7 +64,7 @@ These Alpha builds are **unsigned**. Pick the file for your machine, then do the
 xattr -dr com.apple.quarantine /Applications/Desiide.app
 \`\`\`
 
-**Linux:** \`sudo apt install ./Desiide-{version}-linux-x64.deb\`, or \`chmod +x\` the AppImage and run it (AppImages need FUSE 2, e.g. \`sudo apt install libfuse2\`).
+**Linux:** \`sudo apt install ./Desiide-{version}-linux-x64.deb\`, or \`chmod +x\` the AppImage and run it (AppImages need FUSE 2, e.g. \`sudo apt install libfuse2\`). On Ubuntu 24.04 and newer, prefer the \`.deb\`: AppArmor can block the AppImage's sandbox.
 
 Check a download against \`SHA256SUMS\`: \`shasum -a 256 -c SHA256SUMS --ignore-missing\`.`;
 
