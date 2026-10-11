@@ -122,10 +122,12 @@ if (import.meta.main) {
   try {
     const tagArg = process.argv[2];
     if (!tagArg) throw new Error('usage: notes.ts <tag>');
-    const { kind, tag, version } = parseReleaseTag(tagArg);
+    const { kind, tag, version, core } = parseReleaseTag(tagArg);
     const previous = previousTagOf(tag, kind);
     const commits = commitsBetween(previous, tag, kind === 'ext' ? EXTENSION_PATHS : []);
-    process.stdout.write(buildReleaseNotes(kind, version, previous, commits));
+    // The .vsix carries package.json's version, which is the tag's core (see checkExtensionVersion).
+    const fileVersion = kind === 'ext' ? core : version;
+    process.stdout.write(buildReleaseNotes(kind, fileVersion, previous, commits));
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     process.exit(1);

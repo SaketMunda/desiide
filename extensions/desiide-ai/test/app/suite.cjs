@@ -2,7 +2,7 @@
 // under test is the app's *built-in* desiide-ai; this suite loads as an empty probe extension.
 const assert = require('node:assert/strict');
 const { mkdirSync, writeFileSync } = require('node:fs');
-const { dirname, sep } = require('node:path');
+const { dirname } = require('node:path');
 const vscode = require('vscode');
 
 async function waitFor(predicate, what, timeoutMs = 20000) {
@@ -28,7 +28,8 @@ async function run() {
 
     const ext = vscode.extensions.getExtension('desiide.desiide-ai');
     assert.ok(ext, 'desiide-ai is present');
-    results.builtIn = ext.extensionPath.includes(`${sep}Resources${sep}app${sep}extensions${sep}`);
+    // macOS: Desiide.app/Contents/Resources/app/extensions; Linux: <install dir>/resources/app/extensions.
+    results.builtIn = /[\\/]resources[\\/]app[\\/]extensions[\\/]/i.test(ext.extensionPath);
     assert.ok(results.builtIn, `desiide-ai is the app's built-in copy (${ext.extensionPath})`);
 
     // AC1: nothing is clicked. The Desiide panel is visible on first launch, which activates the
