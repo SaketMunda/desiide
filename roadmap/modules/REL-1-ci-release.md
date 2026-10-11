@@ -1,6 +1,6 @@
 # REL-1 · CI & release pipelines
 
-**Status:** todo · **Milestone:** Alpha (verify + app release), Beta (extension publish) · **Size:** L · **Depends on:** FND-1; EDT-1 + EDT-2 for app releases · **Skills:** ide-editor-shell
+**Status:** in-progress · **Milestone:** Alpha (verify + app release), Beta (extension publish) · **Size:** L · **Depends on:** FND-1; EDT-1 + EDT-2 for app releases · **Skills:** ide-editor-shell
 
 ## Purpose
 Repeatable, low-effort releases, so shipping is a tag push rather than a ritual.
