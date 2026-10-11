@@ -1,12 +1,21 @@
 # Desiide app release (REL-1, ADR-011). Push a tag `app-v<semver>`, e.g. app-v0.1.0-alpha.1:
 # verify → build the app (desiide-ai built in) per platform → install and launch every asset →
 # GitHub Release with SHA256SUMS. Tags with a pre-release suffix (-alpha, -beta) are pre-releases.
-# Re-run for an existing tag with "Run workflow".
+# Re-run for an existing tag with "Run workflow". PRs that touch the build or packaging run everything
+# except publishing (a dry run, version 0.0.0-pr.<number>).
 name: release-app
 
 on:
   push:
     tags: ['app-v*']
+  pull_request:
+    paths:
+      - editor
+      - scripts/build-editor.sh
+      - scripts/package-app.sh
+      - scripts/smoke-app.sh
+      - scripts/lib/**
+      - .github/workflows/release-app.yml
   workflow_dispatch:
     inputs:
       tag:
@@ -18,10 +27,11 @@ permissions:
 
 concurrency:
   group: release-app-${{ inputs.tag || github.ref_name }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  TAG: ${{ inputs.tag || github.ref_name }}
+  # Empty on pull_request: checkout then uses the PR's merge commit.
+  TAG: ${{ inputs.tag || (github.event_name != 'pull_request' && github.ref_name || '') }}
 
 jobs:
   tag:
@@ -39,17 +49,25 @@ jobs:
         with:
           node-version-file: .nvmrc
       - id: tag
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          if [[ -n "${PR_NUMBER}" ]]; then
+            printf 'version=0.0.0-pr.%s\nprerelease=true\n' "${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
           parsed="$( node scripts/release/tag.ts "${TAG}" )"
           grep -qx 'kind=app' <<< "${parsed}" || { echo "::error::${TAG} is not an app-v* tag"; exit 1; }
           echo "${parsed}" >> "${GITHUB_OUTPUT}"
 
   verify:
     needs: tag
+    if: github.event_name != 'pull_request' # verify.yml already runs on every PR
     uses: ./.github/workflows/verify.yml
 
   build:
     needs: [tag, verify]
+    if: ${{ !cancelled() && needs.tag.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.verify.result) }}
     name: build (${{ matrix.target }})
     strategy:
       fail-fast: false
@@ -110,6 +128,7 @@ jobs:
 
   release:
     needs: [tag, build]
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
