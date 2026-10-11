@@ -1,0 +1,201 @@
+# Weekly upstream sync (REL-1). When VSCodium publishes a release newer than the one the fork is based
+# on (editor/patches/desiide/base-version): merge it into a branch of the fork, dry-run our patches,
+# build and launch the app, push the branch to the fork, and open a PR here that bumps editor/ to it,
+# with the results. Merge conflicts open an issue instead. Otherwise it reports "no new tag".
+#
+# Pushing to the fork needs the EDITOR_FORK_TOKEN secret: a fine-grained token with Contents
+# read/write on SaketMunda/desiide-vscodium only (GITHUB_TOKEN can't write to another repository).
+name: upstream-sync
+
+on:
+  schedule:
+    - cron: '17 6 * * 1' # Mondays, 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      newer: ${{ steps.compare.outputs.newer }}
+      current: ${{ steps.compare.outputs.current }}
+      latest: ${{ steps.compare.outputs.latest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - id: compare
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest="$( gh api repos/VSCodium/vscodium/releases/latest --jq .tag_name )"
+          # upstream.ts rejects anything but a VSCodium version, so `latest` is safe to use below.
+          result="$( node scripts/release/upstream.ts "${latest}" editor/patches/desiide/base-version )"
+          echo "${result}" >> "${GITHUB_OUTPUT}"
+          echo "latest=${latest}" >> "${GITHUB_OUTPUT}"
+          current="$( sed -n 's/^current=//p' <<< "${result}" )"
+          if grep -qx 'newer=true' <<< "${result}"; then
+            echo "### VSCodium ${latest} is out (fork is on ${current}): syncing" >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "### No new VSCodium release: the fork is on ${current}, the latest is ${latest}" >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+  sync:
+    needs: check
+    if: needs.check.outputs.newer == 'true'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    env:
+      LATEST: ${{ needs.check.outputs.latest }}
+      CURRENT: ${{ needs.check.outputs.current }}
+      BRANCH: sync/vscodium-${{ needs.check.outputs.latest }}
+      FORK: SaketMunda/desiide-vscodium
+    defaults:
+      run:
+        shell: bash # with pipefail
+    steps:
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libkrb5-dev libx11-dev libxkbfile-dev libsecret-1-dev fakeroot dpkg-dev xvfb
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          fetch-depth: 0 # full fork history: the merge needs a merge base with VSCodium
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: editor/.nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Git identity
+        run: |
+          for repo in . editor; do
+            git -C "${repo}" config user.name 'github-actions[bot]'
+            git -C "${repo}" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          done
+
+      - name: Merge VSCodium into the fork
+        id: merge
+        working-directory: editor
+        run: |
+          git remote add upstream https://github.com/VSCodium/vscodium.git
+          git fetch --no-tags upstream "refs/tags/${LATEST}:refs/tags/${LATEST}"
+          git switch -c "${BRANCH}"
+          if git merge --no-edit -m "Merge VSCodium ${LATEST}" "${LATEST}"; then
+            printf '%s\n' "${LATEST}" > patches/desiide/base-version
+            git commit -am "chore: base-version ${LATEST}"
+            echo "result=merged" >> "${GITHUB_OUTPUT}"
+          else
+            git diff --name-only --diff-filter=U > ../conflicts.txt
+            git merge --abort
+            echo "result=conflict" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Dry-run our patches
+        id: patches
+        if: steps.merge.outputs.result == 'merged'
+        continue-on-error: true
+        run: scripts/check-editor-patches.sh "$( jq -r .tag editor/upstream/stable.json )"
+
+      - name: Build
+        id: build
+        if: steps.patches.outcome == 'success'
+        continue-on-error: true
+        run: scripts/build-editor.sh
+
+      - name: First launch
+        id: launch
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        run: DESIIDE_APP_PATH="${PWD}/editor/VSCode-linux-x64/desiide" xvfb-run -a pnpm -F desiide-ai test:app
+
+      - name: Push the fork branch
+        if: steps.merge.outputs.result == 'merged'
+        env:
+          FORK_TOKEN: ${{ secrets.EDITOR_FORK_TOKEN }}
+        run: |
+          if [[ -z "${FORK_TOKEN}" ]]; then
+            echo "::error::Set the EDITOR_FORK_TOKEN secret (Contents read/write on ${FORK}) so the sync can push ${BRANCH} to the fork."
+            exit 1
+          fi
+          git -C editor push --force "https://x-access-token:${FORK_TOKEN}@github.com/${FORK}.git" "HEAD:refs/heads/${BRANCH}"
+
+      - name: Open or update the bump PR
+        if: steps.merge.outputs.result == 'merged'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PATCHES: ${{ steps.patches.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          LAUNCH: ${{ steps.launch.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          mark() { case "$1" in success) echo '✅ pass' ;; failure) echo '❌ fail' ;; *) echo '⏭️ not run' ;; esac; }
+          git switch -c "${BRANCH}"
+          git add editor
+          git commit -m "chore(editor): sync VSCodium ${LATEST}"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${BRANCH}"
+          {
+            echo "Bumps \`editor/\` from VSCodium ${CURRENT} to **${LATEST}** (fork branch [\`${BRANCH}\`](https://github.com/${FORK}/tree/${BRANCH}))."
+            echo
+            echo "| Step | Result |"
+            echo "|---|---|"
+            echo "| Merge | ✅ clean |"
+            echo "| Patch dry-run (\`check-editor-patches.sh\`) | $( mark "${PATCHES}" ) |"
+            echo "| Linux x64 build (\`build-editor.sh\`) | $( mark "${BUILD}" ) |"
+            echo "| First launch (\`test:app\`) | $( mark "${LAUNCH}" ) |"
+            echo
+            echo "Logs: ${RUN_URL}"
+            echo
+            echo "Before merging: fix any failure on the fork branch (see the \`ide-editor-shell\` skill, \"Upstream sync\"), then fast-forward the fork: \`git -C editor push origin ${BRANCH}:desiide\`."
+            echo "PRs opened by GITHUB_TOKEN don't trigger workflows: push any commit (or close and reopen) to run \`verify\`."
+          } > pr-body.md
+          title="chore(editor): sync VSCodium ${LATEST}"
+          if [[ "${PATCHES}${BUILD}${LAUNCH}" != "successsuccesssuccess" ]]; then draft=(--draft); else draft=(); fi
+          if gh pr view "${BRANCH}" --json state --jq .state 2> /dev/null | grep -qx OPEN; then
+            gh pr edit "${BRANCH}" --title "${title}" --body-file pr-body.md
+          else
+            gh pr create --head "${BRANCH}" --base master --title "${title}" --body-file pr-body.md "${draft[@]}"
+          fi
+          cat pr-body.md >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Report a merge conflict
+        if: steps.merge.outputs.result == 'conflict'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Upstream sync: VSCodium ${LATEST} needs a manual merge"
+          {
+            echo "Merging VSCodium **${LATEST}** into the fork's \`desiide\` branch conflicts in:"
+            echo
+            while read -r file; do echo "- \`${file}\`"; done < conflicts.txt
+            echo
+            echo "Resolve it locally (see the \`ide-editor-shell\` skill, \"Upstream sync\"). Run: ${RUN_URL}"
+          } > issue.md
+          existing="$( gh issue list --state open --search "in:title \"${title}\"" --json number --jq '.[0].number' )"
+          if [[ -n "${existing}" ]]; then
+            gh issue comment "${existing}" --body-file issue.md
+          else
+            gh issue create --title "${title}" --body-file issue.md
+          fi
+          cat issue.md >> "${GITHUB_STEP_SUMMARY}"
+          exit 1

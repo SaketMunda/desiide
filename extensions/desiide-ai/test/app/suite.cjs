@@ -2,10 +2,12 @@
 // under test is the app's *built-in* desiide-ai; this suite loads as an empty probe extension.
 const assert = require('node:assert/strict');
 const { mkdirSync, writeFileSync } = require('node:fs');
-const { dirname, sep } = require('node:path');
+const { dirname } = require('node:path');
 const vscode = require('vscode');
 
-async function waitFor(predicate, what, timeoutMs = 20000) {
+// Generous: the first launch of freshly built or downloaded code is slow (macOS scans new binaries;
+// CI runners are cold), and a webview can take ~20 s to report ready there.
+async function waitFor(predicate, what, timeoutMs = 60000) {
   const start = Date.now();
   while (!predicate()) {
     if (Date.now() - start > timeoutMs) throw new Error(`Timed out waiting for ${what}`);
@@ -28,7 +30,8 @@ async function run() {
 
     const ext = vscode.extensions.getExtension('desiide.desiide-ai');
     assert.ok(ext, 'desiide-ai is present');
-    results.builtIn = ext.extensionPath.includes(`${sep}Resources${sep}app${sep}extensions${sep}`);
+    // macOS: Desiide.app/Contents/Resources/app/extensions; Linux: <install dir>/resources/app/extensions.
+    results.builtIn = /[\\/]resources[\\/]app[\\/]extensions[\\/]/i.test(ext.extensionPath);
     assert.ok(results.builtIn, `desiide-ai is the app's built-in copy (${ext.extensionPath})`);
 
     // AC1: nothing is clicked. The Desiide panel is visible on first launch, which activates the

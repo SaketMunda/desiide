@@ -4,5 +4,5 @@
     "outDir": "node_modules/.cache/tsc/tooling",
     "tsBuildInfoFile": "node_modules/.cache/tsc/tooling.tsbuildinfo"
   },
-  "include": ["eslint.config.ts", "vitest.config.ts"]
+  "include": ["eslint.config.ts", "vitest.config.ts", "scripts/**/*.ts"]
 }

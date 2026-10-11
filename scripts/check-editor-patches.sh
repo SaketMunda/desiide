@@ -37,4 +37,12 @@ else
   echo "✗ build/lib/builtInExtensions.ts at ${TAG} no longer supports 'vsix': desiide-ai bundling needs a new approach"
   FAILED=1
 fi
+
+# apply.sh step 4 keeps Microsoft's apt repo out of the .deb by rewriting this exact check.
+if curl -sf "https://raw.githubusercontent.com/microsoft/vscode/${TAG}/resources/linux/debian/postinst.template" | grep -qF '"@@NAME@@" != "code-oss"'; then
+  echo "✓ .deb postinst apt-repo check unchanged at ${TAG}"
+else
+  echo "✗ resources/linux/debian/postinst.template changed at ${TAG}: update apply.sh step 4 so the .deb never adds Microsoft's apt repo"
+  FAILED=1
+fi
 exit "${FAILED}"

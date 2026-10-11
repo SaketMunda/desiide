@@ -1,0 +1,5 @@
+# LF everywhere, including Windows checkouts (the verify matrix runs prettier --check there).
+* text=auto eol=lf
+*.png binary
+*.icns binary
+*.ico binary
