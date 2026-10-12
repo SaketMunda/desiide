@@ -41,6 +41,12 @@ class FakeChild extends EventEmitter implements OrchestratorProcess {
       setup.configure?.(this.host);
     }
     this.connection.listen();
+    // Windows' graceful stop (see OrchestratorClient.stop): the real orchestrator exits on stdin end.
+    this.stdin.on('finish', () => {
+      if (this.gone) return;
+      this.signals.push('stdin-end');
+      if (!setupIgnoresSigterm.has(this)) this.exit(0, null);
+    });
   }
 
   kill(signal: NodeJS.Signals = 'SIGTERM'): boolean {
@@ -61,7 +67,10 @@ class FakeChild extends EventEmitter implements OrchestratorProcess {
     setImmediate(() => this.emit('exit', code, signal));
   }
 }
+/** Children that ignore the graceful stop (SIGTERM, or stdin closing on Windows). */
 const setupIgnoresSigterm = new WeakSet<FakeChild>();
+/** What stop() tries before SIGKILL. */
+const GRACEFUL = process.platform === 'win32' ? 'stdin-end' : 'SIGTERM';
 
 interface Setup {
   configure?: (host: Host) => void;
@@ -193,11 +202,11 @@ describe('OrchestratorClient: lifecycle', () => {
     await expect(pending).rejects.toMatchObject({ kind: 'aborted' });
   });
 
-  it('dispose stops the process with SIGTERM, escalating to SIGKILL', async () => {
+  it('dispose stops the process gracefully, escalating to SIGKILL', async () => {
     const { client, children, statuses } = setup({ ignoreSigterm: true });
     await client.request('health.ping', {});
     await client.dispose();
-    expect(children[0]?.signals).toEqual(['SIGTERM', 'SIGKILL']);
+    expect(children[0]?.signals).toEqual([GRACEFUL, 'SIGKILL']);
     expect(states(statuses).at(-1)).toBe('stopped');
     await expect(client.request('health.ping', {})).rejects.toMatchObject({ kind: 'disposed' });
   });
@@ -282,7 +291,7 @@ describe('OrchestratorClient: protocol version', () => {
       message,
     });
     expect(client.status).toEqual({ state: 'failed', reason: 'protocol_mismatch', message });
-    expect(children[0]?.signals).toContain('SIGTERM');
+    expect(children[0]?.signals).toContain(GRACEFUL);
     await expect(client.request('health.ping', {})).rejects.toMatchObject({
       kind: 'protocol_mismatch',
     });

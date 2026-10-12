@@ -447,7 +447,13 @@ export class OrchestratorClient {
   private async stop(session: Session): Promise<void> {
     session.intentional = true;
     if (session.hasExited) return;
-    session.child.kill('SIGTERM');
+    if (process.platform === 'win32') {
+      // Windows has no SIGTERM: kill() terminates at once and skips the orchestrator's shutdown
+      // (which kills running tool processes). Closing stdin asks it to shut down instead.
+      session.child.stdin?.end();
+    } else {
+      session.child.kill('SIGTERM');
+    }
     const timer = setTimeout(() => {
       if (!session.hasExited) session.child.kill('SIGKILL');
     }, this.opts.stopTimeoutMs ?? 2_000);

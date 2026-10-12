@@ -91,7 +91,10 @@ describe('OrchestratorClient with the bundled orchestrator process', () => {
         expect(isAlive(second.pid)).toBe(false);
       }
       expect(existsSync(join(logDir, 'orchestrator.log'))).toBe(true);
-      expect(readFileSync(join(logDir, 'orchestrator.log'), 'utf8')).toContain('SIGTERM');
+      // A graceful shutdown: SIGTERM on POSIX, stdin closing on Windows (see stop()).
+      expect(readFileSync(join(logDir, 'orchestrator.log'), 'utf8')).toMatch(
+        process.platform === 'win32' ? /stdin closed|connection closed/ : /SIGTERM/,
+      );
       // Cold start budget is 500 ms (STANDARDS); allow slack for loaded CI machines.
       expect(coldStartMs).toBeLessThan(2_000);
     } finally {

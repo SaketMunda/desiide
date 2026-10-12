@@ -84,6 +84,7 @@ export interface ProcessOptions {
 }
 
 export interface ProcessResult {
+  /** null when the process was killed (timeout, abort, head capture full) or never started. */
   exitCode: number | null;
   /**
    * `tail`: combined stdout + stderr in arrival order, with a marker when truncated.
@@ -213,7 +214,8 @@ export function runProcess(cmd: ProcessCommand, opts: ProcessOptions): Promise<P
             .replace(/\uFFFD+$/, '')
         : (truncated ? truncationMarker(tail.dropped) : '') + tail.text();
       const result: ProcessResult = {
-        exitCode,
+        // Killed by us: no exit code of its own (POSIX reports a signal, Windows exit code 1).
+        exitCode: timedOut || cancelled || headFull ? null : exitCode,
         output,
         truncated,
         timedOut,
