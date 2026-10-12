@@ -73,13 +73,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macOS: VSCodium's own heap setting. vscode-min-prepack outgrows the 8 GB default on
+          # Apple silicon and aborts (exit 134); macOS swaps past the runner's 7 GB of RAM.
           - target: darwin-arm64
             runner: macos-15
+            heap: 12288
           - target: darwin-x64
             runner: macos-15-intel
+            heap: 12288
           # 22.04, not latest: the oldest glibc we can build on is the oldest one the app runs on.
           - target: linux-x64
             runner: ubuntu-22.04
+            heap: 8192
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
     defaults:
@@ -113,6 +118,7 @@ jobs:
       # Each step tees its output so a failure can be posted as an annotation (see the last step).
       - name: Build
         env:
+          MAX_OLD_SPACE_SIZE: ${{ matrix.heap }}
           # Build dependencies (e.g. @vscode/ripgrep) download from GitHub; unauthenticated requests
           # from shared runners hit the rate limit (403). Read-only token, valid for this job only.
           GITHUB_TOKEN: ${{ github.token }}
