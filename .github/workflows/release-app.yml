@@ -73,15 +73,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macOS: VSCodium's own heap setting. vscode-min-prepack outgrows the 8 GB default on
+          # Apple silicon and aborts (exit 134); macOS swaps past the runner's 7 GB of RAM.
           - target: darwin-arm64
             runner: macos-15
+            heap: 12288
           - target: darwin-x64
             runner: macos-15-intel
+            heap: 12288
           # 22.04, not latest: the oldest glibc we can build on is the oldest one the app runs on.
           - target: linux-x64
             runner: ubuntu-22.04
+            heap: 8192
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
+    defaults:
+      run:
+        shell: bash # -o pipefail, so `| tee` keeps a failing exit code
     env:
       VERSION: ${{ needs.tag.outputs.version }}
     steps:
@@ -107,16 +115,22 @@ jobs:
           node-version-file: editor/.nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Each step tees its output so a failure can be posted as an annotation (see the last step).
       - name: Build
-        run: scripts/build-editor.sh
+        env:
+          MAX_OLD_SPACE_SIZE: ${{ matrix.heap }}
+          # Build dependencies (e.g. @vscode/ripgrep) download from GitHub; unauthenticated requests
+          # from shared runners hit the rate limit (403). Read-only token, valid for this job only.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: scripts/build-editor.sh 2>&1 | tee "${RUNNER_TEMP}/build.log"
       - name: Package
-        run: scripts/package-app.sh "${VERSION}" dist/app
+        run: scripts/package-app.sh "${VERSION}" dist/app 2>&1 | tee "${RUNNER_TEMP}/package.log"
       - name: Install and launch every asset
         run: |
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            xvfb-run -a scripts/smoke-app.sh "${VERSION}" dist/app
+            xvfb-run -a scripts/smoke-app.sh "${VERSION}" dist/app 2>&1 | tee "${RUNNER_TEMP}/smoke.log"
           else
-            scripts/smoke-app.sh "${VERSION}" dist/app
+            scripts/smoke-app.sh "${VERSION}" dist/app 2>&1 | tee "${RUNNER_TEMP}/smoke.log"
           fi
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -125,6 +139,15 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           compression-level: 0 # already compressed
+      - name: Post the failure as an annotation
+        if: failure()
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          for step in build package smoke; do
+            if [[ -f "${RUNNER_TEMP}/${step}.log" ]]; then last="${step}"; fi
+          done
+          [[ -n "${last:-}" ]] && scripts/ci/annotate-failure.sh "${TARGET}: ${last} failed" "${RUNNER_TEMP}/${last}.log"
 
   release:
     needs: [tag, build]

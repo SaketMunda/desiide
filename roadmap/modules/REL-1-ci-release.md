@@ -55,6 +55,7 @@ Repeatable, low-effort releases, so shipping is a tag push rather than a ritual.
    - **CI:** `darwin-x64`, `linux-x64` (tar.gz, AppImage, `.deb` + the no-Microsoft-repo assertion), and `darwin-arm64` on GitHub runners run in this PR's `release-app` dry run. See the PR checks.
    - **Checksums, pre-release, and Release publishing** run on the first real `app-v*` tag. The logic they rely on is unit-tested: `release.test.ts` covers tag → pre-release, release notes, and the changelog.
 2. **AC2 (upstream sync):** VSCodium's latest release is `1.135.06055`, which is already `base-version`, so the run takes the "no new tag" path. Locally, `node scripts/release/upstream.ts 1.135.06055 editor/patches/desiide/base-version` prints `newer=false`. The `check` job writes "No new VSCodium release…" to the summary. `workflow_dispatch` only appears once the workflow is on `master`, so the one manual run happens right after merge. `check-editor-patches.sh 1.135.0` passes all four checks, including the new `.deb` guard anchor.
+   **Done 2026-10-12:** a manual dispatch on `master` (`05c12c7`) reported *"No new VSCodium release: the fork is on 1.135.06055, the latest is 1.135.06055"*.
 3. **AC3 (Beta, extension):**
    - `tag.ts ext-v0.0.1-beta --package …` → `prerelease=true`. A mismatched tag fails with "bump package.json to X, or tag ext-vY".
    - `vsce package --pre-release` → `.vsix` (42 files, 496 KB) whose manifest has `PreRelease = true`.

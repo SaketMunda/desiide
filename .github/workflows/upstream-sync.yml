@@ -120,6 +120,8 @@ jobs:
         id: build
         if: steps.patches.outcome == 'success'
         continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # see release-app.yml, Build
         run: scripts/build-editor.sh
 
       - name: First launch
