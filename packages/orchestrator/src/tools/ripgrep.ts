@@ -32,7 +32,7 @@ export function rgWalkArgs(ignoreGlobs: readonly string[] = []): string[] {
   // --no-config: RIPGREP_CONFIG_PATH must not inject flags (e.g. --follow).
   return [
     '--no-config',
-    // Workspace paths always use `/` (rg prints `\` on Windows otherwise).
+    // Workspace paths always use `/` (rg prints `\` on Windows otherwise). Not applied to --json.
     '--path-separator',
     '/',
     '--hidden',
@@ -217,7 +217,12 @@ export const searchTool = defineTool({
       let text = parsed.data.lines.text.replace(/\r?\n$/, '');
       if (text.length > MAX_MATCH_LINE_CHARS)
         text = `${text.slice(0, MAX_MATCH_LINE_CHARS)} [… cut]`;
-      matches.push(`${parsed.data.path.text}:${parsed.data.line_number ?? '?'}: ${text}`);
+      // --path-separator doesn't reach --json output; `\` is a legal filename char off Windows.
+      const path =
+        process.platform === 'win32'
+          ? parsed.data.path.text.replaceAll('\\', '/')
+          : parsed.data.path.text;
+      matches.push(`${path}:${parsed.data.line_number ?? '?'}: ${text}`);
     }
 
     const stderr = (r.stderr ?? '').trim();
