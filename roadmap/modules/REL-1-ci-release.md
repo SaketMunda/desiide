@@ -80,7 +80,17 @@ Repeatable, low-effort releases, so shipping is a tag push rather than a ritual.
   - The `.deb` maintainer field still says VSCodium (VSCodium's own `sed` runs after our hook). This is cosmetic, like EDT-1's remaining VSCodium strings.
 - **The AppImage needs FUSE 2** (`libfuse2`). The release notes say so.
 - **glibc ≥ 2.35** (Ubuntu 22.04 / Debian 12 and newer), because Linux builds on `ubuntu-22.04` without VS Code's sysroot.
-- **Windows in the verify matrix runs for the first time with this PR.** If a package's tests assume POSIX paths or shells, the failure is that module's; fixes go in a `fix/` branch.
+- **Windows in the verify matrix** first failed on master (103 tests). Branch `fix/windows-verify` fixed it:
+  - **Product (COR-3/COR-4):**
+    - Timeout and cancel never killed anything on Windows. `process.kill(-pid)` is POSIX-only, so the fix kills the tree with `taskkill /T /F` while the process is running.
+    - There's no post-exit reap on Windows, because PIDs get reused.
+    - ripgrep printed `\` paths into workspace paths and the repo map; the fix passes `--path-separator /`.
+  - **Tests:**
+    - Fixture paths used `URL.pathname`.
+    - POSIX file modes and signals.
+    - Symlinks to `/etc`.
+    - Process tests now run `node` instead of shell syntax.
+  - **Still POSIX-only:** the tests that check shell syntax. Which shell the `shell` tool uses on Windows (cmd, PowerShell, Git Bash) is an open planning question, and it matters by Beta, when the standalone extension reaches Windows users.
 - **AC3's "verified once for real before Beta"** needs the `desiide` publisher/namespace and the `VSCE_PAT`/`OVSX_PAT` secrets (ADR-015, user action).
 
 **Follow-ups:**

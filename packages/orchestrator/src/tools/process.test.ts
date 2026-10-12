@@ -1,8 +1,9 @@
+import { existsSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { runProcess, scrubEnv, truncationMarker } from './process.ts';
+import { runProcess, scrubEnv, truncationMarker, type ProcessCommand } from './process.ts';
 
 let cwd: string;
 
@@ -10,7 +11,8 @@ beforeAll(async () => {
   cwd = await mkdtemp(join(tmpdir(), 'desiide-proc-'));
 });
 afterAll(async () => {
-  await rm(cwd, { recursive: true, force: true });
+  // Windows can briefly keep a killed process's cwd busy.
+  await rm(cwd, { recursive: true, force: true, maxRetries: 5 });
 });
 
 function isAlive(pid: number): boolean {
@@ -31,7 +33,25 @@ async function waitFor(check: () => boolean, ms = 2000): Promise<boolean> {
   return check();
 }
 
-const env = { PATH: process.env.PATH ?? '/usr/bin:/bin' };
+// Windows programs, node.exe included, need SystemRoot.
+const env = {
+  PATH: process.env.PATH ?? '/usr/bin:/bin',
+  ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
+};
+
+/** A Node script as the command: the same behavior on every OS, unlike shell syntax. */
+const node = (script: string, ...args: string[]): ProcessCommand => ({
+  kind: 'exec',
+  file: process.execPath,
+  args: ['-e', script, ...args],
+});
+
+/** Runs a child that starts a grandchild, writes the grandchild's pid to argv[1], and waits. */
+const PARENT_OF_GRANDCHILD = `
+const { spawn } = require('node:child_process');
+const c = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'ignore' });
+require('node:fs').writeFileSync(process.argv[1], String(c.pid));
+setTimeout(() => {}, 30000);`;
 
 describe('scrubEnv', () => {
   it('drops credential-looking and host-only vars, keeps the rest', () => {
@@ -55,7 +75,7 @@ describe('scrubEnv', () => {
 
   it('a child process never sees scrubbed vars', async () => {
     const r = await runProcess(
-      { kind: 'shell', command: 'env' },
+      node("for (const [k, v] of Object.entries(process.env)) console.log(k + '=' + v)"),
       {
         cwd,
         env: { ...env, ANTHROPIC_API_KEY: 'sk-ant-leak', NPM_TOKEN: 'npm-leak', KEEP_ME: 'ok' },
@@ -70,15 +90,23 @@ describe('scrubEnv', () => {
 
 describe('runProcess', () => {
   it('runs in the given cwd and reports the exit code', async () => {
-    const r = await runProcess({ kind: 'shell', command: 'pwd; exit 3' }, { cwd, env });
+    const r = await runProcess(node('console.log(process.cwd()); process.exit(3)'), { cwd, env });
     expect(r.exitCode).toBe(3);
     expect(r.output.trim()).toMatch(/desiide-proc-/);
     expect(r).toMatchObject({ timedOut: false, cancelled: false, truncated: false });
   });
 
+  it('runs a shell command line', async () => {
+    const r = await runProcess(
+      { kind: 'shell', command: `"${process.execPath}" -e "process.exit(4)"` },
+      { cwd, env },
+    );
+    expect(r.exitCode).toBe(4);
+  });
+
   it('runs a file with args without a shell', async () => {
     const r = await runProcess(
-      { kind: 'exec', file: 'echo', args: ['$HOME', ';', 'ls'] },
+      node('console.log(process.argv.slice(1).join(" "))', '$HOME', ';', 'ls'),
       { cwd, env },
     );
     expect(r.output.trim()).toBe('$HOME ; ls');
@@ -96,10 +124,7 @@ describe('runProcess', () => {
   it('tail-truncates output over the cap with a marker', async () => {
     const r = await runProcess(
       // 20,000 lines ≈ 200 KB, well over 64 KB; the last line must survive.
-      {
-        kind: 'shell',
-        command: 'i=0; while [ $i -lt 20000 ]; do echo "line $i"; i=$((i+1)); done',
-      },
+      node("for (let i = 0; i < 20000; i++) process.stdout.write('line ' + i + '\\n')"),
       { cwd, env },
     );
     expect(r.truncated).toBe(true);
@@ -110,21 +135,22 @@ describe('runProcess', () => {
   });
 
   it('honors a custom cap and drops a split multi-byte char at the cut', async () => {
-    const r = await runProcess(
-      { kind: 'shell', command: "printf 'ééééééééééABC'" },
-      { cwd, env, outputCapBytes: 6 },
-    );
+    const r = await runProcess(node("process.stdout.write('ééééééééééABC')"), {
+      cwd,
+      env,
+      outputCapBytes: 6,
+    });
     expect(r.truncated).toBe(true);
     expect(r.output).toBe(truncationMarker(17) + 'éABC');
   });
 
-  it('timeout kills the whole process group, including grandchildren', async () => {
+  it('timeout kills the whole process tree, including grandchildren', async () => {
     const pidFile = join(cwd, 'grandchild.pid');
-    const r = await runProcess(
-      // The grandchild is a background sleep in a subshell; it shares the process group.
-      { kind: 'shell', command: `(sleep 30 & echo $! > ${pidFile}; wait) ; sleep 30` },
-      { cwd, env, timeoutMs: 300 },
-    );
+    const r = await runProcess(node(PARENT_OF_GRANDCHILD, pidFile), {
+      cwd,
+      env,
+      timeoutMs: 1500,
+    });
     expect(r.timedOut).toBe(true);
     expect(r.exitCode).toBeNull();
     expect(r.durationMs).toBeLessThan(5000);
@@ -134,54 +160,64 @@ describe('runProcess', () => {
     expect(await waitFor(() => !isAlive(grandchild))).toBe(true);
   });
 
-  it('kills a background child left running after the command exits', async () => {
-    const pidFile = join(cwd, 'bg.pid');
-    const r = await runProcess(
-      { kind: 'shell', command: `sleep 30 > /dev/null 2>&1 & echo $! > ${pidFile}` },
-      { cwd, env, timeoutMs: 10_000 },
-    );
-    expect(r.exitCode).toBe(0);
-    const { readFile } = await import('node:fs/promises');
-    const bg = Number((await readFile(pidFile, 'utf8')).trim());
-    expect(await waitFor(() => !isAlive(bg))).toBe(true);
-  });
+  // POSIX only: Windows doesn't reap after exit (see runProcess), it stops waiting for the pipes.
+  it.skipIf(process.platform === 'win32')(
+    'kills a background child left running after the command exits',
+    async () => {
+      const pidFile = join(cwd, 'bg.pid');
+      const r = await runProcess(
+        { kind: 'shell', command: `sleep 30 > /dev/null 2>&1 & echo $! > ${pidFile}` },
+        { cwd, env, timeoutMs: 10_000 },
+      );
+      expect(r.exitCode).toBe(0);
+      const { readFile } = await import('node:fs/promises');
+      const bg = Number((await readFile(pidFile, 'utf8')).trim());
+      expect(await waitFor(() => !isAlive(bg))).toBe(true);
+    },
+  );
 
-  it('abort cancels and kills the group', async () => {
+  it('abort cancels and kills the process tree', async () => {
+    const pidFile = join(cwd, 'abort-grandchild.pid');
     const ac = new AbortController();
-    const p = runProcess({ kind: 'shell', command: 'sleep 30' }, { cwd, env, signal: ac.signal });
-    setTimeout(() => ac.abort(), 100);
+    const p = runProcess(node(PARENT_OF_GRANDCHILD, pidFile), { cwd, env, signal: ac.signal });
+    expect(await waitFor(() => existsSync(pidFile), 5000)).toBe(true);
+    ac.abort();
     const r = await p;
     expect(r.cancelled).toBe(true);
     expect(r.durationMs).toBeLessThan(5000);
+    const { readFile } = await import('node:fs/promises');
+    const grandchild = Number((await readFile(pidFile, 'utf8')).trim());
+    expect(await waitFor(() => !isAlive(grandchild))).toBe(true);
   });
 
   it('returns immediately when already aborted', async () => {
-    const r = await runProcess(
-      { kind: 'shell', command: 'echo should-not-run' },
-      { cwd, env, signal: AbortSignal.abort() },
-    );
+    const r = await runProcess(node("console.log('should-not-run')"), {
+      cwd,
+      env,
+      signal: AbortSignal.abort(),
+    });
     expect(r).toMatchObject({ cancelled: true, output: '' });
   });
 
   it('tracks the process group with the host and untracks it afterwards', async () => {
     const events: string[] = [];
-    await runProcess(
-      { kind: 'shell', command: 'true' },
-      {
-        cwd,
-        env,
-        trackProcessGroup: (pid) => {
-          events.push(`track:${pid > 0}`);
-          return () => events.push('untrack');
-        },
+    await runProcess(node(''), {
+      cwd,
+      env,
+      trackProcessGroup: (pid) => {
+        events.push(`track:${pid > 0}`);
+        return () => events.push('untrack');
       },
-    );
+    });
     expect(events).toEqual(['track:true', 'untrack']);
   });
 
   it('head capture keeps the start of stdout, stops early, and separates stderr', async () => {
     const r = await runProcess(
-      { kind: 'shell', command: 'echo oops >&2; yes line' },
+      node(
+        "process.stderr.write('oops\\n'); const b = 'line\\n'.repeat(1000);" +
+          " (function w() { while (process.stdout.write(b)); process.stdout.once('drain', w); })()",
+      ),
       { cwd, env, capture: 'head', outputCapBytes: 100, timeoutMs: 10_000 },
     );
     expect(r.truncated).toBe(true);
@@ -192,10 +228,11 @@ describe('runProcess', () => {
   });
 
   it('head capture under the cap is complete and not truncated', async () => {
-    const r = await runProcess(
-      { kind: 'shell', command: 'echo a; echo b' },
-      { cwd, env, capture: 'head' },
-    );
+    const r = await runProcess(node("process.stdout.write('a\\nb\\n')"), {
+      cwd,
+      env,
+      capture: 'head',
+    });
     expect(r).toMatchObject({ output: 'a\nb\n', truncated: false, exitCode: 0, stderr: '' });
   });
 });

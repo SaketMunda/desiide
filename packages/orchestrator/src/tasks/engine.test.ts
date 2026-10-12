@@ -18,7 +18,7 @@ import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import pino from 'pino';
 import { ErrorCodes, createMessageConnection, type MessageConnection } from 'vscode-jsonrpc/node';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { registerConfigUpdate } from '../config/handler.ts';
 import { createHost, type Host } from '../host/host.ts';
 import { makeTestWorkspace, type TestWorkspace } from '../tools/testWorkspace.ts';
@@ -153,7 +153,14 @@ describe('task.* over JSON-RPC', () => {
     const s = await setup([
       {
         toolCalls: [
-          { id: 's1', name: 'shell', args: { command: 'echo $$ > pid.txt; exec sleep 30' } },
+          {
+            id: 's1',
+            name: 'shell',
+            // Any shell: the command's own pid, then a long wait.
+            args: {
+              command: `node -e "require('node:fs').writeFileSync('pid.txt', String(process.pid)); setTimeout(() => {}, 30000)"`,
+            },
+          },
         ],
       },
     ]);
@@ -184,7 +191,8 @@ describe('task.* over JSON-RPC', () => {
     });
     await cancelled;
     expect(Date.now() - started).toBeLessThan(1000);
-    expect(isAlive(pid)).toBe(false);
+    // Windows kills through taskkill, which finishes a moment after the cancel.
+    await vi.waitFor(() => expect(isAlive(pid)).toBe(false), { timeout: 1000, interval: 20 });
     expect(await s.client.sendRequest('task.cancel', { taskId: task.id })).toEqual({
       cancelled: false,
     });

@@ -78,7 +78,10 @@ describe('OrchestratorClient with the bundled orchestrator process', () => {
         'ready',
       ]);
       expect(statuses[2]).toMatchObject({ state: 'restarting', attempt: 1 });
-      expect(statuses[2]?.state === 'restarting' && statuses[2].reason).toContain('SIGKILL');
+      // Windows has no signals: a killed process just exits with code 1.
+      expect(statuses[2]?.state === 'restarting' && statuses[2].reason).toContain(
+        process.platform === 'win32' ? 'code 1' : 'SIGKILL',
+      );
       await expect(client.request('health.ping', {})).resolves.toMatchObject({ ok: true });
 
       const second = client.status;

@@ -1,11 +1,12 @@
 import { DesiideConfig } from '@desiide/protocol';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { BUILTIN_PROVIDERS } from './providers.ts';
 import { createModelRegistry } from './registry.ts';
 import { loadFixture, replayFetch } from './testing/fixtures.ts';
 
 const fixture = (path: string) =>
-  loadFixture(new URL(`../test/fixtures/${path}.jsonl`, import.meta.url).pathname);
+  loadFixture(fileURLToPath(new URL(`../test/fixtures/${path}.jsonl`, import.meta.url)));
 
 describe('BUILTIN_PROVIDERS through the registry', () => {
   it('ships every provider the protocol names', () => {

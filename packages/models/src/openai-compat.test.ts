@@ -1,4 +1,5 @@
 import type { ModelConfig } from '@desiide/protocol';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { createOpenAICompatAdapter } from './openai-compat.ts';
 import type { ProviderContext } from './registry.ts';
@@ -8,7 +9,7 @@ import type { ChatRequest, ReasoningLevel, StreamEvent } from './types.ts';
 
 const fixture = (name: string) =>
   loadFixture(
-    new URL(`../test/fixtures/openai-compatible/${name}.jsonl`, import.meta.url).pathname,
+    fileURLToPath(new URL(`../test/fixtures/openai-compatible/${name}.jsonl`, import.meta.url)),
   );
 
 const KEY = 'sk-test-SENTINEL-7f3a';

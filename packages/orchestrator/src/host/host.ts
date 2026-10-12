@@ -20,6 +20,7 @@ import {
   type MessageConnection,
 } from 'vscode-jsonrpc/node';
 import * as z from 'zod';
+import { killProcessTree } from '../tools/process.ts';
 import type { Logger } from './logger.ts';
 
 export interface HandlerContext {
@@ -72,16 +73,12 @@ function isClientMethod(method: string): method is ClientMethod {
   return Object.hasOwn(ClientMethods, method);
 }
 
-function defaultKillProcessGroup(pid: number): void {
-  process.kill(-pid, 'SIGKILL');
-}
-
 export function createHost({
   connection,
   logger,
   server = { name: 'desiide-orchestrator', version: '0.0.0' },
   now = Date.now,
-  killProcessGroup = defaultKillProcessGroup,
+  killProcessGroup = killProcessTree,
 }: HostOptions): Host {
   const startedAt = now();
   const handlers = new Map<ClientMethod, InternalHandler>();

@@ -1,4 +1,5 @@
 import { createServer } from 'node:net';
+import { fileURLToPath } from 'node:url';
 import type { AddressInfo } from 'node:net';
 import type { ModelConfig } from '@desiide/protocol';
 import { describe, expect, it } from 'vitest';
@@ -18,7 +19,7 @@ import type { ChatRequest, ReasoningLevel, StreamEvent } from './types.ts';
 import type { FetchLike } from './http.ts';
 
 const fixture = (name: string) =>
-  loadFixture(new URL(`../test/fixtures/ollama/${name}.jsonl`, import.meta.url).pathname);
+  loadFixture(fileURLToPath(new URL(`../test/fixtures/ollama/${name}.jsonl`, import.meta.url)));
 
 function context(fetch: FetchLike, config: Partial<ModelConfig> = {}): ProviderContext {
   return {
