@@ -112,6 +112,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Each step tees its output so a failure can be posted as an annotation (see the last step).
       - name: Build
+        env:
+          # Build dependencies (e.g. @vscode/ripgrep) download from GitHub; unauthenticated requests
+          # from shared runners hit the rate limit (403). Read-only token, valid for this job only.
+          GITHUB_TOKEN: ${{ github.token }}
         run: scripts/build-editor.sh 2>&1 | tee "${RUNNER_TEMP}/build.log"
       - name: Package
         run: scripts/package-app.sh "${VERSION}" dist/app 2>&1 | tee "${RUNNER_TEMP}/package.log"
