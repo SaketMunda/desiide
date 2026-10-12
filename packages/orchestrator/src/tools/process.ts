@@ -1,8 +1,10 @@
 import { spawn } from 'node:child_process';
+import { join } from 'node:path';
 
 export const DEFAULT_TIMEOUT_MS = 120_000;
 export const DEFAULT_OUTPUT_CAP_BYTES = 64 * 1024;
 const STDERR_TAIL_BYTES = 8 * 1024;
+const WINDOWS_PIPE_GRACE_MS = 2_000;
 
 /** Names that look like credentials. Matching vars never reach a child process. */
 const SECRET_NAME = /KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL/i;
@@ -98,7 +100,24 @@ export interface ProcessResult {
   spawnError?: string;
 }
 
-function defaultKillGroup(pid: number): void {
+/**
+ * Kills a process started by `runProcess` and everything it started. POSIX: SIGKILL to its process
+ * group (it was spawned `detached`, so it leads one). Windows has no process groups: `taskkill /T`
+ * kills the tree, which reaches descendants only while their parent is still alive.
+ */
+export function killProcessTree(pid: number): void {
+  if (process.platform === 'win32') {
+    // Absolute path: never resolve taskkill through PATH.
+    const taskkill = join(process.env['SystemRoot'] ?? 'C:\\Windows', 'System32', 'taskkill.exe');
+    const killer = spawn(taskkill, ['/pid', String(pid), '/T', '/F'], {
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    killer.on('error', () => {
+      // Nothing more to try; the process may already be gone.
+    });
+    return;
+  }
   try {
     process.kill(-pid, 'SIGKILL');
   } catch {
@@ -109,12 +128,13 @@ function defaultKillGroup(pid: number): void {
 /**
  * Runs a command in its own process group (`detached`). On timeout or abort the whole group is
  * SIGKILLed, so grandchildren die too. The group is also killed after the main process exits:
- * a leftover background child would keep the pipes open and leak.
+ * a leftover background child would keep the pipes open and leak. Windows: see killProcessTree,
+ * and the `exit` handler below.
  */
 export function runProcess(cmd: ProcessCommand, opts: ProcessOptions): Promise<ProcessResult> {
   const start = Date.now();
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const killGroup = opts.killProcessGroup ?? defaultKillGroup;
+  const killGroup = opts.killProcessGroup ?? killProcessTree;
   const cap = opts.outputCapBytes ?? DEFAULT_OUTPUT_CAP_BYTES;
   const head = opts.capture === 'head';
   const tail = new TailBuffer(head ? STDERR_TAIL_BYTES : cap);
@@ -211,6 +231,17 @@ export function runProcess(cmd: ProcessCommand, opts: ProcessOptions): Promise<P
     });
     child.on('exit', (code) => {
       exitCode = code;
+      if (process.platform === 'win32') {
+        // No process groups, and the PID may be reused once the process is gone, so a tree kill now
+        // could hit an unrelated program. If something the command started still holds the pipes,
+        // stop waiting for them instead.
+        setTimeout(() => {
+          child.stdout.destroy();
+          child.stderr.destroy();
+          finish();
+        }, WINDOWS_PIPE_GRACE_MS).unref();
+        return;
+      }
       // Reap anything the command left running in its group, so `close` can fire.
       kill();
     });

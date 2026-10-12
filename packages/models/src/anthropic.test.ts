@@ -1,4 +1,5 @@
 import type { ModelConfig } from '@desiide/protocol';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   ANTHROPIC_KEY_HINT,
@@ -13,7 +14,7 @@ import { loadFixture, replayFetch, type ReplayFetch } from './testing/fixtures.t
 import type { ChatMessage, ChatRequest, StreamEvent } from './types.ts';
 
 const fixture = (name: string) =>
-  loadFixture(new URL(`../test/fixtures/anthropic/${name}.jsonl`, import.meta.url).pathname);
+  loadFixture(fileURLToPath(new URL(`../test/fixtures/anthropic/${name}.jsonl`, import.meta.url)));
 
 const KEY = 'sk-ant-api03-SENTINEL-9c1e';
 

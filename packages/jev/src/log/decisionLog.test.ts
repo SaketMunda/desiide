@@ -47,7 +47,8 @@ describe('createDecisionLog', () => {
     expect(log.path).toBe(join(dir, DECISION_LOG_FILE));
     expect((await lines(log.path)).map((l) => JSON.parse(l) as unknown)).toEqual([r]);
     expect(await readFile(join(dir, '.gitignore'), 'utf8')).toBe('*\n');
-    expect((await stat(log.path)).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes (Node reports 0o666 or 0o444); the user profile's ACL applies.
+    if (process.platform !== 'win32') expect((await stat(log.path)).mode & 0o777).toBe(0o600);
   });
 
   it('rejects records that do not match the schema, without wedging later appends', async () => {

@@ -52,7 +52,12 @@ export async function makeTestWorkspace(
     workspace: await createWorkspace([root]),
     taskId: 'task-1',
     projectConfig: opts.projectConfig ?? {},
-    env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: base },
+    env: {
+      PATH: process.env.PATH ?? '/usr/bin:/bin',
+      HOME: base,
+      // Windows programs, node.exe included, need SystemRoot.
+      ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
+    },
     rgPath,
     newId: () => `id-${++n}`,
   };
@@ -61,6 +66,7 @@ export async function makeTestWorkspace(
     ctx,
     write,
     git,
-    dispose: () => rm(base, { recursive: true, force: true }),
+    // Windows can briefly keep a killed process's cwd busy.
+    dispose: () => rm(base, { recursive: true, force: true, maxRetries: 5 }),
   };
 }

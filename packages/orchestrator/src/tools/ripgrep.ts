@@ -32,6 +32,9 @@ export function rgWalkArgs(ignoreGlobs: readonly string[] = []): string[] {
   // --no-config: RIPGREP_CONFIG_PATH must not inject flags (e.g. --follow).
   return [
     '--no-config',
+    // Workspace paths always use `/` (rg prints `\` on Windows otherwise).
+    '--path-separator',
+    '/',
     '--hidden',
     '--no-require-git',
     ...ignores.flatMap((g) => ['--glob', `!${g}`]),

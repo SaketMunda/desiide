@@ -1,4 +1,4 @@
-import { symlink, writeFile } from 'node:fs/promises';
+import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { summarize } from './commands.ts';
@@ -30,7 +30,15 @@ beforeAll(async () => {
     },
     { git: true },
   );
-  await symlink('/etc', join(tw.root, 'etc-link'));
+  // A link to a real folder outside the workspace (a junction on Windows, which needs no privilege).
+  const outside = join(tw.root, '..', 'outside');
+  await mkdir(outside);
+  await writeFile(join(outside, 'hosts'), '127.0.0.1 localhost\n');
+  await symlink(
+    outside,
+    join(tw.root, 'etc-link'),
+    process.platform === 'win32' ? 'junction' : 'dir',
+  );
 });
 afterAll(async () => {
   await tw.dispose();
@@ -250,8 +258,13 @@ describe('git_read', () => {
   });
 });
 
+// Shell-syntax cases are POSIX only: which shell the tool uses on Windows is still open (planning).
+const posixShell = process.platform !== 'win32';
+/** Waits `ms` in any shell. */
+const nodeSleep = (ms: number): string => `node -e "setTimeout(() => {}, ${ms})"`;
+
 describe('shell', () => {
-  it('runs at the workspace root with a scrubbed env', async () => {
+  it.skipIf(!posixShell)('runs at the workspace root with a scrubbed env', async () => {
     const ctx = { ...tw.ctx, env: { ...tw.ctx.env, OPENAI_API_KEY: 'sk-leak', VISIBLE: 'yes' } };
     const { result } = await run('shell', { command: 'pwd; env' }, ctx);
     expect(result.ok).toBe(true);
@@ -261,14 +274,17 @@ describe('shell', () => {
     expect(result.output.split('\n')[0]).toMatch(/\/ws$/);
   });
 
-  it('a non-zero exit is a failed call carrying the exit code and output', async () => {
-    const { result } = await run('shell', { command: 'echo boom >&2; exit 7' });
-    expect(result).toMatchObject({ ok: false, exitCode: 7, output: 'boom\n' });
-    expect(result.error).toMatchObject({ kind: 'failed', message: 'command exited with code 7' });
-  });
+  it.skipIf(!posixShell)(
+    'a non-zero exit is a failed call carrying the exit code and output',
+    async () => {
+      const { result } = await run('shell', { command: 'echo boom >&2; exit 7' });
+      expect(result).toMatchObject({ ok: false, exitCode: 7, output: 'boom\n' });
+      expect(result.error).toMatchObject({ kind: 'failed', message: 'command exited with code 7' });
+    },
+  );
 
   it('times out', async () => {
-    const { result } = await run('shell', { command: 'sleep 5', timeoutMs: 1000 });
+    const { result } = await run('shell', { command: nodeSleep(5000), timeoutMs: 1000 });
     expect(result.error?.kind).toBe('timeout');
     expect(result.durationMs).toBeLessThan(4000);
   });
@@ -276,7 +292,7 @@ describe('shell', () => {
   it('cancels on abort', async () => {
     const ac = new AbortController();
     const p = executeToolCall(
-      { id: 'c', tool: 'shell', args: { command: 'sleep 5' } },
+      { id: 'c', tool: 'shell', args: { command: nodeSleep(5000) } },
       tw.ctx,
       ac.signal,
     );
@@ -291,7 +307,7 @@ describe('shell', () => {
 });
 
 describe('run_tests / lint', () => {
-  it('runs the configured command and summarizes', async () => {
+  it.skipIf(!posixShell)('runs the configured command and summarizes', async () => {
     const ctx = {
       ...tw.ctx,
       projectConfig: { testCommand: 'echo noise; echo "Tests  3 passed | 1 failed"; exit 1' },
