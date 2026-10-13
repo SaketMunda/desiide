@@ -2,7 +2,7 @@
 
 **An open-source, AI-native IDE where you bring your own models and every AI decision is visible.**
 
-> **Status: pre-alpha.** Desiide is being built in the open. Nothing is installable yet. The first release (Alpha) will be the Desiide desktop app for macOS and Linux. See the [roadmap](roadmap/README.md) for what's done and what's next.
+> **Status: early alpha, built in the open.** [Pre-release builds](https://github.com/SaketMunda/desiide/releases) for macOS (Apple silicon and Intel) and Linux x64 install and run, with the Desiide panel built in. What works today: the agent loop with a local Ollama model (configured in `settings.json` for now), the live task stream, and policy-gated tools. Not built yet: model setup screens and cloud API keys, diff review and approval, and the decision panel. Those make up the rest of Alpha. See the [roadmap](roadmap/README.md) for what's done and what's next.
 
 ## About
 
