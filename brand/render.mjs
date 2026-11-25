@@ -7,7 +7,7 @@ import { join } from 'node:path';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const require = createRequire(join(here, '../extensions/desiide-ai/package.json'));
 const { chromium } = require('playwright-core');
-const files = ['', 'social/'].flatMap((d) =>
+const files = [''].flatMap((d) =>
   readdirSync(join(here, d))
     .filter((f) => f.endsWith('.svg'))
     .map((f) => d + f),
