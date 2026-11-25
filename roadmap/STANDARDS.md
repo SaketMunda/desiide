@@ -48,6 +48,6 @@ The bar is **enterprise-trustworthy, not enterprise-heavy**. If a rule here slow
 
 ## UX & accessibility
 - Everything is reachable by keyboard, has visible focus, and ARIA labels on icon buttons.
-- Colors come from VS Code theme variables plus Desiide accent tokens (UI-1). Test in dark, light, and high-contrast themes.
+- Every UI follows `brand/EXPERIENCE.md` (ADR-023). Colors come from VS Code theme variables plus the Desiide tokens from UI-7, using the fixed state mapping: lime = done/approve, violet = decision/routing, cyan = running, amber = needs you, red = blocked. Test in dark (primary), light, and high-contrast themes.
 - Motion is subtle, under 250 ms, and honors `prefers-reduced-motion`.
 - Show decisions as structured labels and numbers; keep the prose short.

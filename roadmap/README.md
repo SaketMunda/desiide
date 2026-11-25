@@ -42,6 +42,7 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [UI-4](modules/UI-4-review-gate.md) | Review & approval (diffs, commands) | Alpha | L | UI-3, COR-2 | todo |
 | [UI-5](modules/UI-5-decision-panel.md) | Decision panel | Alpha | M | UI-1, JEV-4 | todo |
 | [UI-6](modules/UI-6-settings-onboarding.md) | Settings & onboarding | Alpha | M | UI-1, MOD-1, JEV-1 | todo |
+| [UI-7](modules/UI-7-studio-theme.md) | Studio theme, icon & motion (ADR-023) | Alpha | M | UI-1, EDT-1 | todo |
 | [EDT-1](modules/EDT-1-fork-build.md) | VSCodium fork & branding | Alpha | M | FND-1 | done |
 | [EDT-2](modules/EDT-2-fork-integration.md) | Built-in extension & default layout | Alpha | S | EDT-1, UI-1 | done |
 | [COR-6](modules/COR-6-multi-root.md) | Multi-root workspaces | Beta | M | COR-3, UI-2, UI-4 | todo |
@@ -60,7 +61,7 @@ Wave 1  FND-1
 Wave 2  FND-2 · UI-1 · EDT-1 · REL-1 (verify CI part)
 Wave 3  COR-1 · COR-3 · MOD-1 · JEV-1 · UI-2 (mock client) · EDT-2
 Wave 4  COR-2 · COR-4 · MOD-2 · MOD-3 · JEV-2 · JEV-4 · UI-3 · UI-6
-Wave 5  COR-5 (single+cascade) · UI-4 · UI-5 · JEV-3 (when docs land)
+Wave 5  COR-5 (single+cascade) · UI-4 · UI-5 · UI-7 · JEV-3 (when docs land)
 Wave 6  REL-2 (app) · REL-1 (app release) · REL-3  → 🚀 Alpha
 Beta    COR-5 (critique) · COR-6 · REL-1 (extension publish) · REL-2 (standalone extension) · REL-3  → 🚀 Beta
 ```

@@ -1,15 +1,31 @@
 # Desiide brand
 
-Two colors, one wordmark, one mark. That's the whole system (ADR-016, revised 2026-11-25).
+The **logo** is two colors, one wordmark, one mark (ADR-016). Everything around it (site, app, webviews) follows the **Midnight Maker** direction in [EXPERIENCE.md](EXPERIENCE.md) (ADR-023).
 
-## Colors
+## Logo colors
 
 | Name | Hex | Use |
 |---|---|---|
 | **Ink** | `#131313` | Type on paper; the ground of every dark surface (app icon, avatar, banners) |
 | **Paper** | `#ECEDE8` | Type on ink; the ground of every light surface |
 
-There is no third brand color. For hierarchy, use ink or paper at an opacity (muted text ≈ 62%, hairlines ≈ 16%, washes ≈ 5%). Never use a grey hex. Inside the editor, semantic colors (error red, diff green) are UI states, not brand colors.
+The logo never uses a third color.
+
+## Product palette (ADR-023)
+
+| Token | Hex | Role |
+|---|---|---|
+| Midnight | `#0A0C12` | Page / app ground |
+| Surface → Raise | `#121624` → `#1F2537` | Panels, cards, popovers (tinted, never pure black) |
+| Paper | `#ECEDE8` | Primary text |
+| Muted / Dim | `#9AA1B4` / `#626A80` | Secondary text, metadata |
+| **Electric lime** | `#C6FF3D` | Brand accent: primary action, done, approve |
+| Violet | `#9C8CFF` | Decisions, routing |
+| Cyan | `#5CE1E6` | Running, info, types |
+| Amber | `#FFB547` | Needs you: asks, reviews, strings |
+| Red | `#FF6B6B` | Blocked, removed |
+
+Text on lime is `#11140A`. Glow is a highlight for one thing at a time, never a default border.
 
 ## Wordmark
 
@@ -25,7 +41,8 @@ There is no third brand color. For hierarchy, use ink or paper at an opacity (mu
 
 | File | What it's for |
 |---|---|
-| `app-icon.svg` | App icon (macOS grid: 824 px tile, 185 px radius on a 1024 canvas). Paper D on ink |
+| `app-icon-glossy.svg` | **The app icon.** OS-style glossy tile, paper D on ink, faint lime rim |
+| `app-icon.svg` | Flat app icon (macOS grid: 824 px tile, 185 px radius on a 1024 canvas) for print and tiny sizes |
 | `app-icon-light.svg` | Light variant (ink D on paper) for light docks, store listings, print |
 | `favicon.svg` | Browser tab (64 px, rounded) |
 | `social/avatar.svg` | Profile picture on X, LinkedIn, YouTube, Instagram, GitHub (full bleed; platforms crop it to a circle) |
@@ -34,9 +51,9 @@ There is no third brand color. For hierarchy, use ink or paper at an opacity (mu
 
 | Role | Face | Notes |
 |---|---|---|
-| Display | Bodoni Moda 500, *italic* for emphasis | Echoes the wordmark's contrast. Headlines only |
-| Body | IBM Plex Sans 400 | |
-| Utility | IBM Plex Mono 400/500 | Labels, data, anything that's code. Uppercase labels get 0.14em tracking |
+| Display | Bricolage Grotesque 700–800, condensed (`font-stretch` 78–85%), tight tracking | Oversized headlines. The wordmark stays the only serif |
+| Body / UI | Geist 400–500 | |
+| Technical | Geist Mono 400/500 | Code, terminals, labels, data. Uppercase labels get 0.14em tracking |
 
 All three are OFL. The site self-hosts them (`site/fonts/`), so visitors' browsers never call Google.
 
