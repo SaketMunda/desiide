@@ -59,22 +59,23 @@ All three are OFL. The site self-hosts them (`site/fonts/`), so visitors' browse
 
 ## Social kit
 
-Every file is an SVG source with a PNG rendered beside it, at the platform's size:
+Midnight Maker style (ADR-023): headline "Vibe code, with receipts.", the decision chips from the product, grid, grain and lime/violet glows. Layouts live in `social/render.mjs`; the PNGs are ready to upload.
 
 | File | Size | Where |
 |---|---|---|
-| `social/avatar.png` | 800 × 800 | All profile pictures |
-| `social/x-header.png` | 1500 × 500 | X header |
-| `social/linkedin-banner.png` | 1584 × 396 | LinkedIn banner |
-| `social/youtube-banner.png` | 2560 × 1440 | YouTube channel art (wordmark sits in the 1546 × 423 safe area) |
-| `social/og-image.png` | 1200 × 630 | Link previews (also `site/og-image.png`) |
+| `social/avatar.png` | 800 × 800 | Profile picture everywhere (glossy D; platforms crop to a circle) |
+| `social/x-header.png` | 1500 × 500 | X header for [@desiideonx](https://x.com/desiideonx). Bottom-left left clear for the avatar |
+| `social/linkedin-banner.png` | 1584 × 396 | LinkedIn banner. Text sits right, clear of the avatar |
+| `social/youtube-banner.png` | 2560 × 1440 | YouTube channel art; everything readable is inside the 1546 × 423 safe area |
+| `social/og-image.png` | 1200 × 630 | Link previews (copied to `site/og-image.png`) |
 
-Tagline on banners: **THE OPEN-SOURCE AI IDE · YOUR MODELS · EVERY DECISION VISIBLE**. Sign-off: *Let's build something real.*
+Handle: **@desiideonx** on X. Site: **desiide.com**. Sign-off: *Let's build something real.*
 
 ## Regenerating
 
 ```sh
-node brand/render.mjs   # re-renders every PNG from its SVG (uses the repo's playwright-core)
+node brand/render.mjs          # logo, mark and icon PNGs from their SVGs
+node brand/social/render.mjs   # the social kit (then copy og-image.png into site/)
 ```
 
 ## Voice
