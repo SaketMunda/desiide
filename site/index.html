@@ -1395,7 +1395,7 @@
                 <button class="btn primary" type="submit">Join the waitlist</button>
               </form>
               <p class="formnote" id="formnote" aria-live="polite">
-                One email when the public alpha opens. No spam, ever.
+                Launch news only, rarely. Stored with Buttondown; unsubscribe in one click.
               </p>
             </div>
           </div>
@@ -1747,9 +1747,11 @@
       const $ = (s) => document.querySelector(s);
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-      /* Waitlist. Set WAITLIST_ENDPOINT to the provider's form URL to go live, e.g.
-   'https://buttondown.com/api/emails/embed-subscribe/desiide'. Until then the form says so. */
-      const WAITLIST_ENDPOINT = '';
+      /* Waitlist on Buttondown (account: desiide). The form posts the way Buttondown's own
+   embed does, into a new tab, so the visitor sees Buttondown's real answer (subscribed,
+   already on the list, or a check) instead of a success message we can't verify.
+   Buttondown then sends the double opt-in email. */
+      const WAITLIST_ENDPOINT = 'https://buttondown.com/api/emails/embed-subscribe/desiide';
       for (const [f, n] of [
         ['#waitlist', '#formnote'],
         ['#waitlist2', '#formnote2'],
@@ -1760,33 +1762,25 @@
           note.textContent = t;
           note.dataset.state = s;
         };
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
+        form.action = WAITLIST_ENDPOINT;
+        form.method = 'post';
+        form.target = '_blank';
+        const embed = document.createElement('input');
+        embed.type = 'hidden';
+        embed.name = 'embed';
+        embed.value = '1';
+        form.append(embed);
+        form.addEventListener('submit', (e) => {
           const email = form.email.value.trim();
           if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            e.preventDefault();
             say('That email looks incomplete. Check it and try again.', 'error');
             form.email.focus();
             return;
           }
-          if (!WAITLIST_ENDPOINT) {
-            say('The waitlist opens soon. Star the repo to hear first.', 'error');
-            return;
-          }
-          const b = form.querySelector('button');
-          b.disabled = true;
-          try {
-            await fetch(WAITLIST_ENDPOINT, {
-              method: 'POST',
-              mode: 'no-cors',
-              body: new URLSearchParams({ email }),
-            });
-            say("You're in. Check your inbox to confirm.", 'ok');
-            form.reset();
-          } catch {
-            say("Couldn't reach the waitlist. Check your connection and try again.", 'error');
-          } finally {
-            b.disabled = false;
-          }
+          // Let the browser submit, then clear the field once the post has gone.
+          say('Opened Buttondown in a new tab. Confirm there, then check your inbox.', 'ok');
+          setTimeout(() => form.reset(), 300);
         });
       }
 
