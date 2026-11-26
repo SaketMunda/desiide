@@ -57,8 +57,12 @@
   --desiide-state-needs: #ffb547;
   --desiide-state-blocked: #ff6b6b;
 
-  /* Earlier names (UI-1…UI-6), kept as aliases of the state mapping. */
-  --desiide-accent: var(--desiide-state-done);
+  /* The current choice (selected segment, nav item, mention): violet, like the workbench's own
+   * selection in Desiide Midnight. Lime is reserved for primary actions and the active tab. */
+  --desiide-select: var(--desiide-state-decision);
+
+  /* Earlier names (UI-1…UI-6), kept as aliases. */
+  --desiide-accent: var(--desiide-select);
   --desiide-accent-jev: var(--desiide-state-decision);
   --desiide-outcome-auto: var(--desiide-state-done);
   --desiide-outcome-confirm: var(--desiide-state-needs);

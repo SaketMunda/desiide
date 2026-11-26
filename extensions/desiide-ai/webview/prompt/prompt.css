@@ -41,7 +41,7 @@
   gap: var(--desiide-space-2);
   padding: var(--desiide-space-2);
   border: 1px solid var(--desiide-border);
-  border-radius: var(--desiide-radius-sm);
+  border-radius: var(--desiide-radius);
   color: var(--desiide-fg);
   background: var(--desiide-surface);
   font: inherit;
@@ -52,8 +52,12 @@
   border-color: var(--desiide-accent);
 }
 .desiide-prompt__example .codicon {
-  color: var(--desiide-accent);
+  color: var(--desiide-fg-muted);
   margin-top: 2px;
+  transition: color var(--desiide-motion-fast) var(--desiide-ease);
+}
+.desiide-prompt__example:hover .codicon {
+  color: var(--desiide-select);
 }
 
 /* Chips */
