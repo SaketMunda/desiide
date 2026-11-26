@@ -41,7 +41,7 @@ Status: `todo` · `in-progress` · `review` · `done` · `blocked`. A build sess
 | [UI-3](modules/UI-3-task-stream.md) | Task stream (transcript) | Alpha | M | UI-1, FND-2 | review |
 | [UI-4](modules/UI-4-review-gate.md) | Review & approval (diffs, commands) | Alpha | L | UI-3, COR-2 | todo |
 | [UI-5](modules/UI-5-decision-panel.md) | Decision panel | Alpha | M | UI-1, JEV-4 | todo |
-| [UI-6](modules/UI-6-settings-onboarding.md) | Settings & onboarding | Alpha | M | UI-1, MOD-1, JEV-1 | in-progress |
+| [UI-6](modules/UI-6-settings-onboarding.md) | Settings & onboarding | Alpha | M | UI-1, MOD-1, JEV-1 | review |
 | [UI-7](modules/UI-7-studio-theme.md) | Studio theme, icon & motion (ADR-023) | Alpha | M | UI-1, EDT-1 | todo |
 | [EDT-1](modules/EDT-1-fork-build.md) | VSCodium fork & branding | Alpha | M | FND-1 | done |
 | [EDT-2](modules/EDT-2-fork-integration.md) | Built-in extension & default layout | Alpha | S | EDT-1, UI-1 | done |
