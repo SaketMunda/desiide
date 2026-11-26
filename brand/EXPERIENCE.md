@@ -2,6 +2,10 @@
 
 # DESIIDE — Experience & Visual Design Brief
 
+> **The feeling, in one line (added by the user, 2026-11-26):** Desiide is a new-gen editor. It must be **playful and psychologically relaxing**. Developers should *enjoy* coding here, the way you enjoy your own space after hours, not feel like they're clocking in to a job. Every screen fits the mood and vibe of devs; "functional but boring" fails review.
+>
+> In the IDE that means: calm, low-glare midnight surfaces; soft shapes; small rewarding moments (a satisfying lime check when a diff lands, one gentle pulse when a decision arrives); friendly empty states and copy with personality; ambient Afterhours touches that are opt-in; and nothing anxiety-inducing (no red walls, no alarm-style prompts, "needs you" is amber and kind). Delight lives in the moments between focus, never on top of the code.
+
 ## Creative Direction: Midnight Maker Culture
 
 **Design philosophy:** Serious engineering. Playful culture. A little nerdy. A little futuristic. Never boring.

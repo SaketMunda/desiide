@@ -6,6 +6,8 @@
 
 Make the app look and feel like Desiide, not a reskinned VS Code: the Midnight Maker direction (ADR-023, `brand/EXPERIENCE.md`) applied inside the IDE. "Personality outside. Focus inside."
 
+**The bar:** playful and psychologically relaxing. A developer should open Desiide at 11pm and feel like they're in their own studio, not at work. If a screen is correct but joyless, it isn't done. See the "feeling" line at the top of `brand/EXPERIENCE.md`.
+
 ## Scope
 
 **Theme (editor patch `01-default-theme.patch` + theme contribution)**
@@ -44,6 +46,7 @@ Make the app look and feel like Desiide, not a reskinned VS Code: the Midnight M
 3. The five AI states render with the shared components in UI-3's Chromium harness, in Midnight, Daylight and HC (screenshots attached).
 4. With reduced motion on, no animation runs (harness check).
 5. No webview requests anything from the network for fonts or assets.
+6. Vibe check: side-by-side screenshots (stock VS Code vs Desiide Midnight, empty editor + an agent run) attached to the PR, and the user signs off that it feels playful and calm, not like a reskin.
 
 ## Handoff notes
 

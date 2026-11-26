@@ -1,8 +1,22 @@
-# [Desiide](https://desiide.com) 
+<p align="center">
+  <a href="https://desiide.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="brand/wordmark-paper.svg">
+      <img src="brand/wordmark-ink.svg" alt="Desiide" width="420">
+    </picture>
+  </a>
+</p>
 
-**An open-source, AI-native IDE where you bring your own models and every AI decision is visible.**
+<p align="center"><b>Vibe code, with receipts.</b><br>An open-source, AI-native IDE where you bring your own models and every AI decision is visible.</p>
 
-> **Status: early alpha, built in the open.** [Pre-release builds](https://github.com/SaketMunda/desiide/releases) for macOS (Apple silicon and Intel) and Linux x64 install and run, with the Desiide panel built in. What works today: the agent loop with a local Ollama model (configured in `settings.json` for now), the live task stream, and policy-gated tools. Not built yet: model setup screens and cloud API keys, diff review and approval, and the decision panel. Those make up the rest of Alpha. See the [roadmap](roadmap/README.md) for what's done and what's next.
+<p align="center">
+  <a href="https://desiide.com">desiide.com</a> ·
+  <a href="https://desiide.com/#waitlist">Join the waitlist</a> ·
+  <a href="docs/try-the-alpha.md">Try the alpha</a> ·
+  <a href="https://x.com/desiideonx">@desiideonx</a>
+</p>
+
+> **Status: early alpha, built in the open.** [Pre-release builds](https://github.com/SaketMunda/desiide/releases) for macOS (Apple silicon and Intel) and Linux x64 install and run, with the Desiide panel built in. What works today: the agent loop with a local Ollama model (configured in `settings.json` for now), the live task stream, and policy-gated tools. Not built yet: model setup screens and cloud API keys, diff review and approval, and the decision panel. Those make up the rest of Alpha. See the [roadmap](roadmap/README.md) for what's done and what's next. To try it now, follow [docs/try-the-alpha.md](docs/try-the-alpha.md). To hear when the public alpha lands, join the waitlist at [desiide.com](https://desiide.com).
 
 ## About
 
@@ -61,6 +75,8 @@ Details, build order, and module status: [roadmap/README.md](roadmap/README.md).
 | `editor/` | The VSCodium fork: the Desiide desktop app |
 | `roadmap/` | Milestones, module briefs, standards, decisions |
 | `docs/` | Developer docs |
+| `brand/` | Logo, icons, social kit and the experience brief (`EXPERIENCE.md`) |
+| `site/` | desiide.com (static, deployed to GitHub Pages) |
 
 ## Development
 
@@ -128,7 +144,7 @@ rm -rf ~/.cache/desiide                   # ~1 GB: pinned Node and the build's n
 
 ## Contributing
 
-Work is organized into **modules**, each with a brief in [`roadmap/modules/`](roadmap/modules) that defines its scope and acceptance criteria. A module is built on a `mod/<ID>-<slug>` branch and merged by PR once [the Definition of Done](roadmap/STANDARDS.md) is met and CI is green. Contribution guidelines, a code of conduct, and a security policy will be added before Alpha.
+Work is organized into **modules**, each with a brief in [`roadmap/modules/`](roadmap/modules) that defines its scope and acceptance criteria. Every change lands by pull request: CI, a dependency check and an AI review run on it, and a code owner approves it. Read [CONTRIBUTING.md](CONTRIBUTING.md) first, especially its security rules. Report vulnerabilities privately ([SECURITY.md](SECURITY.md)). We follow a [code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

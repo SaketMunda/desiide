@@ -6,3 +6,14 @@ allowBuilds:
   esbuild: true
   # Only needed for signed Marketplace publishing (REL-1); packaging works without it.
   '@vscode/vsce-sign': false
+# Supply-chain guards (CONTRIBUTING.md › Security). Dependency install scripts are already off
+# except the allowBuilds list above.
+# A version must be 24 h old before pnpm will pick it; hijacked releases are usually pulled sooner.
+minimumReleaseAge: 1440
+# Refuse a version published with weaker provenance than earlier ones (a common sign of a hijacked account).
+trustPolicy: no-downgrade
+# Exceptions need a reason and an exact version.
+trustPolicyExclude:
+  # Vitest dep. 3.2.2 was hand-published (Jan 2025) by its long-time maintainer without
+  # provenance; same author as 3.2.1, no install scripts. Checked 2026-11-26.
+  - why-is-node-running@3.2.2
