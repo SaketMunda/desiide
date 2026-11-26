@@ -1,4 +1,4 @@
-# Desiide
+# [Desiide](https://desiide.com) 
 
 **An open-source, AI-native IDE where you bring your own models and every AI decision is visible.**
 
