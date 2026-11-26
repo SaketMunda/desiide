@@ -1,6 +1,6 @@
 # UI-6 · Settings & onboarding
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, MOD-1, JEV-1 · **Skills:** ide-editor-shell, ide-model-adapters, ide-jev-decisions
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, MOD-1, JEV-1 · **Skills:** ide-editor-shell, ide-model-adapters, ide-jev-decisions
 
 ## Purpose
 Get a new user from install to first task in **under 2 minutes**, and give pros full control over models, roles, Jev, and gating.

@@ -202,8 +202,12 @@ export const schemaFixtures: Record<string, SchemaFixture> = {
   },
   RolesConfig: { valid: [{ cheap: 'local', strong: 'claude' }], invalid: [{ fast: 'x' }] },
   JevConfig: {
-    valid: [{}, { enabled: true, endpoint: 'https://jev.example.com', apiKey: 'secret:jev' }],
-    invalid: [{ apiKey: 'raw-key' }],
+    valid: [
+      {},
+      { enabled: true, endpoint: 'https://jev.example.com', apiKey: 'secret:jev' },
+      { redactPaths: true, redactSalt: 'a'.repeat(64) },
+    ],
+    invalid: [{ apiKey: 'raw-key' }, { redactPaths: true, redactSalt: 'short' }],
   },
   GatingConfig: {
     valid: [{}, { mode: 'strict', thresholds: { safeNowAuto: 0.95 } }],

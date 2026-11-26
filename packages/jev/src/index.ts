@@ -67,7 +67,7 @@ export type {
   WorkflowPolicyInput,
   WorkflowPolicyOptions,
 } from './policy/workflow.ts';
-export { REASON_TEXT, describeReason } from './policy/reasons.ts';
+export { DENY_RULES, REASON_TEXT, describeReason } from './policy/reasons.ts';
 export { analyzeCommand } from './policy/shell.ts';
 export type { CommandAnalysis, SimpleCommand } from './policy/shell.ts';
 export {

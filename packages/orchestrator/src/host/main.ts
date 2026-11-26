@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { registerConfigUpdate } from '../config/handler.ts';
 import { createContextEngine } from '../context/engine.ts';
 import { createDecisionService } from '../decisions/service.ts';
+import { registerJevHandlers, workspaceSampler } from '../jev/handlers.ts';
 import { registerModelHandlers } from '../models/handlers.ts';
 import { createWorkspacePolicy } from '../policy/workspacePolicy.ts';
 import { registerTaskEngine } from '../tasks/engine.ts';
@@ -37,6 +38,16 @@ startOrchestrator({
       workspaceRoots: () => host.session?.workspaceRoots,
       trackProcessGroup: (pid) => host.trackProcessGroup(pid),
       logger: logger.child({ component: 'context' }),
+    });
+    registerJevHandlers(host, {
+      models,
+      redactor: () => policy.redactor(),
+      jevSettings: () => policy.jevSettings(),
+      git: (signal) => policy.git(signal),
+      sampleFiles: workspaceSampler({
+        workspaceRoots: () => host.session?.workspaceRoots,
+        describeFiles: (paths, signal) => context.describeFiles(paths, signal),
+      }),
     });
     late.tasks = registerTaskEngine(host, {
       models,

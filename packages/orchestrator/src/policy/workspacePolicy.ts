@@ -1,10 +1,12 @@
 import {
   createEngineSelector,
+  createPathRedactor,
   createPolicyGate,
   createRuleJevEngine,
   resolveThresholds,
   type GatingMode,
   type GitInfo,
+  type PathRedactor,
   type PolicyGate,
   type ProjectPolicy,
   type ReplayOptions,
@@ -32,6 +34,20 @@ export interface WorkspacePolicy {
   onConfig: ConfigListener;
   /** Engines and current settings for `decisions.replay` (JEV-4). */
   replayOptions(): ReplayOptions;
+  /** Set while `jev.redactPaths` is on and a valid salt was configured. */
+  redactor(): PathRedactor | undefined;
+  /** What `jev.test` reports on: the Jev settings from the last `config.update`. */
+  jevSettings(): JevSettings;
+  /** The project's sensitive globs and check commands (`.desiide/project.json`). */
+  loadProject(): Promise<ProjectPolicy>;
+  /** The current branch, for risk_gate state. */
+  git(signal: AbortSignal): Promise<GitInfo>;
+}
+
+export interface JevSettings {
+  enabled: boolean;
+  endpoint?: string;
+  redactPaths: boolean;
 }
 
 const MAX_CACHED_PROJECTS = 32;
@@ -49,6 +65,8 @@ export function createWorkspacePolicy(host: Host, opts: WorkspacePolicyOptions):
   });
   let mode: GatingMode = 'conservative';
   let thresholds: Thresholds = resolveThresholds().thresholds;
+  let redactor: PathRedactor | undefined;
+  let jev: JevSettings = { enabled: false, redactPaths: false };
   // One project config read per task: the gate runs on every tool call.
   const projects = new Map<string, Promise<ProjectPolicy>>();
 
@@ -95,7 +113,7 @@ export function createWorkspacePolicy(host: Host, opts: WorkspacePolicyOptions):
 
   const gate = createPolicyGate({
     engine,
-    settings: () => ({ mode, thresholds }),
+    settings: () => ({ mode, thresholds, ...(redactor ? { redactor } : {}) }),
     project,
     git,
     newId: opts.newId,
@@ -118,6 +136,25 @@ export function createWorkspacePolicy(host: Host, opts: WorkspacePolicyOptions):
     mode = config.gating.mode;
     const resolved = resolveThresholds(config.gating.thresholds);
     thresholds = resolved.thresholds;
+    jev = {
+      enabled: config.jev.enabled,
+      ...(config.jev.endpoint ? { endpoint: config.jev.endpoint } : {}),
+      redactPaths: config.jev.redactPaths,
+    };
+    redactor = undefined;
+    if (config.jev.redactPaths) {
+      if (config.jev.redactSalt) {
+        redactor = createPathRedactor({ salt: config.jev.redactSalt });
+      } else {
+        // Never fall back to a guessable salt: without one, paths stay unredacted and we say so.
+        const warning =
+          'desiide.jev.redactPaths is on, but no redaction salt was sent, so paths are not redacted.';
+        opts.logger?.warn({ warning }, 'path redaction unavailable');
+        host
+          .notify('log', { level: 'warn', message: warning, ts: new Date().toISOString() })
+          .catch(() => {});
+      }
+    }
     engine.update({
       config: {
         enabled: config.jev.enabled,
@@ -136,5 +173,17 @@ export function createWorkspacePolicy(host: Host, opts: WorkspacePolicyOptions):
   // JEV-3 adds the HTTP engine here once it exists; until then replay runs rules only.
   const replayOptions = (): ReplayOptions => ({ rules, settings: { mode, thresholds } });
 
-  return { gate, onConfig, replayOptions };
+  return {
+    gate,
+    onConfig,
+    replayOptions,
+    redactor: () => redactor,
+    jevSettings: () => jev,
+    loadProject: () =>
+      loadProject().catch((err: unknown) => {
+        opts.logger?.warn({ err }, 'project config unavailable');
+        return {};
+      }),
+    git,
+  };
 }
