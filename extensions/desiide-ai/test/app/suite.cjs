@@ -44,6 +44,12 @@ async function run() {
     results.welcomeOpened = true;
     results.tabs = tabs();
 
+    // UI-7 AC1: a fresh profile opens in Desiide Midnight (01-default-theme.patch + desiide-ai's theme).
+    results.colorTheme = vscode.workspace.getConfiguration('workbench').get('colorTheme');
+    assert.equal(results.colorTheme, 'Desiide Midnight', 'the default color theme');
+    results.themeKind = vscode.window.activeColorTheme.kind;
+    assert.equal(results.themeKind, vscode.ColorThemeKind.Dark, 'Desiide Midnight is active');
+
     const all = await vscode.commands.getCommands(true);
     results.focusCommand = all.includes('desiide.focus');
   } catch (err) {
