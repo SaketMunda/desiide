@@ -1,0 +1,16 @@
+# Every change needs a code owner's approval before it can merge (enforced by the ruleset in
+# .github/rulesets/master.json). The explicit lines below are the paths where a malicious change
+# would do the most harm; they stay owned by the maintainer even if more owners join later.
+*                       @SaketMunda
+
+/.github/               @SaketMunda
+/scripts/               @SaketMunda
+/editor/                @SaketMunda
+/.gitmodules            @SaketMunda
+/package.json           @SaketMunda
+/pnpm-lock.yaml         @SaketMunda
+/pnpm-workspace.yaml    @SaketMunda
+**/package.json         @SaketMunda
+/CLAUDE.md              @SaketMunda
+/.claude/               @SaketMunda
+/roadmap/DECISIONS.md   @SaketMunda
