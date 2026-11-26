@@ -542,7 +542,11 @@ function tokenColors(p: Palette): TokenRule[] {
     },
     { scope: ['variable.parameter'], settings: { foreground: s.parameter, fontStyle: 'italic' } },
     {
-      scope: ['variable.other.property', 'variable.other.object.property', 'support.variable.property'],
+      scope: [
+        'variable.other.property',
+        'variable.other.object.property',
+        'support.variable.property',
+      ],
       settings: { foreground: s.property },
     },
     { scope: ['variable.language'], settings: { foreground: s.keyword, fontStyle: 'italic' } },

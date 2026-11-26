@@ -1,0 +1,145 @@
+// Theme colors for rendering webviews outside VS Code: the local VS Code's built-in theme files
+// (Dark+, Light+, High Contrast) plus the Desiide Midnight/Daylight themes, over color-registry
+// defaults for the keys the theme files leave unset. Shared by scripts/screenshots.mjs and the
+// Chromium harness (test/webview/*.mjs).
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+export const themeDir =
+  process.env.VSCODE_THEMES ??
+  '/Applications/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/themes';
+
+/** JSONC → JSON: drop comments outside strings, then trailing commas. */
+function parseJsonc(text) {
+  let s = '';
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"') {
+      const start = i;
+      for (i++; i < text.length && text[i] !== '"'; i++) if (text[i] === '\\') i++;
+      s += text.slice(start, i + 1);
+    } else if (c === '/' && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== '\n') i++;
+      s += '\n';
+    } else if (c === '/' && text[i + 1] === '*') {
+      i = text.indexOf('*/', i + 2) + 1;
+    } else s += c;
+  }
+  return JSON.parse(s.replace(/,(\s*[}\]])/g, '$1'));
+}
+
+function themeColors(file, dir = themeDir) {
+  const json = parseJsonc(readFileSync(join(dir, file), 'utf8'));
+  const base = json.include ? themeColors(json.include.replace('./', ''), dir) : {};
+  return { ...base, ...(json.colors ?? {}) };
+}
+
+// Registry defaults for keys the theme files leave unset (from VS Code's color registry).
+export const defaults = {
+  dark: {
+    foreground: '#cccccc',
+    descriptionForeground: '#ccccccb3',
+    focusBorder: '#007fd4',
+    'sideBar.background': '#252526',
+    'editorWidget.background': '#252526',
+    'widget.shadow': '#0000005c',
+    'button.background': '#0e639c',
+    'button.foreground': '#ffffff',
+    'button.hoverBackground': '#1177bb',
+    'button.secondaryBackground': '#3a3d41',
+    'button.secondaryForeground': '#ffffff',
+    'button.secondaryHoverBackground': '#45494e',
+    'toolbar.hoverBackground': '#5a5d5e50',
+    'textCodeBlock.background': '#0a0a0a66',
+    'icon.foreground': '#c5c5c5',
+    'testing.iconPassed': '#73c991',
+    'editorWarning.foreground': '#cca700',
+    errorForeground: '#f48771',
+  },
+  light: {
+    foreground: '#616161',
+    descriptionForeground: '#717171',
+    focusBorder: '#0090f1',
+    'sideBar.background': '#f3f3f3',
+    'editorWidget.background': '#f3f3f3',
+    'widget.shadow': '#00000029',
+    'button.background': '#007acc',
+    'button.foreground': '#ffffff',
+    'button.hoverBackground': '#0062a3',
+    'button.secondaryBackground': '#5f6a79',
+    'button.secondaryForeground': '#ffffff',
+    'button.secondaryHoverBackground': '#4c5561',
+    'toolbar.hoverBackground': '#b8b8b850',
+    'textCodeBlock.background': '#dcdcdc66',
+    'icon.foreground': '#424242',
+    'testing.iconPassed': '#388a34',
+    'editorWarning.foreground': '#bf8803',
+    errorForeground: '#a1260d',
+  },
+  hc: {
+    foreground: '#ffffff',
+    descriptionForeground: '#ffffffb3',
+    focusBorder: '#f38518',
+    contrastBorder: '#6fc3df',
+    'sideBar.background': '#000000',
+    'editorWidget.background': '#0c141f',
+    'button.background': '#000000',
+    'button.foreground': '#ffffff',
+    'button.border': '#6fc3df',
+    'button.secondaryBackground': '#000000',
+    'button.secondaryForeground': '#ffffff',
+    'toolbar.hoverBackground': '#00000000',
+    'textCodeBlock.background': '#000000',
+    'icon.foreground': '#ffffff',
+    'testing.iconPassed': '#73c991',
+    'editorWarning.foreground': '#fff00f',
+    errorForeground: '#f48771',
+    'widget.border': '#6fc3df',
+  },
+};
+
+export const themes = [
+  { name: 'dark-plus', file: 'dark_plus.json', kind: 'dark', bodyClass: 'vscode-dark' },
+  { name: 'light-plus', file: 'light_plus.json', kind: 'light', bodyClass: 'vscode-light' },
+  { name: 'high-contrast', file: 'hc_black.json', kind: 'hc', bodyClass: 'vscode-high-contrast' },
+  {
+    name: 'desiide-midnight',
+    file: 'desiide-midnight-color-theme.json',
+    dir: join(root, 'themes'),
+    kind: 'dark',
+    bodyClass: 'vscode-dark',
+  },
+  {
+    name: 'desiide-daylight',
+    file: 'desiide-daylight-color-theme.json',
+    dir: join(root, 'themes'),
+    kind: 'light',
+    bodyClass: 'vscode-light',
+  },
+];
+
+export function cssVars(colors) {
+  const vars = Object.entries(colors).map(([k, v]) => `--vscode-${k.replace(/\./g, '-')}: ${v};`);
+  vars.push(
+    "--vscode-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;",
+    '--vscode-font-size: 13px;',
+    "--vscode-editor-font-family: Menlo, Monaco, 'Courier New', monospace;",
+    '--vscode-editor-font-size: 12px;',
+  );
+  return `:root{${vars.join('')}}`;
+}
+
+/** A theme's webview colors; VS Code's built-in themes fall back to registry defaults if absent. */
+export function colorsFor(theme) {
+  const dir = theme.dir ?? themeDir;
+  const own = existsSync(join(dir, theme.file)) ? themeColors(theme.file, dir) : {};
+  return { ...defaults[theme.kind], ...own };
+}
+
+export const themeByName = (name) => {
+  const theme = themes.find((t) => t.name === name);
+  if (!theme) throw new Error(`unknown theme ${name}`);
+  return theme;
+};

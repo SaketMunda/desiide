@@ -14,7 +14,18 @@ import type {
   UserItem,
 } from '../../shared/transcript/model.ts';
 import { post } from '../bridge.ts';
-import { Badge, Button, Chip, Codicon } from '../ui/index.ts';
+import {
+  Badge,
+  Button,
+  Codicon,
+  DecisionChip,
+  firstLanding,
+  NeedsYou,
+  RunMark,
+  type RunStatus,
+  summarizeDecision,
+  ThinkingLabel,
+} from '../ui/index.ts';
 import { errorView, secondsLeft } from './errors.ts';
 import {
   formatDuration,
@@ -83,8 +94,7 @@ function Thinking({
         onClick={() => setOpen(!open)}
       >
         <Codicon name={open ? 'chevron-down' : 'chevron-right'} />
-        <span>{thinking ? 'Thinking…' : 'Thought'}</span>
-        <span class="desiide-muted">{formatDuration(elapsed)}</span>
+        <ThinkingLabel live={thinking} elapsed={formatDuration(elapsed)} />
       </button>
       {/* Reasoning is plain text, not markdown (ADR-022). */}
       <pre id={id} class="desiide-thinking__text" hidden={!open}>
@@ -109,6 +119,19 @@ function AssistantMessage({ item, live, streaming }: ItemProps<AssistantItem>) {
 }
 
 const OUTPUT_TAIL_LINES = 20;
+
+/** Tool statuses that end in the shared running → done / failed mark. */
+const RUN_STATUS: Partial<Record<ToolItem['status'], RunStatus>> = {
+  running: 'running',
+  awaiting_approval: 'waiting',
+  ok: 'done',
+  failed: 'failed',
+  invalid_args: 'failed',
+  timeout: 'failed',
+  blocked: 'failed',
+  rejected: 'stopped',
+  cancelled: 'stopped',
+};
 
 function ToolCard({ item, taskId, live }: ItemProps<ToolItem>) {
   const [open, setOpen] = useState(false);
@@ -137,8 +160,12 @@ function ToolCard({ item, taskId, live }: ItemProps<ToolItem>) {
           {summary}
         </span>
         <span class="desiide-tool__status">
-          <Codicon name={status.icon} spin={running} />
-          <span>{status.label}</span>
+          {RUN_STATUS[item.status] && (running || item.status !== 'running') ? (
+            <RunMark status={RUN_STATUS[item.status] ?? 'stopped'} label={status.label} />
+          ) : (
+            <Codicon name={status.icon} />
+          )}
+          <span aria-hidden={RUN_STATUS[item.status] ? true : undefined}>{status.label}</span>
           {duration !== undefined && <span class="desiide-muted">{formatDuration(duration)}</span>}
         </span>
       </button>
@@ -206,38 +233,44 @@ const RESOLUTION: Record<NonNullable<ApprovalItem['resolution']>, string> = {
   cancelled: 'cancelled',
 };
 
-/** UI-4 replaces this with the approval card (approve / reject). */
+/**
+ * UI-4 replaces this with the approval card (approve / reject buttons, which nudge while waiting).
+ * It already uses the shared "needs you" treatment.
+ */
 function ApprovalPlaceholder({ item }: ItemProps<ApprovalItem>) {
   return (
-    <div class="desiide-slot" data-slot="approval">
-      <Codicon name="shield" />
-      <span>
-        Approval needed: {TOOL_LABELS[item.call.tool] ?? item.call.tool}{' '}
-        <code>{summarizeArgs(item.call)}</code>
-      </span>
-      <Badge tone={item.resolution ? 'neutral' : 'confirm'}>
-        {item.resolution ? RESOLUTION[item.resolution] : 'waiting'}
-      </Badge>
+    <div class="desiide-slot desiide-slot--card" data-slot="approval">
+      <NeedsYou
+        answered={item.resolution !== undefined}
+        title={
+          <span>
+            {item.resolution ? 'You were asked' : 'Needs you'}:{' '}
+            {TOOL_LABELS[item.call.tool] ?? item.call.tool}
+          </span>
+        }
+      >
+        <code>{summarizeArgs(item.call)}</code>{' '}
+        <Badge tone={item.resolution ? 'neutral' : 'needs'}>
+          {item.resolution ? RESOLUTION[item.resolution] : 'waiting'}
+        </Badge>
+      </NeedsYou>
     </div>
   );
 }
 
-/** UI-5 replaces this with the inline decision chip and its panel link. */
-function DecisionPlaceholder({ item }: ItemProps<DecisionItem>) {
-  const first = item.decisions[0];
-  if (!first) return null;
-  const pack = first.pack.split('@')[0] ?? first.pack;
-  const outcome = first.policyOutcome ?? first.workflow;
-  const tone = first.policyOutcome ?? 'jev';
+/** Decision ids already shown in this webview: a decision pulses once, when it first lands. */
+const landedDecisions = new Set<string>();
+
+/** UI-5 adds the panel link (`onClick`) to this chip. */
+function DecisionRow({ item, live }: ItemProps<DecisionItem>) {
+  const summary = summarizeDecision(item.decisions);
+  const [pulse] = useState(
+    () => live && firstLanding(landedDecisions, item.id, item.decisions.at(-1)?.ts, Date.now()),
+  );
+  if (!summary) return null;
   return (
     <div class="desiide-slot desiide-slot--chip" data-slot="decision">
-      <Chip
-        tone={tone === 'auto' || tone === 'confirm' || tone === 'block' ? tone : 'jev'}
-        icon="law"
-      >
-        {first.engine === 'rules' ? 'rules' : 'Jev'} · {pack.replace('_', ' ')}
-        {outcome ? ` → ${outcome}` : ''}
-      </Chip>
+      <DecisionChip summary={summary} pulse={pulse} />
     </div>
   );
 }
@@ -289,8 +322,8 @@ type Renderers = {
 };
 
 /**
- * Item renderers by kind. UI-4 (edit_proposal, approval) and UI-5 (decision) replace their
- * placeholders here, e.g. `ITEM_RENDERERS.approval = ApprovalCard`.
+ * Item renderers by kind. UI-4 (edit_proposal, approval) and UI-5 (decision) replace or extend
+ * theirs here, e.g. `ITEM_RENDERERS.approval = ApprovalCard`.
  */
 export const ITEM_RENDERERS: Renderers = {
   user: UserMessage,
@@ -298,7 +331,7 @@ export const ITEM_RENDERERS: Renderers = {
   tool: ToolCard,
   edit_proposal: EditProposalPlaceholder,
   approval: ApprovalPlaceholder,
-  decision: DecisionPlaceholder,
+  decision: DecisionRow,
   error: ErrorCard,
   status: StatusLine,
 };

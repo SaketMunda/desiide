@@ -1,62 +1,110 @@
 /*
- * Desiide design tokens. Everything derives from VS Code theme variables so views follow the
- * user's theme; Desiide adds only its two brand accents (teal primary, amber for Jev decisions and
- * risk) and three outcome colors. The brand palette also ships as the Desiide Dark/Light themes.
+ * Desiide design tokens (UI-7, ADR-023 "Midnight Maker"), shared by every desiide-ai webview.
+ *
+ * Base colors (surfaces, text, borders, buttons) read VS Code theme variables first, so a user's own
+ * theme still wins; the Desiide Midnight/Daylight themes set those variables to the brand palette.
+ * The five state colors are Desiide's own and stay in every theme:
+ *   lime   = done / approve        --desiide-state-done
+ *   violet = decision / routing    --desiide-state-decision
+ *   cyan   = running / info        --desiide-state-running
+ *   amber  = needs you             --desiide-state-needs
+ *   red    = blocked / removed     --desiide-state-blocked
+ *
+ * Type: Geist for UI, Geist Mono for technical detail (chips, numbers, labels), both bundled with
+ * the extension (no network). Code keeps the user's editor font.
+ *
+ * Motion: under 250 ms, eased, one animation at a time per region, and none at all under
+ * prefers-reduced-motion (kit.css turns every animation and transition off).
  */
-:root {
-  --desiide-font: var(--vscode-font-family);
-  --desiide-font-size: var(--vscode-font-size, 13px);
-  --desiide-font-mono: var(--vscode-editor-font-family, monospace);
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('./fonts/Geist.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('./fonts/GeistMono.woff2') format('woff2');
+}
 
+:root {
+  --desiide-font: 'Geist', var(--vscode-font-family), system-ui, sans-serif;
+  --desiide-font-size: var(--vscode-font-size, 13px);
+  --desiide-font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --desiide-font-code: var(--vscode-editor-font-family, 'Geist Mono'), monospace;
+
+  /* Base: the user's theme first. */
   --desiide-fg: var(--vscode-foreground);
+  --desiide-fg-strong: var(--vscode-editor-foreground, var(--vscode-foreground));
   --desiide-fg-muted: var(--vscode-descriptionForeground);
   --desiide-bg: var(--vscode-sideBar-background, var(--vscode-editor-background));
   --desiide-surface: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  --desiide-surface-sunken: var(--vscode-input-background, var(--desiide-bg));
   --desiide-border: var(--vscode-widget-border, var(--vscode-panel-border, transparent));
   --desiide-focus: var(--vscode-focusBorder);
-  --desiide-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.16));
+  --desiide-shadow: 0 6px 18px -8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.4));
 
-  --desiide-accent: #2bb3a3;
-  --desiide-accent-jev: #f2a33a;
-  --desiide-outcome-auto: var(--vscode-testing-iconPassed, #73c991);
-  --desiide-outcome-confirm: var(--vscode-editorWarning-foreground, #cca700);
-  --desiide-outcome-block: var(--vscode-errorForeground, #f48771);
+  /* Brand + state colors (Midnight values; adjusted per theme kind below). */
+  --desiide-lime: #c6ff3d;
+  --desiide-lime-ink: #11140a;
+  --desiide-state-done: #c6ff3d;
+  --desiide-state-decision: #9c8cff;
+  --desiide-state-running: #5ce1e6;
+  --desiide-state-needs: #ffb547;
+  --desiide-state-blocked: #ff6b6b;
 
-  --desiide-radius: 8px;
-  --desiide-radius-sm: 4px;
+  /* Earlier names (UI-1…UI-6), kept as aliases of the state mapping. */
+  --desiide-accent: var(--desiide-state-done);
+  --desiide-accent-jev: var(--desiide-state-decision);
+  --desiide-outcome-auto: var(--desiide-state-done);
+  --desiide-outcome-confirm: var(--desiide-state-needs);
+  --desiide-outcome-block: var(--desiide-state-blocked);
+
+  /* Shape: soft, rounded. */
+  --desiide-radius-lg: 14px;
+  --desiide-radius: 10px;
+  --desiide-radius-sm: 6px;
   --desiide-space-1: 4px;
   --desiide-space-2: 8px;
   --desiide-space-3: 12px;
   --desiide-space-4: 16px;
 
-  --desiide-motion-fast: 150ms;
-  --desiide-motion-base: 250ms;
-  --desiide-ease: cubic-bezier(0.2, 0, 0, 1);
+  --desiide-motion-fast: 120ms;
+  --desiide-motion-base: 200ms;
+  --desiide-motion-slow: 240ms;
+  --desiide-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Light themes: darker accents keep text contrast >= 4.5:1 on light backgrounds. */
+/* Light themes: darker state colors keep text at >= 4.5:1 on light surfaces. */
 body.vscode-light {
-  --desiide-accent: #0e8074;
-  --desiide-accent-jev: #a35f00;
+  --desiide-state-done: #3f6e00;
+  --desiide-state-decision: #5b45e0;
+  --desiide-state-running: #00707a;
+  --desiide-state-needs: #8f5300;
+  --desiide-state-blocked: #c0302f;
+  --desiide-shadow: 0 6px 18px -10px var(--vscode-widget-shadow, rgba(19, 19, 19, 0.2));
 }
 
-/* High contrast: rely on theme borders, and use the brightest accents. */
+/* High contrast: VS Code's own HC themes plus the brightest (or darkest) state colors. */
 body.vscode-high-contrast {
-  --desiide-accent: #3ee6d2;
-  --desiide-accent-jev: #ffc266;
+  --desiide-state-done: #d4ff6b;
+  --desiide-state-decision: #c2b8ff;
+  --desiide-state-running: #8beff2;
+  --desiide-state-needs: #ffcb7a;
+  --desiide-state-blocked: #ff9a9a;
   --desiide-border: var(--vscode-contrastBorder);
   --desiide-shadow: none;
 }
 body.vscode-high-contrast-light {
-  --desiide-accent: #005c53;
-  --desiide-accent-jev: #7a4500;
+  --desiide-state-done: #2f5200;
+  --desiide-state-decision: #4330c0;
+  --desiide-state-running: #005a62;
+  --desiide-state-needs: #6e3f00;
+  --desiide-state-blocked: #9e1f1f;
   --desiide-border: var(--vscode-contrastBorder);
   --desiide-shadow: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --desiide-motion-fast: 0ms;
-    --desiide-motion-base: 0ms;
-  }
 }

@@ -1,4 +1,5 @@
 @import './tokens.css';
+@import './states.css';
 
 * {
   box-sizing: border-box;
@@ -11,12 +12,25 @@ body {
   background: var(--desiide-bg);
   font-family: var(--desiide-font);
   font-size: var(--desiide-font-size);
-  line-height: 1.45;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 :focus-visible {
   outline: 1px solid var(--desiide-focus);
-  outline-offset: 1px;
+  outline-offset: 2px;
+}
+
+/* Reduced motion: nothing animates, anywhere (UI-7 AC4). Components never rely on an animation to
+ * convey state; every animated state has a static look. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .desiide-visually-hidden {
@@ -28,24 +42,31 @@ body {
   white-space: nowrap;
 }
 
-/* Tones: one color per tone, reused by badge, chip, card edge and bar fill. */
+/* Tones: one color per tone, reused by badge, chip, card edge and bar fill. The state names and
+ * the earlier names are the same five colors: done = auto, decision = jev, running = ai,
+ * needs = confirm, blocked = block. */
 .desiide-tone--neutral {
   --desiide-tone: var(--desiide-fg-muted);
 }
-.desiide-tone--ai {
-  --desiide-tone: var(--desiide-accent);
+.desiide-tone--ai,
+.desiide-tone--running {
+  --desiide-tone: var(--desiide-state-running);
 }
-.desiide-tone--jev {
-  --desiide-tone: var(--desiide-accent-jev);
+.desiide-tone--jev,
+.desiide-tone--decision {
+  --desiide-tone: var(--desiide-state-decision);
 }
-.desiide-tone--auto {
-  --desiide-tone: var(--desiide-outcome-auto);
+.desiide-tone--auto,
+.desiide-tone--done {
+  --desiide-tone: var(--desiide-state-done);
 }
-.desiide-tone--confirm {
-  --desiide-tone: var(--desiide-outcome-confirm);
+.desiide-tone--confirm,
+.desiide-tone--needs {
+  --desiide-tone: var(--desiide-state-needs);
 }
-.desiide-tone--block {
-  --desiide-tone: var(--desiide-outcome-block);
+.desiide-tone--block,
+.desiide-tone--blocked {
+  --desiide-tone: var(--desiide-state-blocked);
 }
 
 /* Button */
@@ -53,12 +74,18 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--desiide-space-1);
-  padding: 4px 12px;
+  padding: 5px 12px;
   border: 1px solid var(--vscode-button-border, transparent);
   border-radius: var(--desiide-radius-sm);
   font: inherit;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color var(--desiide-motion-fast) var(--desiide-ease);
+  transition:
+    background-color var(--desiide-motion-fast) var(--desiide-ease),
+    transform var(--desiide-motion-fast) var(--desiide-ease);
+}
+.desiide-button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 .desiide-button--primary {
   color: var(--vscode-button-foreground);
@@ -118,15 +145,20 @@ body {
 }
 .desiide-badge {
   padding: 0 6px;
-  border-radius: var(--desiide-radius-sm);
-  font-weight: 600;
+  border-color: transparent;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--desiide-tone) 16%, transparent);
+  font-family: var(--desiide-font-mono);
+  font-size: 10px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
 }
 .desiide-chip {
-  padding: 1px 8px;
+  padding: 1px 9px;
+  border-color: color-mix(in srgb, var(--desiide-tone) 40%, transparent);
   border-radius: 999px;
-  font-family: inherit;
+  font-family: var(--desiide-font-mono);
 }
 .desiide-chip--button {
   cursor: pointer;
@@ -141,29 +173,39 @@ body {
 
 /* Card */
 .desiide-card {
-  border: 1px solid var(--desiide-border);
-  border-left: 3px solid var(--desiide-tone, var(--desiide-border));
-  border-radius: var(--desiide-radius);
-  background: var(--desiide-surface);
+  border: 1px solid
+    color-mix(in srgb, var(--desiide-tone, var(--desiide-border)) 40%, var(--desiide-border));
+  border-radius: var(--desiide-radius-lg);
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--desiide-tone, transparent) 5%, transparent),
+      transparent 60%
+    ),
+    var(--desiide-surface);
   box-shadow: var(--desiide-shadow);
 }
 .desiide-card--neutral {
   --desiide-tone: var(--desiide-border);
 }
-.desiide-card--ai {
-  --desiide-tone: var(--desiide-accent);
+.desiide-card--ai,
+.desiide-card--running {
+  --desiide-tone: var(--desiide-state-running);
 }
-.desiide-card--jev {
-  --desiide-tone: var(--desiide-accent-jev);
+.desiide-card--jev,
+.desiide-card--decision {
+  --desiide-tone: var(--desiide-state-decision);
 }
-.desiide-card--auto {
-  --desiide-tone: var(--desiide-outcome-auto);
+.desiide-card--auto,
+.desiide-card--done {
+  --desiide-tone: var(--desiide-state-done);
 }
-.desiide-card--confirm {
-  --desiide-tone: var(--desiide-outcome-confirm);
+.desiide-card--confirm,
+.desiide-card--needs {
+  --desiide-tone: var(--desiide-state-needs);
 }
-.desiide-card--block {
-  --desiide-tone: var(--desiide-outcome-block);
+.desiide-card--block,
+.desiide-card--blocked {
+  --desiide-tone: var(--desiide-state-blocked);
 }
 .desiide-card__header {
   display: flex;
@@ -200,19 +242,20 @@ body {
   color: var(--desiide-fg-muted);
 }
 .desiide-prob__value {
+  font-family: var(--desiide-font-mono);
   font-variant-numeric: tabular-nums;
 }
 .desiide-prob__track {
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 4px;
   background: color-mix(in srgb, var(--desiide-tone) 18%, transparent);
   overflow: hidden;
 }
 .desiide-prob__fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--desiide-tone);
-  transition: width var(--desiide-motion-base) var(--desiide-ease);
+  transition: width var(--desiide-motion-slow) var(--desiide-ease);
 }
 
 /* ScoreDots */
@@ -225,16 +268,16 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 1px solid var(--desiide-accent-jev);
+  border: 1px solid var(--desiide-state-decision);
 }
 .desiide-score__dot--on {
-  background: var(--desiide-accent-jev);
+  background: var(--desiide-state-decision);
 }
 
-/* Spinner */
+/* Spinner: cyan, the running color. */
 .desiide-spinner {
   display: inline-flex;
-  color: var(--desiide-fg-muted);
+  color: var(--desiide-state-running);
 }
 @keyframes desiide-spin {
   to {
@@ -243,11 +286,6 @@ body {
 }
 .desiide-spin {
   animation: desiide-spin 1s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .desiide-spin {
-    animation: none;
-  }
 }
 
 /* EmptyState */
@@ -260,12 +298,14 @@ body {
 }
 .desiide-empty__icon .codicon {
   font-size: 28px;
-  color: var(--desiide-accent);
+  color: var(--desiide-state-decision);
 }
 .desiide-empty__title {
   margin: 0;
-  font-size: 13px;
+  color: var(--desiide-fg-strong);
+  font-size: 14px;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .desiide-empty__description {
   margin: 0;
@@ -312,7 +352,7 @@ body {
   margin: 0;
   padding: var(--desiide-space-2) var(--desiide-space-3);
   overflow-x: auto;
-  font-family: var(--desiide-font-mono);
+  font-family: var(--desiide-font-code);
   font-size: var(--vscode-editor-font-size, 12px);
 }
 
@@ -331,8 +371,14 @@ body {
 .desiide-section-title {
   margin: 0;
   color: var(--desiide-fg-muted);
-  font-size: 11px;
-  font-weight: 600;
+  font-family: var(--desiide-font-mono);
+  font-size: 10px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.14em;
+}
+
+.desiide-states {
+  display: grid;
+  gap: var(--desiide-space-3);
 }

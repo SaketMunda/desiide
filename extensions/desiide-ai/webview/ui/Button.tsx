@@ -6,12 +6,22 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 export interface ButtonProps extends Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, 'icon'> {
   variant?: ButtonVariant;
   icon?: string;
+  /** Breathe gently to say "this is waiting for you" (unanswered asks only). */
+  nudge?: boolean;
   children: ComponentChildren;
 }
 
-export function Button({ variant = 'primary', icon, children, type, ...rest }: ButtonProps) {
+export function Button({
+  variant = 'primary',
+  icon,
+  nudge = false,
+  children,
+  type,
+  ...rest
+}: ButtonProps) {
+  const cls = `desiide-button desiide-button--${variant}${nudge ? ' desiide-button--nudge' : ''}`;
   return (
-    <button type={type ?? 'button'} class={`desiide-button desiide-button--${variant}`} {...rest}>
+    <button type={type ?? 'button'} class={cls} {...rest}>
       {icon && <Codicon name={icon} />}
       <span>{children}</span>
     </button>

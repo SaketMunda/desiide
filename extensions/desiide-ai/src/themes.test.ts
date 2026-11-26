@@ -174,13 +174,17 @@ describe.each(THEMES)('%s theme', (name, theme: Theme) => {
     expect(theme.name).toBe(name);
   });
 
-  it.each(TEXT_PAIRS)('text: %s on %s is at least 4.5:1', (...pair) => {
-    expect(ratio(pair)).toBeGreaterThanOrEqual(4.5);
-  });
+  for (const pair of TEXT_PAIRS) {
+    it(`text: ${pair[0]} on ${pair[1]} is at least 4.5:1`, () => {
+      expect(ratio(pair)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
 
-  it.each(GLYPH_PAIRS)('glyph: %s on %s is at least 3:1', (...pair) => {
-    expect(ratio(pair)).toBeGreaterThanOrEqual(3);
-  });
+  for (const pair of GLYPH_PAIRS) {
+    it(`glyph: ${pair[0]} on ${pair[1]} is at least 3:1`, () => {
+      expect(ratio(pair)).toBeGreaterThanOrEqual(3);
+    });
+  }
 
   it('keeps every syntax color (comments too) at 4.5:1 on the editor background', () => {
     const bg = color('editor.background');

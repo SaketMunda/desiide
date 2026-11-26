@@ -1,0 +1,276 @@
+/* The five AI states (states.tsx). Visual reference: the landing-page preview (site/index.html #preview).
+ * Motion stays under 250 ms per movement; loops (spinner, shimmer, nudge) are slow and soft. */
+
+/* Thinking: a light sweep across the text while live; plain muted text once done. */
+.desiide-thinking-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--desiide-space-2);
+  font-family: var(--desiide-font-mono);
+  font-size: 12px;
+  color: var(--desiide-fg-muted);
+}
+.desiide-thinking-label.is-live .desiide-thinking-label__text {
+  background: linear-gradient(
+    90deg,
+    var(--desiide-fg-muted) 0%,
+    var(--desiide-fg-strong) 50%,
+    var(--desiide-fg-muted) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: desiide-shimmer 1.6s linear infinite;
+}
+.desiide-thinking-label__time {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+@keyframes desiide-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+/* High contrast: no gradient text. */
+body.vscode-high-contrast .desiide-thinking-label.is-live .desiide-thinking-label__text,
+body.vscode-high-contrast-light .desiide-thinking-label.is-live .desiide-thinking-label__text {
+  background: none;
+  color: var(--desiide-fg);
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .desiide-thinking-label.is-live .desiide-thinking-label__text {
+    background: none;
+    color: var(--desiide-fg);
+  }
+}
+
+/* Decision: violet chip, probability bar, one soft pulse when it lands. */
+.desiide-decision {
+  --desiide-tone: var(--desiide-state-decision);
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px var(--desiide-space-2);
+  max-width: 100%;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--desiide-tone) 38%, transparent);
+  border-radius: var(--desiide-radius);
+  color: var(--desiide-fg);
+  background: color-mix(in srgb, var(--desiide-tone) 9%, transparent);
+  font-family: var(--desiide-font-mono);
+  font-size: 11px;
+  line-height: 16px;
+}
+.desiide-decision .codicon {
+  color: var(--desiide-tone);
+  font-size: 13px;
+}
+.desiide-decision--button {
+  cursor: pointer;
+  font-family: var(--desiide-font-mono);
+  text-align: left;
+}
+.desiide-decision--button:hover {
+  background: color-mix(in srgb, var(--desiide-tone) 16%, transparent);
+}
+.desiide-decision__label {
+  color: var(--desiide-tone);
+}
+.desiide-decision__arrow {
+  color: var(--desiide-fg-strong);
+}
+.desiide-decision__meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.desiide-decision__bar {
+  width: 56px;
+  height: 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--desiide-tone) 20%, transparent);
+  overflow: hidden;
+}
+.desiide-decision__fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--desiide-tone);
+}
+.desiide-decision__pct {
+  color: var(--desiide-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.desiide-decision__tag {
+  padding: 0 6px;
+  border-radius: 5px;
+  color: var(--desiide-tone);
+  background: color-mix(in srgb, var(--desiide-tone) 16%, transparent);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.desiide-decision.is-landing {
+  animation:
+    desiide-rise var(--desiide-motion-base) var(--desiide-ease) both,
+    desiide-ring var(--desiide-motion-slow) var(--desiide-ease) 1;
+}
+.desiide-decision.is-landing .desiide-decision__fill {
+  animation: desiide-fill var(--desiide-motion-slow) var(--desiide-ease) both;
+}
+@keyframes desiide-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes desiide-ring {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--desiide-state-decision) 50%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--desiide-state-decision) 0%, transparent);
+  }
+}
+@keyframes desiide-fill {
+  from {
+    width: 0;
+  }
+}
+
+/* Running → done / failed. */
+.desiide-run {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+.desiide-run--running {
+  color: var(--desiide-state-running);
+}
+.desiide-run--done {
+  color: var(--desiide-lime-ink);
+  background: var(--desiide-state-done);
+}
+.desiide-run--done .codicon,
+.desiide-run--failed .codicon {
+  font-size: 11px;
+}
+.desiide-run--failed {
+  color: var(--desiide-state-blocked);
+  background: color-mix(in srgb, var(--desiide-state-blocked) 16%, transparent);
+}
+.desiide-run--waiting {
+  color: var(--desiide-state-needs);
+}
+.desiide-run--stopped {
+  color: var(--desiide-fg-muted);
+}
+body.vscode-light .desiide-run--done,
+body.vscode-high-contrast-light .desiide-run--done {
+  color: #fff;
+}
+.desiide-run.is-landing {
+  animation: desiide-pop var(--desiide-motion-slow) var(--desiide-ease) both;
+}
+@keyframes desiide-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  70% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Needs you: amber edge and a kind tone. */
+.desiide-needs {
+  --desiide-tone: var(--desiide-state-needs);
+  display: grid;
+  gap: var(--desiide-space-2);
+  padding: var(--desiide-space-2) var(--desiide-space-3) var(--desiide-space-3);
+  border: 1px solid color-mix(in srgb, var(--desiide-tone) 45%, transparent);
+  border-radius: var(--desiide-radius-lg);
+  background: color-mix(in srgb, var(--desiide-tone) 6%, var(--desiide-surface));
+}
+.desiide-needs.is-answered {
+  border-color: var(--desiide-border);
+  background: var(--desiide-surface);
+}
+.desiide-needs__title {
+  display: flex;
+  align-items: center;
+  gap: var(--desiide-space-2);
+  color: var(--desiide-fg-strong);
+  font-weight: 600;
+}
+.desiide-needs__dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--desiide-tone);
+}
+.desiide-needs.is-answered .desiide-needs__dot {
+  background: var(--desiide-fg-muted);
+}
+.desiide-needs__body {
+  color: var(--desiide-fg-muted);
+}
+.desiide-needs__body code {
+  color: var(--desiide-fg-strong);
+  font-family: var(--desiide-font-mono);
+}
+.desiide-needs__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--desiide-space-2);
+}
+
+/* The primary button of an unanswered ask breathes: a short soft glow every few seconds. */
+.desiide-button--nudge {
+  animation: desiide-nudge 2.8s var(--desiide-ease) infinite;
+}
+@keyframes desiide-nudge {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--vscode-button-background) 0%, transparent);
+  }
+  8% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--vscode-button-background) 30%, transparent);
+  }
+  24% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--vscode-button-background) 0%, transparent);
+  }
+}
+
+/* Blocked: red-marked but calm. */
+.desiide-blocked {
+  --desiide-tone: var(--desiide-state-blocked);
+  display: grid;
+  gap: var(--desiide-space-1);
+  padding: var(--desiide-space-2) var(--desiide-space-3);
+  border: 1px solid color-mix(in srgb, var(--desiide-tone) 30%, var(--desiide-border));
+  border-radius: var(--desiide-radius-lg);
+  background: color-mix(in srgb, var(--desiide-tone) 5%, var(--desiide-surface));
+}
+.desiide-blocked__title {
+  display: flex;
+  align-items: center;
+  gap: var(--desiide-space-2);
+  color: var(--desiide-fg-strong);
+  font-weight: 600;
+}
+.desiide-blocked__title .codicon {
+  color: var(--desiide-tone);
+}
+.desiide-blocked__body {
+  color: var(--desiide-fg-muted);
+}
