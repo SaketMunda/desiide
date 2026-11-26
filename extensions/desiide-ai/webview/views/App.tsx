@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import type { ExtensionToWebview, ViewId } from '../../shared/messages.ts';
+import type { ExtensionToWebview, PageId } from '../../shared/messages.ts';
 import { post, useBridge } from '../bridge.ts';
 import { PromptBox } from '../prompt/PromptBox.tsx';
 import { useTranscript } from '../transcript/store.ts';
 import { TaskStream } from '../transcript/TaskStream.tsx';
 import { Button, EmptyState } from '../ui/index.ts';
+import { SettingsPage } from '../settings/SettingsPage.tsx';
 import { Showcase } from './Showcase.tsx';
 
 export interface AppProps {
-  view: ViewId;
+  view: PageId;
 }
 
 export function App({ view }: AppProps) {
@@ -27,6 +28,7 @@ export function App({ view }: AppProps) {
 
   useEffect(() => post({ type: 'ready', view }), [view]);
 
+  if (view === 'settings') return <SettingsPage />;
   if (showcase) return <Showcase />;
   if (view === 'panel') return <Panel />;
 

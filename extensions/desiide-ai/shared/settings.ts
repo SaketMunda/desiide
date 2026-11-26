@@ -33,17 +33,19 @@ export interface ProviderPreset {
   keyUrlHint?: string;
 }
 
+const ANTHROPIC_PRESET: ProviderPreset = {
+  id: 'anthropic',
+  label: 'Anthropic (Claude)',
+  provider: 'anthropic',
+  keyRef: 'secret:anthropic',
+  modelPlaceholder: 'claude-sonnet-5-5',
+  defaultModel: 'claude-sonnet-5-5',
+  keyUrlHint: 'console.anthropic.com → API keys',
+};
+
 /** Cloud providers offered in onboarding and "Add model". Local models come from discovery. */
 export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
-  {
-    id: 'anthropic',
-    label: 'Anthropic (Claude)',
-    provider: 'anthropic',
-    keyRef: 'secret:anthropic',
-    modelPlaceholder: 'claude-sonnet-5-5',
-    defaultModel: 'claude-sonnet-5-5',
-    keyUrlHint: 'console.anthropic.com → API keys',
-  },
+  ANTHROPIC_PRESET,
   {
     id: 'openai',
     label: 'OpenAI',
@@ -78,6 +80,9 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
     modelPlaceholder: 'model name the server expects',
   },
 ];
+
+export const presetById = (id: ProviderPresetId): ProviderPreset =>
+  PROVIDER_PRESETS.find((p) => p.id === id) ?? ANTHROPIC_PRESET;
 
 export const KeyStatus = z.enum(['set', 'missing', 'none']);
 export type KeyStatus = z.infer<typeof KeyStatus>;
