@@ -5,7 +5,7 @@
     "outDir": "../../node_modules/.cache/tsc/desiide-ai-host",
     "tsBuildInfoFile": "../../node_modules/.cache/tsc/desiide-ai-host.tsbuildinfo"
   },
-  "include": ["src", "shared", "vite.config.mts", "vitest.config.mts"],
+  "include": ["src", "shared", "themes", "vite.config.mts", "vitest.config.mts"],
   "references": [
     {
       "path": "../../packages/protocol"

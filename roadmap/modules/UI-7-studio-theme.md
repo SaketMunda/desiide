@@ -1,6 +1,6 @@
 # UI-7 · Studio theme, icon & motion
 
-**Status:** todo · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, EDT-1 · **Skills:** ide-editor-shell
+**Status:** in-progress · **Milestone:** Alpha · **Size:** M · **Depends on:** UI-1, EDT-1 · **Skills:** ide-editor-shell
 
 ## Purpose
 

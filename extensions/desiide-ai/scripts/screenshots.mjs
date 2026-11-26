@@ -1,6 +1,6 @@
 /* global window, document -- used inside callbacks that Playwright runs in the page */
 // Renders the built webview bundle in headless Chromium under Dark+, Light+ and High Contrast
-// colors taken from the local VS Code's built-in theme files, plus the Desiide Dark/Light themes, and
+// colors taken from the local VS Code's built-in theme files, plus the Desiide Midnight/Daylight themes, and
 // saves PNGs to .screenshots/.
 // Approximates VS Code's webview theming (theme colors + registry defaults); final visual QA
 // still happens in VS Code itself. No server or port: requests are fulfilled via page.route.
@@ -109,15 +109,15 @@ const themes = [
   { name: 'light-plus', file: 'light_plus.json', kind: 'light', bodyClass: 'vscode-light' },
   { name: 'high-contrast', file: 'hc_black.json', kind: 'hc', bodyClass: 'vscode-high-contrast' },
   {
-    name: 'desiide-dark',
-    file: 'desiide-dark-color-theme.json',
+    name: 'desiide-midnight',
+    file: 'desiide-midnight-color-theme.json',
     dir: join(root, 'themes'),
     kind: 'dark',
     bodyClass: 'vscode-dark',
   },
   {
-    name: 'desiide-light',
-    file: 'desiide-light-color-theme.json',
+    name: 'desiide-daylight',
+    file: 'desiide-daylight-color-theme.json',
     dir: join(root, 'themes'),
     kind: 'light',
     bodyClass: 'vscode-light',
