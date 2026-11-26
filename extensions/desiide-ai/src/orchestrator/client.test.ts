@@ -212,6 +212,54 @@ describe('OrchestratorClient: lifecycle', () => {
   });
 });
 
+describe('OrchestratorClient: session setup (UI-6 config push)', () => {
+  const recordConfig = (seen: Array<{ pid: number; models: number }>) => (host: Host) => {
+    let models = -1;
+    host.register('config.update', (c) => {
+      models = c.models.length;
+      return { ok: true };
+    });
+    host.register('task.list', () => {
+      seen.push({ pid: 0, models });
+      return { tasks: [] };
+    });
+  };
+
+  it('sends config.update before the first request and again after a crash restart', async () => {
+    const seen: Array<{ pid: number; models: number }> = [];
+    const sent: number[] = [];
+    const { client, children, statuses } = setup(
+      { configure: recordConfig(seen) },
+      {
+        onSessionStart: async (send) => {
+          sent.push(Date.now());
+          await send('config.update', {
+            models: [{ id: 'local', provider: 'ollama', model: 'qwen' }],
+          });
+        },
+      },
+    );
+    await client.request('task.list', {});
+    expect(seen).toEqual([{ pid: 0, models: 1 }]);
+    children[0]?.crash();
+    await vi.waitFor(() => expect(states(statuses).filter((s) => s === 'ready')).toHaveLength(2));
+    await client.request('task.list', {});
+    expect(seen.at(-1)).toEqual({ pid: 0, models: 1 });
+    expect(sent).toHaveLength(2);
+  });
+
+  it('logs a failing setup and still starts', async () => {
+    const { client, log } = setup(
+      {},
+      {
+        onSessionStart: () => Promise.reject(new Error('boom')),
+      },
+    );
+    await expect(client.request('health.ping', {})).resolves.toMatchObject({ ok: true });
+    expect(log.lines.join('\n')).toMatch(/session setup failed: boom/);
+  });
+});
+
 describe('OrchestratorClient: supervisor', () => {
   it('restarts after a crash and reports restarting → starting → ready', async () => {
     const { client, children, statuses, spawn } = setup();

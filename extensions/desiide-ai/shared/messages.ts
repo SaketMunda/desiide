@@ -7,6 +7,7 @@ import {
   WorkflowOption,
 } from '@desiide/protocol';
 import * as z from 'zod';
+import { SettingsToHost, SettingsToWebview } from './settings.ts';
 
 /**
  * Messages between the extension host and the webviews. Both sides validate everything they
@@ -16,8 +17,17 @@ import * as z from 'zod';
 export const ViewId = z.enum(['panel', 'decisions']);
 export type ViewId = z.infer<typeof ViewId>;
 
+/** Every webview root: the sidebar views plus the Settings editor tab (UI-6). */
+export const PageId = z.enum([...ViewId.options, 'settings']);
+export type PageId = z.infer<typeof PageId>;
+
 /** Commands a webview may ask the extension to run. Anything else is rejected. */
-export const WebviewCommand = z.enum(['desiide.showLog', 'desiide.dev.showcase', 'desiide.setup']);
+export const WebviewCommand = z.enum([
+  'desiide.showLog',
+  'desiide.dev.showcase',
+  'desiide.setup',
+  'desiide.openSettings',
+]);
 export type WebviewCommand = z.infer<typeof WebviewCommand>;
 
 // --- Prompt Box (UI-2) ---
@@ -101,7 +111,7 @@ export type TaskRecord = z.infer<typeof TaskRecord>;
 const InsertedCode = z.string().min(1).max(1_000_000);
 
 export const WebviewToExtension = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('ready'), view: ViewId }),
+  z.strictObject({ type: z.literal('ready'), view: PageId }),
   z.strictObject({ type: z.literal('command'), command: WebviewCommand }),
   z.strictObject({
     type: z.literal('log'),
@@ -132,6 +142,7 @@ export const WebviewToExtension = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('code.insert'), code: InsertedCode }),
   /** Show a tool call's whole retained output in the "Desiide: Tool Output" channel. */
   z.strictObject({ type: z.literal('tool.openOutput'), taskId: Id, callId: Id }),
+  ...SettingsToHost.options,
 ]);
 export type WebviewToExtension = z.infer<typeof WebviewToExtension>;
 export type WebviewMessageType = WebviewToExtension['type'];
@@ -139,7 +150,7 @@ export type WebviewMessageType = WebviewToExtension['type'];
 export const ExtensionToWebview = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('init'),
-    view: ViewId,
+    view: PageId,
     devMode: z.boolean(),
     showcase: z.boolean(),
   }),
@@ -179,5 +190,6 @@ export const ExtensionToWebview = z.discriminatedUnion('type', [
   z.object({ type: z.literal('tasks.removed'), taskIds: z.array(Id) }),
   /** Show this task in the transcript (e.g. after Retry). */
   z.object({ type: z.literal('tasks.select'), taskId: Id }),
+  ...SettingsToWebview.options,
 ]);
 export type ExtensionToWebview = z.infer<typeof ExtensionToWebview>;

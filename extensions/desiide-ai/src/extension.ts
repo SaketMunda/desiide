@@ -14,7 +14,9 @@ import {
 } from './orchestrator/notice.ts';
 import { PromptController } from './prompt/controller.ts';
 import { FallbackTaskClient, MockTaskClient, orchestratorTaskClient } from './prompt/taskClient.ts';
+import { SettingsController } from './settings/controller.ts';
 import { formatStatus, type StatusState } from './status.ts';
+import { SettingsSection } from '../shared/settings.ts';
 import { TranscriptController } from './transcript/controller.ts';
 import { DesiideViewProvider, VIEW_TYPES } from './views/DesiideViewProvider.ts';
 
@@ -28,10 +30,16 @@ export interface DesiideApi {
   readonly orchestrator: OrchestratorClient;
   /** Host side of the Prompt Box (UI-2). `fill` lets onboarding (UI-6) prefill a sample task. */
   readonly prompt: Pick<PromptController, 'fill' | 'focus' | 'searchFiles'>;
+  /** Settings & onboarding (UI-6). */
+  readonly settings: Pick<SettingsController, 'open' | 'service'>;
   setStatus(state: StatusState): void;
 }
 
 let orchestrator: OrchestratorClient | undefined;
+
+/** Onboarding's "Try it": a safe, read-only first task that works on any project. */
+export const TRY_IT_PROMPT =
+  'Give me a two-sentence tour of this project, then point out one small thing worth improving.';
 
 export function activate(context: vscode.ExtensionContext): DesiideApi {
   const start = performance.now();
@@ -41,7 +49,11 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   const readyViews = new Set<ViewId>();
 
   // Views are constructed before the controller that listens to them; it is attached below.
-  const late: { prompt?: PromptController; transcript?: TranscriptController } = {};
+  const late: {
+    prompt?: PromptController;
+    transcript?: TranscriptController;
+    settings?: SettingsController;
+  } = {};
   const host = {
     devMode,
     showcase: false,
@@ -87,6 +99,10 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
       version: (context.extension.packageJSON as { version?: string }).version ?? '0.0.0',
     },
     secrets: async (ref) => (await context.secrets.get(secretStorageKey(ref))) ?? null,
+    // Every (re)started orchestrator gets the settings before any other request (UI-6).
+    onSessionStart: async (send) => {
+      if (late.settings) await send('config.update', late.settings.service.config());
+    },
     log,
   });
   orchestrator = client;
@@ -125,6 +141,22 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   late.transcript = transcript;
   const focusPanel = () => vscode.commands.executeCommand(`${VIEW_TYPES.panel}.focus`);
 
+  const settings = new SettingsController({
+    extensionUri: context.extensionUri,
+    context,
+    orchestrator: {
+      isRunning: () => client.status.state === 'ready',
+      request: (method, params) => client.request(method, params),
+    },
+    log,
+    tryIt: async () => {
+      await focusPanel();
+      promptController.fill(TRY_IT_PROMPT);
+      promptController.focus();
+    },
+  });
+  late.settings = settings;
+
   const focusPrompt = async (): Promise<void> => {
     await focusPanel();
     promptController.focus();
@@ -142,12 +174,17 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
       }
       await focusPanel();
     },
-    'desiide.setup': () =>
-      vscode.commands.executeCommand(
-        'workbench.action.openWalkthrough',
-        `${context.extension.id}#${WALKTHROUGH_ID}`,
-        false,
-      ),
+    // The Prompt Box's "Set up a model" lands on the guided start, not the walkthrough list.
+    'desiide.setup': () => settings.open('start'),
+    'desiide.openSettings': (section?: unknown) => {
+      const parsed = SettingsSection.safeParse(section);
+      settings.open(parsed.success ? parsed.data : undefined);
+    },
+    'desiide.tryIt': async () => {
+      await focusPanel();
+      promptController.fill(TRY_IT_PROMPT);
+      promptController.focus();
+    },
     'desiide.showLog': () => channel.show(true),
     'desiide.restartOrchestrator': restartOrchestrator,
     'desiide.dev.showcase': () => {
@@ -168,6 +205,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     status,
     promptController,
     transcript,
+    settings,
     { dispose: () => void client.dispose() },
     ...(Object.keys(providers) as ViewId[]).map((view) =>
       vscode.window.registerWebviewViewProvider(VIEW_TYPES[view], providers[view]),
@@ -203,6 +241,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     },
     orchestrator: client,
     prompt: promptController,
+    settings,
     setStatus,
   };
 }
