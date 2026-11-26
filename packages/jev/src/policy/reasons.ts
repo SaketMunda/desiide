@@ -46,6 +46,10 @@ const DENY_RULE_TEXT: Readonly<Record<string, string>> = {
   shutdown: 'shuts down or reboots the machine',
 };
 
+/** The hard deny-list rules, for read-only display (UI-6 settings). Order is display order. */
+export const DENY_RULES: ReadonlyArray<{ readonly id: string; readonly text: string }> =
+  Object.freeze(Object.entries(DENY_RULE_TEXT).map(([id, text]) => Object.freeze({ id, text })));
+
 const OVERRIDE_TEXT: Readonly<Record<string, string>> = {
   strict_mode: 'strict gating mode asks before every side effect',
   user_choice: 'you picked this workflow',

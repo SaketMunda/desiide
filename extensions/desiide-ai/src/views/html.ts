@@ -1,7 +1,7 @@
-import type { ViewId } from '../../shared/messages.ts';
+import type { PageId } from '../../shared/messages.ts';
 
 export interface WebviewHtmlOptions {
-  view: ViewId;
+  view: PageId;
   nonce: string;
   /** `webview.cspSource`: the only origin allowed for styles, fonts and images. */
   cspSource: string;

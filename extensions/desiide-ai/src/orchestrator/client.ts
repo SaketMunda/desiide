@@ -73,6 +73,12 @@ export type SpawnOrchestrator = (
   env?: Record<string, string>,
 ) => OrchestratorProcess;
 
+/** A typed request on the session that is starting (it isn't `ready` yet). */
+export type SessionSend = <M extends ClientMethod>(
+  method: M,
+  params: ParamsInputOf<M>,
+) => Promise<ResultOf<M>>;
+
 /** Resolves `secret:<name>` refs. Returns `null` when the secret isn't set. */
 export type SecretResolver = (ref: string) => Promise<string | null>;
 
@@ -94,6 +100,12 @@ export interface OrchestratorClientOptions {
   /** Extra environment for the orchestrator process, e.g. `DESIIDE_RG_PATH`. */
   env?: Record<string, string>;
   restartPolicy?: RestartPolicyOptions;
+  /**
+   * Runs after `initialize` and before the session counts as ready, on every (re)start: UI-6
+   * sends `config.update` here, so no request ever reaches an orchestrator without settings.
+   * A failure is logged and doesn't stop the session.
+   */
+  onSessionStart?: (send: SessionSend) => Promise<void>;
   initTimeoutMs?: number;
   /** Grace period between SIGTERM and SIGKILL when stopping. */
   stopTimeoutMs?: number;
@@ -338,6 +350,21 @@ export class OrchestratorClient {
     }
     if (session.hasExited)
       throw this.startFailed('The Desiide orchestrator exited during startup.');
+
+    if (this.opts.onSessionStart) {
+      const send: SessionSend = async (method, params) => {
+        const schema = ClientMethods[method];
+        const raw = await this.send(session, method, schema.params.parse(params));
+        return schema.result.parse(raw) as ResultOf<typeof method>;
+      };
+      try {
+        await this.opts.onSessionStart(send);
+      } catch (err) {
+        this.opts.log.warn(`Orchestrator session setup failed: ${errorMessage(err)}`);
+      }
+      if (session.hasExited)
+        throw this.startFailed('The Desiide orchestrator exited during startup.');
+    }
 
     this.opts.log.info(
       `Orchestrator ready (pid ${String(child.pid)}, server ${init.data.server.version})`,

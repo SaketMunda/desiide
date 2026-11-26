@@ -24,6 +24,11 @@ export const JevConfig = z.strictObject({
   endpoint: z.url().optional(),
   apiKey: SecretRef.optional(),
   redactPaths: z.boolean().default(false),
+  /**
+   * Random per-workspace salt for `redactPaths` (UI-6: `crypto.randomBytes(32)`, hex). Never
+   * derived from the workspace path, which could be guessed. Ignored when `redactPaths` is off.
+   */
+  redactSalt: z.string().min(32).max(512).optional(),
 });
 export type JevConfig = z.infer<typeof JevConfig>;
 

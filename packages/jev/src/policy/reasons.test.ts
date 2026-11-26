@@ -1,6 +1,7 @@
 import { KNOWN_REASON_LABELS } from '@desiide/protocol';
 import { describe, expect, it } from 'vitest';
-import { REASON_TEXT, describeReason } from './reasons.ts';
+import { DENY_CORPUS } from './commands.test.ts';
+import { DENY_RULES, REASON_TEXT, describeReason } from './reasons.ts';
 
 describe('describeReason', () => {
   it('has text for every label known to the protocol', () => {
@@ -17,5 +18,18 @@ describe('describeReason', () => {
     );
     expect(describeReason('option_unavailable:local-single')).toMatch(/\(local-single\)$/);
     expect(describeReason('something_new:x')).toBe('something new x');
+  });
+});
+
+describe('DENY_RULES', () => {
+  it('lists every rule the deny corpus triggers, each with text', () => {
+    const ids = new Set(DENY_RULES.map((r) => r.id));
+    for (const [, rule] of DENY_CORPUS) expect(ids).toContain(rule);
+    for (const r of DENY_RULES)
+      expect(describeReason(`deny_list:${r.id}`)).toBe(`Blocked: ${r.text}`);
+  });
+
+  it('is frozen, so a consumer cannot edit the shown list', () => {
+    expect(Object.isFrozen(DENY_RULES)).toBe(true);
   });
 });

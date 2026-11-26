@@ -4,6 +4,8 @@ export const COMMAND_IDS = [
   'desiide.focusPrompt',
   'desiide.addSelectionToPrompt',
   'desiide.setup',
+  'desiide.openSettings',
+  'desiide.tryIt',
   'desiide.showLog',
   'desiide.restartOrchestrator',
   'desiide.dev.showcase',

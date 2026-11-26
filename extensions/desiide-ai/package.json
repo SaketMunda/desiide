@@ -27,6 +27,8 @@
     "onCommand:desiide.focusPrompt",
     "onCommand:desiide.addSelectionToPrompt",
     "onCommand:desiide.setup",
+    "onCommand:desiide.tryIt",
+    "onCommand:desiide.openSettings",
     "onCommand:desiide.showLog",
     "onCommand:desiide.restartOrchestrator",
     "onCommand:desiide.dev.showcase"
@@ -75,6 +77,18 @@
       {
         "command": "desiide.setup",
         "title": "Set Up Models",
+        "category": "Desiide",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "desiide.openSettings",
+        "title": "Open Settings",
+        "category": "Desiide",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "desiide.tryIt",
+        "title": "Try a Sample Task",
         "category": "Desiide"
       },
       {
@@ -110,6 +124,13 @@
           "when": "editorHasSelection",
           "group": "9_desiide@1"
         }
+      ],
+      "view/title": [
+        {
+          "command": "desiide.openSettings",
+          "when": "view == desiide.panel",
+          "group": "navigation@9"
+        }
       ]
     },
     "keybindings": [
@@ -142,6 +163,213 @@
           ],
           "default": "balance",
           "description": "Default cost preference in the Prompt Box. You can change it per task."
+        },
+        "desiide.models": {
+          "type": "array",
+          "default": [],
+          "markdownDescription": "Your models. Easiest to edit in **Desiide: Open Settings**. Keys are never stored here: `apiKey` is a `secret:<name>` reference to your system keychain.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "provider",
+              "model"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "description": "A short name you pick, used by roles."
+              },
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "ollama",
+                  "anthropic",
+                  "openai-compatible"
+                ]
+              },
+              "model": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The provider's model name."
+              },
+              "baseUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "Server URL. Required for openai-compatible."
+              },
+              "apiKey": {
+                "type": "string",
+                "pattern": "^secret:[A-Za-z0-9._-]{1,128}$",
+                "patternErrorMessage": "Only a reference like secret:anthropic goes here. Add the key itself in Desiide: Open Settings; it is stored in your system keychain."
+              },
+              "costPerMTok": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "input",
+                  "output"
+                ],
+                "properties": {
+                  "input": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "output": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "description": "USD per million tokens, for cost estimates."
+              },
+              "capabilities": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Overrides what the provider reports.",
+                "properties": {
+                  "streaming": {
+                    "type": "boolean"
+                  },
+                  "toolCalls": {
+                    "type": "boolean"
+                  },
+                  "contextTokens": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "maxOutputTokens": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "vision": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "locality": {
+                "type": "string",
+                "enum": [
+                  "local",
+                  "cloud"
+                ],
+                "description": "Overrides where Desiide thinks this model runs. Local: on this machine."
+              },
+              "quirks": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "streamUsage": {
+                    "type": "boolean"
+                  },
+                  "maxTokensField": {
+                    "type": "string",
+                    "enum": [
+                      "max_tokens",
+                      "max_completion_tokens"
+                    ]
+                  }
+                }
+              },
+              "reasoning": {
+                "type": "string",
+                "enum": [
+                  "off",
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              }
+            }
+          }
+        },
+        "desiide.roles": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": false,
+          "markdownDescription": "Which model does what, by `id` from `desiide.models`. With one model, it does everything.",
+          "properties": {
+            "cheap": {
+              "type": "string",
+              "description": "Fast, cheap or local: drafts and simple tasks."
+            },
+            "strong": {
+              "type": "string",
+              "description": "The most capable model, for hard tasks."
+            },
+            "reviewer": {
+              "type": "string",
+              "description": "Reviews drafts (defaults to strong)."
+            }
+          }
+        },
+        "desiide.jev.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Ask Jev for routing and risk decisions. Off by default: Desiide uses its built-in rules. Jev only ever receives metadata (paths, sizes, command names), never file contents."
+        },
+        "desiide.jev.endpoint": {
+          "type": "string",
+          "format": "uri",
+          "description": "Jev API URL."
+        },
+        "desiide.jev.apiKey": {
+          "type": "string",
+          "pattern": "^secret:[A-Za-z0-9._-]{1,128}$",
+          "patternErrorMessage": "Only a reference like secret:anthropic goes here. Add the key itself in Desiide: Open Settings; it is stored in your system keychain."
+        },
+        "desiide.jev.redactPaths": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hash folder and file names before they're sent to Jev (with a random per-workspace salt)."
+        },
+        "desiide.gating.mode": {
+          "type": "string",
+          "enum": [
+            "conservative",
+            "strict"
+          ],
+          "enumDescriptions": [
+            "Asks before anything sensitive or risky (the default).",
+            "Asks before every command and edit."
+          ],
+          "default": "conservative",
+          "description": "How often Desiide asks before acting. There's no looser mode."
+        },
+        "desiide.gating.thresholds": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": false,
+          "markdownDescription": "Advanced. Thresholds can only be made **stricter**; looser values are ignored with a warning.",
+          "properties": {
+            "autoSafeNowMin": {
+              "type": "number",
+              "minimum": 0.9,
+              "maximum": 1
+            },
+            "autoReversibleMin": {
+              "type": "number",
+              "minimum": 0.8,
+              "maximum": 1
+            },
+            "autoHighRiskMax": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.2
+            },
+            "blockSafeNowBelow": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "maxAutoEditFiles": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
         }
       }
     },
@@ -165,6 +393,47 @@
         "title": "Set up Desiide AI",
         "description": "Your AI-native editor: bring your own models, and see every decision it makes.",
         "steps": [
+          {
+            "id": "connect",
+            "title": "Connect a model",
+            "description": "Use a local model through Ollama, or paste a Claude / OpenAI-compatible key. About a minute.\n[Set up models](command:desiide.setup)",
+            "media": {
+              "markdown": "media/walkthrough/connect.md"
+            },
+            "completionEvents": [
+              "onContext:desiide.hasModels"
+            ]
+          },
+          {
+            "id": "roles",
+            "title": "Pick who does what",
+            "description": "A cheap model for drafts, a strong one for hard tasks. Desiide suggests a split; change it any time.\n[Review roles](command:desiide.openSettings?%5B%22roles%22%5D)",
+            "media": {
+              "markdown": "media/walkthrough/roles.md"
+            },
+            "completionEvents": [
+              "onCommand:desiide.openSettings"
+            ]
+          },
+          {
+            "id": "jev",
+            "title": "Optional: turn on Jev",
+            "description": "Jev makes routing and risk calls. It only sees metadata, and you can preview exactly what it would get.\n[See what Jev receives](command:desiide.openSettings?%5B%22jev%22%5D)",
+            "media": {
+              "markdown": "media/walkthrough/jev.md"
+            }
+          },
+          {
+            "id": "try",
+            "title": "Try it",
+            "description": "Run a small, read-only first task on this project.\n[Try a sample task](command:desiide.tryIt)",
+            "media": {
+              "markdown": "media/walkthrough/try.md"
+            },
+            "completionEvents": [
+              "onCommand:desiide.tryIt"
+            ]
+          },
           {
             "id": "panel",
             "title": "Meet the Desiide panel",
@@ -200,9 +469,10 @@
     "test:app": "node test/app/run.mjs",
     "screenshots": "node scripts/build.mjs && node scripts/screenshots.mjs",
     "package": "node scripts/build.mjs --production && vsce package --no-dependencies --out desiide-ai.vsix",
-    "test:webview": "node scripts/build.mjs && node test/webview/prompt.mjs && node test/webview/stream.mjs"
+    "test:webview": "node scripts/build.mjs && node test/webview/prompt.mjs && node test/webview/stream.mjs && node test/webview/settings.mjs"
   },
   "dependencies": {
+    "@desiide/jev": "workspace:*",
     "@desiide/protocol": "workspace:*",
     "@vscode/codicons": "0.0.46-24",
     "highlight.js": "^11.12.0",

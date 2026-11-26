@@ -199,6 +199,9 @@ importers:
 
   extensions/desiide-ai:
     dependencies:
+      '@desiide/jev':
+        specifier: workspace:*
+        version: link:../../packages/jev
       '@desiide/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
