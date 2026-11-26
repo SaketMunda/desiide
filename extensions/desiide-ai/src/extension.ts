@@ -15,6 +15,7 @@ import {
 import { PromptController } from './prompt/controller.ts';
 import { FallbackTaskClient, MockTaskClient, orchestratorTaskClient } from './prompt/taskClient.ts';
 import { SettingsController } from './settings/controller.ts';
+import { TRY_IT_PROMPT } from './settings/tryIt.ts';
 import { formatStatus, type StatusState } from './status.ts';
 import { SettingsSection } from '../shared/settings.ts';
 import { TranscriptController } from './transcript/controller.ts';
@@ -36,10 +37,6 @@ export interface DesiideApi {
 }
 
 let orchestrator: OrchestratorClient | undefined;
-
-/** Onboarding's "Try it": a safe, read-only first task that works on any project. */
-export const TRY_IT_PROMPT =
-  'Give me a two-sentence tour of this project, then point out one small thing worth improving.';
 
 export function activate(context: vscode.ExtensionContext): DesiideApi {
   const start = performance.now();
