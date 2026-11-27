@@ -326,3 +326,15 @@ describe('reason text', () => {
     ]);
   });
 });
+
+describe('the gate decision shows once', () => {
+  it('a decision row is hidden when an approval card shows the same check', async () => {
+    const { shownByApproval } = await import('./view.ts');
+    const view = taskWithDecision();
+    expect(shownByApproval(view, ['d1', 'd2'])).toBe(false);
+    view.items.push(approval);
+    expect(shownByApproval(view, ['d1', 'd2'])).toBe(true);
+    expect(shownByApproval(view, ['other'])).toBe(false);
+    expect(shownByApproval(undefined, ['d1'])).toBe(false);
+  });
+});

@@ -57,7 +57,9 @@ export interface AssistantItem {
   startedAt: string;
 }
 
-export type ToolStatus = 'running' | 'awaiting_approval' | 'ok' | 'failed' | ToolErrorKind;
+/** `awaiting_review`: a `propose_edit` whose diff waits for the user (UI-4). */
+export type ToolStatus =
+  'running' | 'awaiting_approval' | 'awaiting_review' | 'ok' | 'failed' | ToolErrorKind;
 
 export interface ToolItem {
   kind: 'tool';

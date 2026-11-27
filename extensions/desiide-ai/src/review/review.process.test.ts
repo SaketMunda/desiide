@@ -342,3 +342,43 @@ describe('UI-4 with the real task engine', () => {
     expect(events.at(-1)).toMatchObject({ type: 'state_changed', to: 'done' });
   }, 60_000);
 });
+
+describe('UI-4 × COR-4', () => {
+  it('a proposal touching .env arrives with FileMeta.sensitive for the review card', async () => {
+    writeFileSync(join(workspace, 'src/a.ts'), 'export const a = 1;\n');
+    writeFileSync(join(workspace, '.env'), 'COOKIE_SECURE=false\n');
+    turns = [
+      {
+        toolCalls: [
+          {
+            id: 'call_edit',
+            name: 'propose_edit',
+            args: {
+              files: [
+                { path: 'src/a.ts', edits: [{ search: 'a = 1', replace: 'a = 2' }] },
+                { path: '.env', edits: [{ search: 'false', replace: 'true' }] },
+              ],
+            },
+          },
+        ],
+      },
+      { text: 'Done.' },
+    ];
+    let meta: { path: string; sensitive: boolean }[] = [];
+    await run(
+      { kind: 'refactor', instruction: 'Secure cookies', allowedTools: ['propose_edit'] },
+      async (e, s) => {
+        if (e.type !== 'edit_proposed') return;
+        meta = e.files.map((f) => ({ path: f.path, sensitive: f.sensitive }));
+        await accept(s, e, ['.env']);
+      },
+    );
+    expect(meta).toEqual(
+      expect.arrayContaining([
+        { path: 'src/a.ts', sensitive: false },
+        { path: '.env', sensitive: true },
+      ]),
+    );
+    expect(readFileSync(join(workspace, '.env'), 'utf8')).toBe('COOKIE_SECURE=false\n');
+  }, 60_000);
+});

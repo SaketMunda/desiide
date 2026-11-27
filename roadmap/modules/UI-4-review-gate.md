@@ -79,17 +79,16 @@ Where the user says yes or no. Edits are reviewed in VS Code's native diff and a
 - **Reason text is translated on the host** (`review.state.reasons`): `@desiide/jev`'s index pulls Node-only modules, so the webview can't import `describeReason`. Unknown labels render generically.
 - **The decision link** focuses the Decisions view and posts `decisions.focus {decisionId}`. UI-5 must handle that message; until then the link only focuses the view.
 - **Reject from the keyboard sends no reason.** The Reject button opens the optional reason field.
+- **`propose_edit` waits as `awaiting_review`.** A new `ToolStatus` in UI-3's reducer: set on `edit_proposed`, back to `running` when the task resumes. The tool card says "awaiting your review".
+- **The gate decision shows once.** When an approval card shows a check's decision chip (with the landing pulse), the standalone decision row for that check is hidden (`makeDecisionRenderer`, `shownByApproval`). Decision rows with no approval (auto reads, routing) are unchanged.
+- **Sensitive flag end to end:** COR-4's `describeFiles` is wired on master. `review.process.test.ts` › "UI-4 × COR-4" checks that `.env` arrives with `sensitive: true` and `src/a.ts` with `false`.
 - `ITEM_RENDERERS.tool` is wrapped (`makeToolRenderer`), so blocked calls render as a `BlockedCard` instead of a failed tool card. UI-7's `states.mjs` now expects the blocked card.
 
 **Known gaps**
 - **Multi-root:** paths resolve against the first folder, as the orchestrator does (COR-6).
-- `FileMeta.sensitive` only shows once COR-4's `describeFiles` is wired (COR-4 is in review); the card already renders it.
-- While a diff review is pending, the `propose_edit` tool card still says "running" (UI-3's reducer only marks `awaiting_approval` for `approval_required`).
-- The gate's decision chip shows twice: as the transcript's decision row (UI-3/UI-5) and inside the approval card (this brief's probability summary). UI-5 may want to hide one.
 - No pass with a real screen reader. `test:webview` isn't in CI (needs Chromium, same as UI-2/3/7).
 
 **Follow-ups**
 - **UI-5:** handle `decisions.focus` in the Decisions view.
-- **UI-3 (small):** mark the `propose_edit` tool card "awaiting review" between `edit_proposed` and its `tool_call_finished`.
 - **Planning:** confirm the save-after-apply rule (clean files saved, dirty ones left) as an ADR-004 addendum.
 - **REL-2:** add the end-to-end review path in the built app (`test:app`).

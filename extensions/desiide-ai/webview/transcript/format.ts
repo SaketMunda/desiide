@@ -76,6 +76,7 @@ export const TOOL_LABELS: Record<string, string> = {
 export const TOOL_STATUS: Record<ToolStatus, { label: string; tone: Tone; icon: string }> = {
   running: { label: 'running', tone: 'ai', icon: 'loading' },
   awaiting_approval: { label: 'awaiting approval', tone: 'confirm', icon: 'question' },
+  awaiting_review: { label: 'awaiting your review', tone: 'confirm', icon: 'diff' },
   ok: { label: 'done', tone: 'auto', icon: 'check' },
   failed: { label: 'failed', tone: 'block', icon: 'error' },
   blocked: { label: 'blocked', tone: 'block', icon: 'circle-slash' },
