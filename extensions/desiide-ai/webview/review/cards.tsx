@@ -2,15 +2,21 @@ import type { JSX } from 'preact';
 import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ApprovalAnswer } from '../../shared/review/model.ts';
 import { reviewKey } from '../../shared/review/model.ts';
-import type { ApprovalItem, EditProposalItem, ToolItem } from '../../shared/transcript/model.ts';
+import type {
+  ApprovalItem,
+  DecisionItem,
+  EditProposalItem,
+  ToolItem,
+} from '../../shared/transcript/model.ts';
 import { post } from '../bridge.ts';
-import type { ItemProps } from '../transcript/items.tsx';
+import { landedDecisions, type ItemProps } from '../transcript/items.tsx';
 import {
   Badge,
   BlockedNote,
   Button,
   Codicon,
   DecisionChip,
+  firstLanding,
   NeedsYou,
   summarizeDecision,
 } from '../ui/index.ts';
@@ -21,6 +27,7 @@ import {
   blockedCardView,
   cardKey,
   proposalCardView,
+  shownByApproval,
   type ApprovalStatus,
   type BlockedCardView,
   type ReasonView,
@@ -133,6 +140,15 @@ export function ApprovalCard({ item, taskId, live }: ItemProps<ApprovalItem>) {
     ...(sent ? { sent } : {}),
   });
   const decision = useMemo(() => summarizeDecision(card.decisions), [card.decisions]);
+  // The card shows the gate's decision (the transcript row hides it), so it also gets the pulse.
+  const [pulse] = useState(() => {
+    const first = card.decisions[0];
+    return (
+      live &&
+      first !== undefined &&
+      firstLanding(landedDecisions, `decision:${first.id}`, card.decisions.at(-1)?.ts, Date.now())
+    );
+  });
   const answer = (a: ApprovalAnswer, why?: string) => {
     if (card.actions.length === 0) return;
     setSent(a);
@@ -226,6 +242,7 @@ export function ApprovalCard({ item, taskId, live }: ItemProps<ApprovalItem>) {
           <div class="desiide-review__decision">
             <DecisionChip
               summary={decision}
+              pulse={pulse}
               {...(card.decisionId
                 ? {
                     onClick: () =>
@@ -261,6 +278,17 @@ function BlockedCard({ card }: { card: BlockedCardView }) {
       </BlockedNote>
     </div>
   );
+}
+
+/** The transcript's decision row, unless an approval card already shows that check. */
+export function makeDecisionRenderer(
+  DecisionRow: (p: ItemProps<DecisionItem>) => JSX.Element | null,
+) {
+  return function DecisionOrNothing(props: ItemProps<DecisionItem>) {
+    const view = useContext(TaskViewContext);
+    const ids = props.item.decisions.map((d) => d.id);
+    return shownByApproval(view, ids) ? null : <DecisionRow {...props} />;
+  };
 }
 
 /** Tool cards, with blocked calls as a non-actionable card of their own. */

@@ -270,7 +270,17 @@ class Batch {
         if (resolved) this.resolveApproval(view, result.callId, resolved);
         break;
       }
-      case 'edit_proposed':
+      case 'edit_proposed': {
+        // The proposing call now waits for the diff review (it has no `approval_required`).
+        for (let i = view.items.length - 1; i >= 0; i--) {
+          const item = view.items[i];
+          if (item?.kind !== 'tool' || item.call?.tool !== 'propose_edit') continue;
+          if (item.status === 'running') {
+            const copy = this.find(view, item.id);
+            if (copy?.kind === 'tool') copy.status = 'awaiting_review';
+          }
+          break;
+        }
         this.push(view, {
           kind: 'edit_proposal',
           id: `edit:${event.proposal.id}`,
@@ -278,6 +288,7 @@ class Batch {
           files: event.files,
         });
         break;
+      }
       case 'approval_required': {
         const tool = this.find(view, `tool:${event.call.id}`);
         if (tool?.kind === 'tool' && tool.status === 'running') tool.status = 'awaiting_approval';
@@ -376,7 +387,8 @@ class Batch {
   /** The user answered: tools that waited for approval now run (or finish as rejected). */
   private resumeTools(view: TaskView): void {
     view.items.forEach((item) => {
-      if (item.kind !== 'tool' || item.status !== 'awaiting_approval') return;
+      if (item.kind !== 'tool') return;
+      if (item.status !== 'awaiting_approval' && item.status !== 'awaiting_review') return;
       const copy = this.find(view, item.id);
       if (copy?.kind === 'tool') copy.status = 'running';
     });

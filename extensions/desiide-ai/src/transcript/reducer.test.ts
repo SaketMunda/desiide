@@ -298,3 +298,20 @@ describe('robustness', () => {
     expect(removeTask(state, 'nope')).toBe(state);
   });
 });
+
+describe('UI-4: the proposing call waits for the diff review', () => {
+  it('propose_edit shows awaiting_review between edit_proposed and its result', () => {
+    const r = rec(happy);
+    const at = r.events.findIndex((e) => e.type === 'edit_proposed');
+    const waiting = run(r, r.events.slice(0, at + 1));
+    const tool = (v: TaskView) =>
+      v.items.find((i) => i.kind === 'tool' && i.call?.tool === 'propose_edit');
+    expect(tool(waiting)).toMatchObject({ status: 'awaiting_review' });
+    // The user answered: running again, then the final result.
+    const resumed = r.events.findIndex(
+      (e, i) => i > at && e.type === 'state_changed' && e.from === 'awaiting_approval',
+    );
+    expect(tool(run(r, r.events.slice(0, resumed + 1)))).toMatchObject({ status: 'running' });
+    expect(tool(run(r))).toMatchObject({ status: 'ok' });
+  });
+});

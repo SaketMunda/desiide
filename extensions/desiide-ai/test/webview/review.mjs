@@ -315,6 +315,15 @@ try {
     assert.match(await ask.textContent(), /Jev isn't confident/);
     assert.equal(await ask.locator('[role="meter"]').getAttribute('aria-valuenow'), '64');
     assert.equal(await ask.locator('.desiide-button--nudge').count(), 1);
+    assert.equal(
+      await page.locator('[data-slot="decision"]').count(),
+      0,
+      'the gate decision shows once, in the card',
+    );
+    assert.match(
+      await page.locator('.desiide-tool', { hasText: 'Propose edit' }).textContent(),
+      /awaiting your review/,
+    );
     for (const label of ['Run once', 'Allow for this task', 'Reject']) {
       assert.equal(await ask.getByRole('button', { name: label }).count(), 1, label);
     }

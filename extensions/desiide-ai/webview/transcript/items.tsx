@@ -124,6 +124,7 @@ const OUTPUT_TAIL_LINES = 20;
 const RUN_STATUS: Partial<Record<ToolItem['status'], RunStatus>> = {
   running: 'running',
   awaiting_approval: 'waiting',
+  awaiting_review: 'waiting',
   ok: 'done',
   failed: 'failed',
   invalid_args: 'failed',
@@ -259,10 +260,10 @@ function ApprovalPlaceholder({ item }: ItemProps<ApprovalItem>) {
 }
 
 /** Decision ids already shown in this webview: a decision pulses once, when it first lands. */
-const landedDecisions = new Set<string>();
+export const landedDecisions = new Set<string>();
 
 /** UI-5 adds the panel link (`onClick`) to this chip. */
-function DecisionRow({ item, live }: ItemProps<DecisionItem>) {
+export function DecisionRow({ item, live }: ItemProps<DecisionItem>) {
   const summary = summarizeDecision(item.decisions);
   const [pulse] = useState(
     () => live && firstLanding(landedDecisions, item.id, item.decisions.at(-1)?.ts, Date.now()),

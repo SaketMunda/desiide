@@ -210,3 +210,20 @@ export function cardKey(e: {
   if (e.key === 'Escape' || e.key === 'Backspace') return 'reject';
   return null;
 }
+
+/**
+ * True when an approval card of the task shows this decision check itself (its probability chip),
+ * so the transcript's standalone decision row would repeat it.
+ */
+export function shownByApproval(
+  view: TaskView | undefined,
+  decisionIds: readonly string[],
+): boolean {
+  if (!view) return false;
+  return view.items.some(
+    (item) =>
+      item.kind === 'approval' &&
+      item.decisionId !== undefined &&
+      decisionIds.includes(item.decisionId),
+  );
+}
