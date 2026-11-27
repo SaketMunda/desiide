@@ -13,6 +13,9 @@ import {
   statusNotice,
 } from './orchestrator/notice.ts';
 import { PromptController } from './prompt/controller.ts';
+import { ReviewController } from './review/controller.ts';
+import { orchestratorReviewRpc } from './review/rpc.ts';
+import { vscodeReviewWorkspace } from './review/vscodeWorkspace.ts';
 import { FallbackTaskClient, MockTaskClient, orchestratorTaskClient } from './prompt/taskClient.ts';
 import { SettingsController } from './settings/controller.ts';
 import { TRY_IT_PROMPT } from './settings/tryIt.ts';
@@ -33,6 +36,8 @@ export interface DesiideApi {
   readonly prompt: Pick<PromptController, 'fill' | 'focus' | 'searchFiles'>;
   /** Settings & onboarding (UI-6). */
   readonly settings: Pick<SettingsController, 'open' | 'service'>;
+  /** Review & approval (UI-4): what waits for the user, and the review actions. */
+  readonly review: Pick<ReviewController, 'service'>;
   setStatus(state: StatusState): void;
 }
 
@@ -50,6 +55,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     prompt?: PromptController;
     transcript?: TranscriptController;
     settings?: SettingsController;
+    review?: ReviewController;
   } = {};
   const host = {
     devMode,
@@ -59,6 +65,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
       if (view === 'panel') {
         late.prompt?.onReady();
         late.transcript?.onReady();
+        late.review?.onReady();
       }
     },
   };
@@ -70,10 +77,15 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   status.name = 'Desiide';
   status.command = 'desiide.focus';
+  let statusState: StatusState = { runningTasks: 0 };
   const setStatus = (state: StatusState): void => {
-    const view = formatStatus(state);
+    statusState = { ...state, pending: state.pending ?? statusState.pending ?? 0 };
+    const view = formatStatus(statusState);
     status.text = view.text;
     status.tooltip = view.tooltip;
+    status.backgroundColor = view.highlight
+      ? new vscode.ThemeColor('statusBarItem.warningBackground')
+      : undefined;
   };
   setStatus({ runningTasks: 0 });
   status.show();
@@ -137,6 +149,18 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
   );
   late.transcript = transcript;
   const focusPanel = () => vscode.commands.executeCommand(`${VIEW_TYPES.panel}.focus`);
+
+  const review = new ReviewController({
+    panel: providers.panel,
+    decisions: providers.decisions,
+    onEvent: (listener) => tasks.onEvent(listener),
+    rpc: orchestratorReviewRpc(client),
+    workspace: vscodeReviewWorkspace(log),
+    setPending: (pending) => setStatus({ ...statusState, pending }),
+    focusPanel,
+    log,
+  });
+  late.review = review;
 
   const settings = new SettingsController({
     extensionUri: context.extensionUri,
@@ -202,6 +226,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     status,
     promptController,
     transcript,
+    review,
     settings,
     { dispose: () => void client.dispose() },
     ...(Object.keys(providers) as ViewId[]).map((view) =>
@@ -239,6 +264,7 @@ export function activate(context: vscode.ExtensionContext): DesiideApi {
     orchestrator: client,
     prompt: promptController,
     settings,
+    review,
     setStatus,
   };
 }

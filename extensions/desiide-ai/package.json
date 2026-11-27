@@ -370,6 +370,11 @@
               "maximum": 1
             }
           }
+        },
+        "desiide.review.notify": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a notification when an edit review or an approval is waiting for you and the Desiide panel isn't visible."
         }
       }
     },

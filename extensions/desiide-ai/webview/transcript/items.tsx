@@ -133,7 +133,7 @@ const RUN_STATUS: Partial<Record<ToolItem['status'], RunStatus>> = {
   cancelled: 'stopped',
 };
 
-function ToolCard({ item, taskId, live }: ItemProps<ToolItem>) {
+export function ToolCard({ item, taskId, live }: ItemProps<ToolItem>) {
   const [open, setOpen] = useState(false);
   const status = TOOL_STATUS[item.status];
   const tool = item.call?.tool;

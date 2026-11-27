@@ -6,7 +6,15 @@ describe('formatStatus', () => {
     expect(formatStatus({ runningTasks: 0 })).toEqual({
       text: '$(sparkle) Desiide',
       tooltip: 'Desiide\nNo tasks running\nClick to open the Desiide view',
+      highlight: false,
     });
+  });
+
+  it('highlights approvals and reviews waiting for the user', () => {
+    const s = formatStatus({ runningTasks: 1, pending: 2 });
+    expect(s.text).toBe('$(sparkle) Desiide $(sync~spin) 1 $(bell-dot) 2');
+    expect(s.tooltip).toContain('2 waiting for you');
+    expect(s.highlight).toBe(true);
   });
 
   it('shows workflow, model and running count', () => {
