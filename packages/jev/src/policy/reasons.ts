@@ -19,6 +19,8 @@ export const REASON_TEXT: Readonly<Record<string, string>> = {
   policy_override: 'Adjusted by policy',
   approved_for_task: 'You allowed this exact action for the task',
   user_rejected: 'You rejected this',
+  user_override: 'You picked this workflow',
+  escalated: 'Handed to the stronger model',
   outside_workspace: 'Reaches outside the workspace',
   command_substitution: 'Runs a nested command ($(…) or backticks)',
   privileged: 'Runs with elevated privileges (sudo)',
@@ -50,6 +52,12 @@ const DENY_RULE_TEXT: Readonly<Record<string, string>> = {
 export const DENY_RULES: ReadonlyArray<{ readonly id: string; readonly text: string }> =
   Object.freeze(Object.entries(DENY_RULE_TEXT).map(([id, text]) => Object.freeze({ id, text })));
 
+const ESCALATION_TEXT: Readonly<Record<string, string>> = {
+  verification_failed: 'the checks failed',
+  edit_failed: "the draft edit didn't parse or apply",
+  escalation_need: 'Jev expects the cheap model to need help',
+};
+
 const OVERRIDE_TEXT: Readonly<Record<string, string>> = {
   strict_mode: 'strict gating mode asks before every side effect',
   user_choice: 'you picked this workflow',
@@ -71,6 +79,10 @@ export function describeReason(label: ReasonLabel): string {
   if (head === 'policy_override' && detail) {
     const why = Object.hasOwn(OVERRIDE_TEXT, detail) ? OVERRIDE_TEXT[detail] : detail;
     return `Adjusted by policy: ${why}`;
+  }
+  if (head === 'escalated' && detail) {
+    const why = Object.hasOwn(ESCALATION_TEXT, detail) ? ESCALATION_TEXT[detail] : detail;
+    return `Handed to the stronger model: ${why}`;
   }
   if (base) return detail ? `${base} (${detail})` : base;
   return label.replace(/[_:]/g, ' ');

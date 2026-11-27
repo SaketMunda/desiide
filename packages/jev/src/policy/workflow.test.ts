@@ -125,7 +125,8 @@ describe('workflow policy rules', () => {
   it('honors an available user choice and explains an unavailable one', async () => {
     expect(await run(scripted('cloud-single', 0, 0), task('balance', 'local-single'))).toEqual({
       workflow: 'local-single',
-      reasons: ['policy_override:user_choice'],
+      reasons: ['user_override', 'policy_override:user_choice'],
+      decisionId: expect.any(String),
     });
     const cloudOnly = state({ availableModels: models('cloud') });
     const d = await run(scripted('cloud-single', 0, 0), task('balance', 'local-single'), cloudOnly);
@@ -133,6 +134,63 @@ describe('workflow policy rules', () => {
       workflow: 'cloud-single',
       reasons: ['option_unavailable:local-single'],
     });
+  });
+
+  it('COR-5 AC4: an override asks no engine but still logs a decision with user_override', async () => {
+    const records: DecisionRecord[] = [];
+    const never: JevEngine = {
+      ...scripted('cloud-single', 0, 0),
+      choice: () => Promise.reject(new Error('must not be asked')),
+      score: () => Promise.reject(new Error('must not be asked')),
+    };
+    const d = await decideWorkflow(
+      {
+        task: task('balance', 'cloud-single'),
+        workflowState: state(),
+        costState: exampleCostRouteState,
+      },
+      { engine: never, newId, onDecision: (r) => records.push(r) },
+    );
+    expect(d.workflow).toBe('cloud-single');
+    expect(records).toHaveLength(1);
+    expect(records[0]).toMatchObject({
+      id: d.decisionId,
+      question: 'workflow',
+      engine: 'rules',
+      workflow: 'cloud-single',
+      reasons: ['user_override', 'policy_override:user_choice'],
+      result: { kind: 'choice', selected: 'cloud-single' },
+    });
+  });
+
+  it('COR-5: explicit options (from roles) replace the locality inference', async () => {
+    // Both models are cloud, but the caller can run a cascade (cheap → strong roles).
+    const cloudOnly = state({ availableModels: models('cloud') });
+    const offered: string[][] = [];
+    const engine: JevEngine = {
+      ...scripted('local-cloud-cascade', 0, 0),
+      choice: (req) => {
+        offered.push([...(req.options ?? [])]);
+        return scripted('local-cloud-cascade', 0, 0).choice(req);
+      },
+    };
+    const d = await decideWorkflow(
+      {
+        task: task(),
+        workflowState: cloudOnly,
+        costState: exampleCostRouteState,
+        options: ['cloud-single', 'local-cloud-cascade', 'local-single'],
+      },
+      { engine, newId },
+    );
+    expect(offered).toEqual([['local-single', 'local-cloud-cascade', 'cloud-single']]);
+    expect(d.workflow).toBe('local-cloud-cascade');
+    expect(
+      await decideWorkflow(
+        { task: task(), workflowState: cloudOnly, costState: exampleCostRouteState, options: [] },
+        { engine, newId },
+      ),
+    ).toEqual({ workflow: undefined, reasons: ['no_models_configured'] });
   });
 
   it('with only local models, floors cannot reach the cloud and the choice stays local', async () => {

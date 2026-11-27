@@ -9,3 +9,4 @@ export type { ConfigListener } from './config/handler.ts';
 export { registerModelHandlers } from './models/handlers.ts';
 export * from './tasks/index.ts';
 export * from './context/index.ts';
+export * from './workflows/index.ts';

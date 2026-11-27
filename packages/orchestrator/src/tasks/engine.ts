@@ -7,6 +7,7 @@ import { confirmAllGate, type Gate } from './gate.ts';
 import { registerTaskHandlers } from './handlers.ts';
 import { createTaskManager, type TaskLogger, type TaskManager } from './taskManager.ts';
 import { prepareTaskTools } from './tools.ts';
+import type { WorkflowEngine } from '../workflows/engine.ts';
 
 export interface TaskEngineOptions {
   models: ModelRegistry;
@@ -16,9 +17,11 @@ export interface TaskEngineOptions {
   context?: ContextProvider;
   logger?: TaskLogger;
   maxRunning?: number;
+  /** COR-5 workflow selection + single/cascade. Absent: one model per task (`roleForTask`). */
+  workflows?: WorkflowEngine;
 }
 
-/** Single-model routing until COR-5: `quality` uses the strong model, everything else the cheap one. */
+/** Routing without a workflow engine: `quality` uses the strong model, everything else the cheap one. */
 export function roleForTask(task: Task): ModelRole {
   return task.preference === 'quality' ? 'strong' : 'cheap';
 }
@@ -45,6 +48,7 @@ export function registerTaskEngine(host: Host, options: TaskEngineOptions): Task
     context: options.context ?? pathOnlyContext,
     newId,
     ...(options.maxRunning === undefined ? {} : { maxRunning: options.maxRunning }),
+    ...(options.workflows ? { workflows: options.workflows } : {}),
     ...(options.logger ? { logger: options.logger } : {}),
   });
   registerTaskHandlers(host, tasks);

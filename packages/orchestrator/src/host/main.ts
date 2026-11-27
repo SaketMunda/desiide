@@ -5,11 +5,13 @@ import { randomUUID } from 'node:crypto';
 import { registerConfigUpdate } from '../config/handler.ts';
 import { createContextEngine } from '../context/engine.ts';
 import { createDecisionService } from '../decisions/service.ts';
-import { registerJevHandlers, workspaceSampler } from '../jev/handlers.ts';
+import { availableModels, registerJevHandlers, workspaceSampler } from '../jev/handlers.ts';
 import { registerModelHandlers } from '../models/handlers.ts';
 import { createWorkspacePolicy } from '../policy/workspacePolicy.ts';
 import { registerTaskEngine } from '../tasks/engine.ts';
 import type { TaskManager } from '../tasks/taskManager.ts';
+import { createWorkflowEngine } from '../workflows/engine.ts';
+import { resolveRoles } from '../workflows/roles.ts';
 import { startOrchestrator } from './start.ts';
 
 startOrchestrator({
@@ -49,10 +51,27 @@ startOrchestrator({
         describeFiles: (paths, signal) => context.describeFiles(paths, signal),
       }),
     });
+    const workflows = createWorkflowEngine({
+      roles: () => resolveRoles((role) => models.forRole(role)),
+      engine: () => policy.engine,
+      onDecision: (record) => policy.onDecision(record),
+      describeFiles: (paths, signal) => context.describeFiles(paths, signal),
+      availableModels: async (ids, signal) => {
+        const { models: listed } = await models.list({ discover: false }, signal);
+        return availableModels(
+          listed.filter((m) => ids.includes(m.id)),
+          (id) => models.config(id),
+        );
+      },
+      redactor: () => policy.redactor(),
+      newId: () => randomUUID(),
+      logger: logger.child({ component: 'workflows' }),
+    });
     late.tasks = registerTaskEngine(host, {
       models,
       gate: () => policy.gate,
       context,
+      workflows,
       logger: logger.child({ component: 'tasks' }),
     });
   },

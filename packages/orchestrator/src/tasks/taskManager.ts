@@ -14,6 +14,7 @@ import {
   type TaskSummary,
 } from '@desiide/protocol';
 import type { RawToolCall, ToolExecution } from '../tools/runner.ts';
+import type { LoopExtras, WorkflowEngine, WorkflowRun } from '../workflows/engine.ts';
 import {
   runAgentLoop,
   type ApprovalAnswer,
@@ -36,8 +37,13 @@ export interface TaskLogger {
 export interface TaskManagerOptions {
   /** Delivers events to the client (`host.notify('task.event', …)`). Must not throw. */
   emit(event: TaskEvent): void;
-  /** Picks the model for a task. A thrown `ModelError` fails the task with its hint. */
+  /**
+   * Picks the model for a task when there is no `workflows` engine. A thrown `ModelError` fails
+   * the task with its hint.
+   */
   resolveModel(task: Task): ModelAdapter;
+  /** COR-5: selects the task's workflow and runs it (single, cascade). */
+  workflows?: WorkflowEngine;
   costPerMTok?(modelId: string): CostPerMTok | undefined;
   /** Builds the per-task tool runner; may throw `TaskFailure` (e.g. no test command). */
   prepareTools(task: Task, signal: AbortSignal): Promise<RunTool>;
@@ -223,31 +229,50 @@ export function createTaskManager(opts: TaskManagerOptions): TaskManager {
     clock.start();
     try {
       setState(run, 'planning');
-      const model = opts.resolveModel(run.task);
-      run.summary.models.push(model.id);
+      // Without a workflow engine, a missing model fails the task before any tool setup.
+      const single = opts.workflows ? undefined : opts.resolveModel(run.task);
+      opts.workflows?.assertRunnable();
       const runTool = await opts.prepareTools(run.task, signal);
-      const costPerMTok = opts.costPerMTok?.(model.id);
-      await runAgentLoop({
-        task: run.task,
-        model,
-        gate: opts.gate(),
-        context: opts.context,
-        runTool,
-        signal,
-        newId: opts.newId,
-        now,
-        ...(costPerMTok ? { costPerMTok } : {}),
-        io: {
-          emit: (body) => emit(run, body),
-          setState: (to) => setState(run, to),
-          setIteration: (n) => {
-            run.summary.iteration = n;
+      const gate = opts.gate();
+      const runLoop = async (model: ModelAdapter, extras: LoopExtras): Promise<void> => {
+        if (!run.summary.models.includes(model.id)) run.summary.models.push(model.id);
+        const costPerMTok = opts.costPerMTok?.(model.id);
+        await runAgentLoop({
+          ...extras,
+          task: run.task,
+          model,
+          gate,
+          context: opts.context,
+          runTool,
+          signal,
+          newId: opts.newId,
+          now,
+          ...(costPerMTok ? { costPerMTok } : {}),
+          io: {
+            emit: (body) => emit(run, body),
+            setState: (to) => setState(run, to),
+            setIteration: (n) => {
+              run.summary.iteration = n;
+            },
+            requestApproval: (req, s) => waitForUser(run, s, clock, approvalWait(run, req)),
+            requestEditReport: (proposal, files, s) =>
+              waitForUser(run, s, clock, editWait(run, proposal, files)),
           },
-          requestApproval: (req, s) => waitForUser(run, s, clock, approvalWait(run, req)),
-          requestEditReport: (proposal, files, s) =>
-            waitForUser(run, s, clock, editWait(run, proposal, files)),
-        },
-      });
+        });
+      };
+      if (single) {
+        await runLoop(single, {});
+      } else if (opts.workflows) {
+        await opts.workflows.run({
+          task: run.task,
+          signal,
+          runLoop,
+          setWorkflow: (workflow) => {
+            run.summary.workflow = workflow;
+          },
+          ...routingHistory(run),
+        });
+      }
       finish(run, 'done');
     } catch (err) {
       const cause: unknown = signal.aborted ? signal.reason : err;
@@ -274,6 +299,20 @@ export function createTaskManager(opts: TaskManagerOptions): TaskManager {
       // Nothing may wait on a finished task.
       if (!signal.aborted) run.controller.abort(new TaskCancelled('task finished'));
     }
+  }
+
+  /** How recent tasks went, for the routing state (metadata only). */
+  function routingHistory(current: TaskRun): Pick<WorkflowRun, 'lastRunStatus' | 'recentFailures'> {
+    const finished = [...runs.values()]
+      .filter((r) => r !== current && isTerminal(r.summary.state))
+      .sort((a, b) => a.summary.updatedAt.localeCompare(b.summary.updatedAt));
+    const last = finished.at(-1)?.summary.state;
+    const lastRunStatus =
+      last === 'done' ? 'success' : last === 'failed' || last === 'cancelled' ? last : 'none';
+    return {
+      lastRunStatus,
+      recentFailures: finished.slice(-5).filter((r) => r.summary.state === 'failed').length,
+    };
   }
 
   type Wait<T> = (resolve: (v: T) => void) => () => void;

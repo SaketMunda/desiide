@@ -33,3 +33,16 @@ describe('DENY_RULES', () => {
     expect(Object.isFrozen(DENY_RULES)).toBe(true);
   });
 });
+
+describe('COR-5 labels', () => {
+  it('explains escalations and user overrides', () => {
+    expect(describeReason('escalated')).toBe('Handed to the stronger model');
+    expect(describeReason('escalated:verification_failed')).toBe(
+      'Handed to the stronger model: the checks failed',
+    );
+    expect(describeReason('escalated:edit_failed')).toBe(
+      "Handed to the stronger model: the draft edit didn't parse or apply",
+    );
+    expect(describeReason('user_override')).toBe('You picked this workflow');
+  });
+});

@@ -6,6 +6,7 @@ import {
   resolveThresholds,
   type GatingMode,
   type GitInfo,
+  type JevEngine,
   type PathRedactor,
   type PolicyGate,
   type ProjectPolicy,
@@ -30,6 +31,10 @@ export interface WorkspacePolicyOptions {
 
 export interface WorkspacePolicy {
   gate: PolicyGate;
+  /** The engine behind the gate (rules, or Jev once JEV-3 lands); COR-5 routes tasks with it. */
+  engine: JevEngine;
+  /** The decision sink the gate uses (JEV-4 log + task stream), for COR-5 workflow decisions. */
+  onDecision(record: DecisionRecord): void;
   /** Subscribe to `config.update`: gating mode, thresholds, Jev settings. */
   onConfig: ConfigListener;
   /** Engines and current settings for `decisions.replay` (JEV-4). */
@@ -175,6 +180,14 @@ export function createWorkspacePolicy(host: Host, opts: WorkspacePolicyOptions):
 
   return {
     gate,
+    engine,
+    onDecision: (record) => {
+      try {
+        opts.onDecision?.(record);
+      } catch (err) {
+        opts.logger?.warn({ err }, 'decision sink failed');
+      }
+    },
     onConfig,
     replayOptions,
     redactor: () => redactor,

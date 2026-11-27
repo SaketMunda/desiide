@@ -29,4 +29,6 @@ export const KNOWN_REASON_LABELS = [
   'policy_override',
   'approved_for_task',
   'user_rejected',
+  'user_override',
+  'escalated',
 ] as const;

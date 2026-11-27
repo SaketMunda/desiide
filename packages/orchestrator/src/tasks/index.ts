@@ -1,7 +1,8 @@
-export { runAgentLoop, costOf } from './agentLoop.ts';
+export { EscalationRequested, runAgentLoop, costOf } from './agentLoop.ts';
 export type {
   AgentLoopIO,
   AgentLoopOptions,
+  EscalationTrigger,
   ApprovalAnswer,
   ApprovalRequest,
   TaskEventBody,

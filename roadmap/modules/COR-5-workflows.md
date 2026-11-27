@@ -1,6 +1,6 @@
 # COR-5 · Workflows (single / cascade / critique)
 
-**Status:** todo · **Milestone:** Alpha (single + cascade), Beta (critique) · **Size:** M · **Depends on:** COR-2, JEV-2 · **Skills:** ide-orchestration-core, ide-jev-decisions
+**Status:** in-progress · **Milestone:** Alpha (single + cascade), Beta (critique) · **Size:** M · **Depends on:** COR-2, JEV-2 · **Skills:** ide-orchestration-core, ide-jev-decisions
 
 ## Purpose
 Multi-model patterns layered on the AgentLoop, chosen per task by the Jev `workflow_select` decision. This is the cost-saving story.

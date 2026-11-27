@@ -23,6 +23,11 @@ export interface WorkflowPolicyInput {
   task: Pick<Task, 'id' | 'preference' | 'workflowOverride'>;
   workflowState: WorkflowSelectState;
   costState: CostRouteState;
+  /**
+   * The options the caller can actually run (COR-5 derives them from the configured roles,
+   * ADR-007). Absent: inferred from `availableModels` locality.
+   */
+  options?: readonly WorkflowOption[];
 }
 
 export interface WorkflowPolicyOptions {
@@ -53,13 +58,35 @@ export async function decideWorkflow(
 ): Promise<WorkflowDecision> {
   const now = opts.now ?? Date.now;
   const { task, workflowState, costState } = input;
-  const allowed = allowedWorkflowOptions(workflowState);
+  const allowed = input.options
+    ? RANK.filter((o) => input.options?.includes(o))
+    : allowedWorkflowOptions(workflowState);
   if (allowed.length === 0) return { workflow: undefined, reasons: ['no_models_configured'] };
 
-  if (task.workflowOverride) {
-    if (allowed.includes(task.workflowOverride)) {
-      return { workflow: task.workflowOverride, reasons: ['policy_override:user_choice'] };
+  if (task.workflowOverride && allowed.includes(task.workflowOverride)) {
+    // No engine is asked, but the choice is still logged, so the Decision panel shows it.
+    const workflow = task.workflowOverride;
+    const reasons: ReasonLabel[] = ['user_override', 'policy_override:user_choice'];
+    const rec: DecisionRecord = {
+      id: opts.newId(),
+      taskId: task.id,
+      pack: workflowState.pack,
+      question: 'workflow',
+      engine: 'rules',
+      stateHash: stateHash(workflowState),
+      state: { ...workflowState },
+      result: { kind: 'choice', selected: workflow, probs: { [workflow]: 1 } },
+      workflow,
+      reasons,
+      latencyMs: 0,
+      ts: new Date(now()).toISOString(),
+    };
+    try {
+      opts.onDecision?.(rec);
+    } catch {
+      // Logging failures don't change the decision.
     }
+    return { workflow, reasons, decisionId: rec.id };
   }
 
   const [choice, complexity, cheap] = await Promise.all([

@@ -23,7 +23,7 @@ import {
 import * as z from 'zod';
 import { TOOLS, toolSpecs } from '../tools/registry.ts';
 import type { RawToolCall, ToolExecution } from '../tools/runner.ts';
-import { TaskFailure, callKey, createBudgetTracker } from './budget.ts';
+import { TaskFailure, callKey, createBudgetTracker, type BudgetTracker } from './budget.ts';
 import type { ContextProvider } from './context.ts';
 import type { Gate, GateDecision } from './gate.ts';
 import {
@@ -72,12 +72,42 @@ export interface AgentLoopOptions {
   newId(): string;
   costPerMTok?: CostPerMTok;
   now?: () => number;
+  /**
+   * Continue this conversation instead of starting one (COR-5 cascade: the strong model picks up
+   * the cheap model's history). Appended to in place. Empty or absent: a fresh conversation.
+   */
+  history?: ChatMessage[];
+  /** A user message added before the first turn, e.g. why the task was escalated. */
+  handoff?: string;
+  /** Shared across the models of one task, so a cascade doesn't get a second set of budgets. */
+  budget?: BudgetTracker;
+  /**
+   * Cascade: asked after a failed check or a failed edit; `true` stops this model with
+   * `EscalationRequested` (always at the end of a turn, with every tool call answered).
+   */
+  escalateOn?(trigger: EscalationTrigger): boolean;
+}
+
+export interface EscalationTrigger {
+  kind: 'verification_failed' | 'edit_failed';
+  /** What failed, as the model was told. */
+  summary: string;
+}
+
+/** Thrown by `runAgentLoop` when `escalateOn` asks to hand the task to a stronger model. */
+export class EscalationRequested extends Error {
+  constructor(readonly trigger: EscalationTrigger) {
+    super(`escalation requested: ${trigger.kind}`);
+    this.name = 'EscalationRequested';
+  }
 }
 
 interface CallOutcome {
   result: ToolResult;
   /** Set when the user declined a verification check, which ends the task. */
   declined?: 'rejected' | 'blocked';
+  /** The model's edit didn't parse or didn't validate against the files (not stale/rejected). */
+  editFailed?: boolean;
 }
 
 const CHECKS = [
@@ -105,7 +135,7 @@ async function contextWindow(
 export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
   const { task, model, gate, io, signal, newId } = opts;
   const now = opts.now ?? Date.now;
-  const budget = createBudgetTracker(task.budget);
+  const budget = opts.budget ?? createBudgetTracker(task.budget);
   const approvedForTask = new Set<string>();
   const tools = toolSpecs(task.allowedTools);
 
@@ -118,9 +148,20 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
   const system = context.system ? `${SYSTEM_PROMPT}\n\n${context.system}` : SYSTEM_PROMPT;
   // The loop only appends to history, so every message ends a prefix later calls repeat: all are
   // cacheable, and providers with prompt caching keep their breakpoints on the latest ones.
-  const messages: ChatMessage[] = [
-    { role: 'user', content: firstMessage(task, context.text), cacheable: true },
-  ];
+  const messages: ChatMessage[] = opts.history ?? [];
+  if (messages.length === 0) {
+    messages.push({ role: 'user', content: firstMessage(task, context.text), cacheable: true });
+  }
+  if (opts.handoff) {
+    // After a failed check the history already ends with a user message; two in a row is
+    // something not every provider accepts, so the handoff joins it.
+    const last = messages.at(-1);
+    if (last?.role === 'user' && typeof last.content === 'string') {
+      messages[messages.length - 1] = { ...last, content: `${last.content}\n\n${opts.handoff}` };
+    } else {
+      messages.push({ role: 'user', content: opts.handoff, cacheable: true });
+    }
+  }
   io.setState('running');
   io.setIteration(budget.iteration);
 
@@ -131,17 +172,22 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
       if (failures.length === 0) return;
       budget.nextIteration();
       io.setIteration(budget.iteration);
-      messages.push({
-        role: 'user',
-        content: verificationFailedMessage(failures),
-        cacheable: true,
-      });
+      const summary = verificationFailedMessage(failures);
+      messages.push({ role: 'user', content: summary, cacheable: true });
+      if (opts.escalateOn?.({ kind: 'verification_failed', summary })) {
+        throw new EscalationRequested({ kind: 'verification_failed', summary });
+      }
       io.setState('running');
       continue;
     }
+    let escalate: EscalationTrigger | undefined;
     for (const call of turn.toolCalls) {
       budget.countToolCall();
-      const { result } = await handleCall(call, 'model');
+      const { result, editFailed } = await handleCall(call, 'model');
+      if (editFailed && !escalate) {
+        const trigger: EscalationTrigger = { kind: 'edit_failed', summary: result.output };
+        if (opts.escalateOn?.(trigger)) escalate = trigger;
+      }
       messages.push({
         role: 'tool',
         toolCallId: call.id,
@@ -151,6 +197,8 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
         cacheable: true,
       });
     }
+    // Only now: every tool call of the turn has its result, so the history stays valid.
+    if (escalate) throw new EscalationRequested(escalate);
   }
 
   async function modelTurn(history: ChatMessage[]) {
@@ -252,7 +300,13 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
     });
     const finish = (result: ToolResult, declined?: CallOutcome['declined']): CallOutcome => {
       io.emit({ type: 'tool_call_finished', result });
-      return declined ? { result, declined } : { result };
+      // A draft edit that doesn't even parse is a model failure (a cascade escalates on it).
+      const unparsable = raw.name === 'propose_edit' && result.error?.kind === 'invalid_args';
+      return {
+        result,
+        ...(declined ? { declined } : {}),
+        ...(unparsable ? { editFailed: true } : {}),
+      };
     };
 
     let args: unknown;
@@ -338,7 +392,10 @@ export async function runAgentLoop(opts: AgentLoopOptions): Promise<void> {
 
     const exec = await opts.runTool({ id: call.id, tool: call.tool, args: call.args }, signal);
     signal.throwIfAborted();
-    if (!exec.proposal) return finish(exec.result);
+    if (!exec.proposal) {
+      const outcome = finish(exec.result);
+      return exec.editErrors?.length ? { ...outcome, editFailed: true } : outcome;
+    }
 
     const proposal = exec.proposal;
     const files = await opts.context.describeFiles(
