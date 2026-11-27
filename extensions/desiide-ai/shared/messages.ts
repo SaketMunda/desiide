@@ -5,8 +5,10 @@ import {
   TaskState,
   TaskSummary,
   WorkflowOption,
+  WorkspacePath,
 } from '@desiide/protocol';
 import * as z from 'zod';
+import { ApprovalAnswer, FileDecision, ProposalReview } from './review/model.ts';
 import { SettingsToHost, SettingsToWebview } from './settings.ts';
 
 /**
@@ -142,6 +144,33 @@ export const WebviewToExtension = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('code.insert'), code: InsertedCode }),
   /** Show a tool call's whole retained output in the "Desiide: Tool Output" channel. */
   z.strictObject({ type: z.literal('tool.openOutput'), taskId: Id, callId: Id }),
+  // --- Review & approval (UI-4) ---
+  /** Open the native diff (current file ↔ proposed) for one file of a proposal. */
+  z.strictObject({
+    type: z.literal('review.openDiff'),
+    taskId: Id,
+    proposalId: Id,
+    path: WorkspacePath,
+  }),
+  /** Answer a proposal: every file once. Accepted files are applied as one WorkspaceEdit. */
+  z.strictObject({
+    type: z.literal('review.submit'),
+    taskId: Id,
+    proposalId: Id,
+    files: z.array(FileDecision).min(1).max(100),
+    /** Optional reason for the rejected files, forwarded to the model. */
+    reason: z.string().max(2000).optional(),
+  }),
+  z.strictObject({
+    type: z.literal('approval.answer'),
+    taskId: Id,
+    approvalId: Id,
+    answer: ApprovalAnswer,
+    /** Only with `reject`: forwarded to the model. */
+    reason: z.string().max(2000).optional(),
+  }),
+  /** Show a decision in the Decisions view (UI-5 renders it). */
+  z.strictObject({ type: z.literal('decision.open'), decisionId: Id }),
   ...SettingsToHost.options,
 ]);
 export type WebviewToExtension = z.infer<typeof WebviewToExtension>;
@@ -190,6 +219,18 @@ export const ExtensionToWebview = z.discriminatedUnion('type', [
   z.object({ type: z.literal('tasks.removed'), taskIds: z.array(Id) }),
   /** Show this task in the transcript (e.g. after Retry). */
   z.object({ type: z.literal('tasks.select'), taskId: Id }),
+  /**
+   * Every retained proposal's review state, replacing the previous one (UI-4). `reasons` maps each
+   * reason label seen so far to its human text (JEV-2's `describeReason`, which needs Node-only
+   * code, so the host translates).
+   */
+  z.object({
+    type: z.literal('review.state'),
+    proposals: z.array(ProposalReview),
+    reasons: z.record(z.string(), z.string()),
+  }),
+  /** To the Decisions view: select this decision (sent by an approval card's link). */
+  z.object({ type: z.literal('decisions.focus'), decisionId: Id }),
   ...SettingsToWebview.options,
 ]);
 export type ExtensionToWebview = z.infer<typeof ExtensionToWebview>;

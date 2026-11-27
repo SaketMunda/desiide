@@ -1,6 +1,6 @@
 # UI-4 · Review & approval (diffs, commands)
 
-**Status:** todo · **Milestone:** Alpha · **Size:** L · **Depends on:** UI-3, COR-2 · **Skills:** ide-editor-shell, ide-jev-decisions
+**Status:** in-progress · **Milestone:** Alpha · **Size:** L · **Depends on:** UI-3, COR-2 · **Skills:** ide-editor-shell, ide-jev-decisions
 
 ## Purpose
 Where the user says yes or no. Edits are reviewed in VS Code's native diff and applied safely (ADR-004). Gated commands are approved with full context. Blocked actions are explained.
