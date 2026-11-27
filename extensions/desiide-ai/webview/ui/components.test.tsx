@@ -6,6 +6,7 @@ import { Collapsible } from './Collapsible.tsx';
 import { ProbabilityBar } from './ProbabilityBar.tsx';
 import { ScoreDots } from './ScoreDots.tsx';
 import { Spinner } from './Spinner.tsx';
+import { BlockedNote, DecisionChip, NeedsYou, RunMark, ThinkingLabel } from './states.tsx';
 
 describe('UI kit accessibility', () => {
   it('IconButton exposes its label as the accessible name', () => {
@@ -53,5 +54,50 @@ describe('UI kit accessibility', () => {
     const html = render(<Spinner label="Thinking" />);
     expect(html).toContain('role="status"');
     expect(html).toContain('Thinking');
+  });
+});
+
+describe('AI state components', () => {
+  it('ThinkingLabel shimmers only while live', () => {
+    expect(render(<ThinkingLabel live elapsed="2 s" />)).toContain('is-live');
+    const done = render(<ThinkingLabel live={false} elapsed="3 s" />);
+    expect(done).not.toContain('is-live');
+    expect(done).toContain('Thought for 3 s');
+  });
+
+  it('DecisionChip is a labelled meter and pulses only when asked', () => {
+    const summary = { label: 'Jev · route', probability: 0.824, probabilityLabel: 'local' };
+    const html = render(<DecisionChip summary={summary} />);
+    expect(html).toContain('role="meter"');
+    expect(html).toContain('aria-valuenow="82"');
+    expect(html).toContain('aria-valuetext="local 82%"');
+    expect(html).not.toContain('is-landing');
+    expect(render(<DecisionChip summary={summary} pulse />)).toContain('is-landing');
+    expect(render(<DecisionChip summary={summary} onClick={() => undefined} />)).toContain(
+      'type="button"',
+    );
+  });
+
+  it('RunMark spins while running and names its status for screen readers', () => {
+    const running = render(<RunMark status="running" label="running" />);
+    expect(running).toContain('desiide-spin');
+    expect(running).toContain('running</span>');
+    const done = render(<RunMark status="done" label="done" />);
+    expect(done).toContain('codicon-check');
+    expect(done).not.toContain('desiide-spin');
+    // Mounted as done: no landing pop (it only plays when it finishes on screen).
+    expect(done).not.toContain('is-landing');
+    expect(render(<RunMark status="failed" label="failed" />)).toContain('codicon-close');
+  });
+
+  it('NeedsYou announces politely until answered; the nudge is on the button', () => {
+    expect(render(<NeedsYou title="Run tests?" />)).toContain('aria-live="polite"');
+    expect(render(<NeedsYou title="Run tests?" answered />)).not.toContain('aria-live');
+    expect(render(<Button nudge>Run once</Button>)).toContain('desiide-button--nudge');
+    expect(render(<Button>Run once</Button>)).not.toContain('nudge');
+  });
+
+  it('BlockedNote marks the blocked state', () => {
+    expect(render(<BlockedNote title="Stopped" />)).toContain('data-state="blocked"');
   });
 });

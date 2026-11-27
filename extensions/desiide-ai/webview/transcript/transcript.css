@@ -123,11 +123,11 @@
   line-height: 16px;
 }
 .desiide-pill.is-live {
-  animation: desiide-pulse 1.6s ease-in-out infinite;
+  animation: desiide-pulse 2.4s ease-in-out infinite;
 }
 @keyframes desiide-pulse {
   50% {
-    opacity: 0.55;
+    opacity: 0.6;
   }
 }
 
@@ -161,10 +161,14 @@
 }
 
 .desiide-turn--user {
+  width: fit-content;
+  max-width: 92%;
+  margin-left: auto;
   padding: var(--desiide-space-2) var(--desiide-space-3);
-  border: 1px solid var(--vscode-input-border, var(--desiide-border));
-  border-radius: var(--desiide-radius);
-  background: var(--vscode-input-background, var(--desiide-surface));
+  border: 1px solid var(--desiide-border);
+  border-radius: var(--desiide-radius-lg) var(--desiide-radius-lg) 4px var(--desiide-radius-lg);
+  color: var(--desiide-fg-strong);
+  background: var(--desiide-surface);
 }
 .desiide-turn__user-text {
   margin: 0;
@@ -177,7 +181,7 @@
   height: 1em;
   margin-left: 2px;
   vertical-align: text-bottom;
-  background: var(--desiide-accent);
+  background: var(--desiide-state-done);
   animation: desiide-blink 1s steps(2, start) infinite;
 }
 @keyframes desiide-blink {
@@ -222,7 +226,7 @@
   padding: 1px 4px;
   border-radius: var(--desiide-radius-sm);
   background: var(--vscode-textCodeBlock-background, var(--desiide-surface));
-  font-family: var(--desiide-font-mono);
+  font-family: var(--desiide-font-code);
   font-size: 0.92em;
 }
 .desiide-md__html a {
@@ -331,15 +335,13 @@ body.vscode-high-contrast-light {
   font: inherit;
   cursor: pointer;
 }
-.desiide-thinking.is-live .desiide-thinking__toggle > span:nth-child(2) {
-  animation: desiide-pulse 1.6s ease-in-out infinite;
-}
 .desiide-thinking__text {
   max-height: 320px;
   margin: var(--desiide-space-1) 0 0;
   padding: var(--desiide-space-2) var(--desiide-space-3);
   overflow-y: auto;
-  border-left: 2px solid var(--desiide-border);
+  border-left: 2px solid
+    color-mix(in srgb, var(--desiide-state-decision) 35%, var(--desiide-border));
   color: var(--desiide-fg-muted);
   font-family: var(--desiide-font);
   white-space: pre-wrap;
@@ -351,6 +353,10 @@ body.vscode-high-contrast-light {
   border: 1px solid var(--desiide-border);
   border-radius: var(--desiide-radius);
   background: var(--desiide-surface);
+  transition: border-color var(--desiide-motion-base) var(--desiide-ease);
+}
+.desiide-tool:has(.desiide-run--running) {
+  border-color: color-mix(in srgb, var(--desiide-state-running) 35%, var(--desiide-border));
 }
 .desiide-tool__head {
   display: flex;
@@ -404,7 +410,7 @@ body.vscode-high-contrast-light {
   overflow: auto;
   border-radius: var(--desiide-radius-sm);
   background: var(--vscode-textCodeBlock-background, var(--desiide-bg));
-  font-family: var(--desiide-font-mono);
+  font-family: var(--desiide-font-code);
   font-size: var(--vscode-editor-font-size, 12px);
   white-space: pre;
 }
@@ -426,23 +432,30 @@ body.vscode-high-contrast-light {
 .desiide-slot code {
   font-family: var(--desiide-font-mono);
 }
-.desiide-slot--chip {
+.desiide-slot--chip,
+.desiide-slot--card {
+  display: block;
   padding: 0;
   border: none;
+  color: inherit;
 }
 
-/* Errors and end of task */
+/* Errors and end of task: red-marked but calm (no red walls). */
 .desiide-error {
   padding: var(--desiide-space-2) var(--desiide-space-3);
-  border: 1px solid var(--desiide-outcome-block);
-  border-radius: var(--desiide-radius);
+  border: 1px solid color-mix(in srgb, var(--desiide-state-blocked) 30%, var(--desiide-border));
+  border-radius: var(--desiide-radius-lg);
+  background: color-mix(in srgb, var(--desiide-state-blocked) 5%, var(--desiide-surface));
 }
 .desiide-error__title {
   display: flex;
   align-items: center;
-  gap: var(--desiide-space-1);
-  color: var(--desiide-outcome-block);
+  gap: var(--desiide-space-2);
+  color: var(--desiide-fg-strong);
   font-weight: 600;
+}
+.desiide-error__title .codicon {
+  color: var(--desiide-state-blocked);
 }
 .desiide-error__hint {
   margin: var(--desiide-space-1) 0;
@@ -458,12 +471,4 @@ body.vscode-high-contrast-light {
   align-items: center;
   gap: var(--desiide-space-2);
   padding-top: var(--desiide-space-1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .desiide-pill.is-live,
-  .desiide-thinking.is-live .desiide-thinking__toggle > span:nth-child(2),
-  .desiide-caret {
-    animation: none;
-  }
 }

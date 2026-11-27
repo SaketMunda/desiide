@@ -4,7 +4,7 @@
 !dist/webview/**
 !dist/codicons/**
 !media/**
-!themes/**
+!themes/*.json
 !package.json
 !README.md
 !LICENSE.md

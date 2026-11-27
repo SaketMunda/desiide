@@ -4,3 +4,6 @@ editor/
 **/*.md
 .vscode-test/
 .screenshots/
+
+# Generated from extensions/desiide-ai/themes/palette.ts (pnpm -F desiide-ai themes)
+extensions/desiide-ai/themes/*.json

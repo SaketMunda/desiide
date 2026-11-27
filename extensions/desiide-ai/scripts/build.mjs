@@ -36,6 +36,11 @@ for (const file of ['codicon.css', 'codicon.ttf']) {
   copyFileSync(join(codicons, file), join(dist, 'codicons', file));
 }
 
+// Geist / Geist Mono are bundled by Vite (tokens.css); their licenses ship next to them.
+for (const file of ['OFL-geist.txt', 'OFL-geistmono.txt']) {
+  copyFileSync(join(root, 'webview/ui/fonts', file), join(dist, 'webview', file));
+}
+
 // The orchestrator (COR-1) ships next to the extension and is forked from dist/ on first use.
 execFileSync(
   process.execPath,
