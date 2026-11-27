@@ -19,6 +19,7 @@ export interface ViewHost {
 export class DesiideViewProvider implements vscode.WebviewViewProvider {
   private webviewView: vscode.WebviewView | undefined;
   private ready = false;
+  private badge: vscode.ViewBadge | undefined;
   readonly router: MessageRouter;
 
   constructor(
@@ -45,6 +46,7 @@ export class DesiideViewProvider implements vscode.WebviewViewProvider {
   resolveWebviewView(webviewView: vscode.WebviewView): void {
     this.webviewView = webviewView;
     this.ready = false;
+    webviewView.badge = this.badge;
     const dist = vscode.Uri.joinPath(this.extensionUri, 'dist');
     const webview = webviewView.webview;
     webview.options = {
@@ -75,6 +77,17 @@ export class DesiideViewProvider implements vscode.WebviewViewProvider {
   /** True once the current webview's script has loaded and said `ready`; messages before that are lost. */
   get isReady(): boolean {
     return this.ready;
+  }
+
+  /** The view is on screen. */
+  get visible(): boolean {
+    return this.webviewView?.visible ?? false;
+  }
+
+  /** The count on the Desiide view and its activity-bar icon (UI-4: things waiting for you). */
+  setBadge(count: number, tooltip: string): void {
+    this.badge = count > 0 ? { value: count, tooltip } : undefined;
+    if (this.webviewView) this.webviewView.badge = this.badge;
   }
 
   post(message: ExtensionToWebview): void {

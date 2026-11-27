@@ -1,0 +1,156 @@
+/* Review & approval cards (UI-4). Built on UI-7's NeedsYou / BlockedNote; state colors only. */
+.desiide-review {
+  border-radius: var(--desiide-radius-lg);
+  outline: none;
+}
+.desiide-review:focus-visible {
+  outline: 1px solid var(--desiide-focus);
+  outline-offset: 2px;
+}
+.desiide-review .desiide-needs__title,
+.desiide-review .desiide-blocked__title {
+  flex-wrap: wrap;
+}
+.desiide-review .desiide-needs__title .desiide-badge {
+  margin-left: auto;
+}
+
+.desiide-review__command {
+  margin: 0;
+  padding: var(--desiide-space-2);
+  border-radius: var(--desiide-radius-sm);
+  background: var(--desiide-surface-sunken);
+  color: var(--desiide-fg-strong);
+  font-family: var(--desiide-font-code);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 12em;
+  overflow: auto;
+}
+.desiide-review__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--desiide-space-2);
+  margin-top: var(--desiide-space-2);
+  font-family: var(--desiide-font-mono);
+  font-size: 11px;
+}
+.desiide-review__reasons {
+  margin: var(--desiide-space-2) 0 0;
+  padding-left: var(--desiide-space-4);
+}
+.desiide-review__reasons li + li {
+  margin-top: 2px;
+}
+.desiide-review__decision {
+  margin-top: var(--desiide-space-2);
+}
+.desiide-review__keys {
+  align-self: center;
+  margin-left: auto;
+  color: var(--desiide-fg-muted);
+  font-family: var(--desiide-font-mono);
+  font-size: 11px;
+}
+.desiide-review__note {
+  margin: var(--desiide-space-2) 0 0;
+  color: var(--desiide-fg-muted);
+}
+.desiide-review__error {
+  margin: var(--desiide-space-2) 0 0;
+  color: var(--desiide-state-blocked);
+}
+
+/* Reject reason */
+.desiide-review__reason {
+  display: grid;
+  flex: 1 1 100%;
+  gap: 2px;
+  margin-top: var(--desiide-space-2);
+  color: var(--desiide-fg-muted);
+  font-size: 11px;
+}
+.desiide-review__reason input {
+  padding: 4px var(--desiide-space-2);
+  border: 1px solid var(--vscode-input-border, var(--desiide-border));
+  border-radius: var(--desiide-radius-sm);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font: inherit;
+  font-size: var(--desiide-font-size);
+}
+.desiide-review__reason input:focus {
+  outline: 1px solid var(--desiide-focus);
+  outline-offset: -1px;
+}
+
+/* Files of an edit proposal */
+.desiide-review__files {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.desiide-review__file {
+  display: flex;
+  align-items: center;
+  gap: var(--desiide-space-2);
+  min-width: 0;
+  padding: 2px 0;
+}
+.desiide-review__file input {
+  margin: 0;
+  accent-color: var(--desiide-state-done);
+}
+.desiide-review__file.is-rejected .desiide-review__path {
+  text-decoration: line-through;
+  color: var(--desiide-fg-muted);
+}
+.desiide-review__file.is-applied > .codicon {
+  color: var(--desiide-state-done);
+}
+.desiide-review__file.is-stale > .codicon {
+  color: var(--desiide-state-needs);
+}
+.desiide-review__path {
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--vscode-textLink-foreground, var(--desiide-fg-strong));
+  font-family: var(--desiide-font-mono);
+  font-size: 12px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.desiide-review__path:hover {
+  text-decoration: underline;
+}
+.desiide-review__path:focus-visible {
+  outline: 1px solid var(--desiide-focus);
+  outline-offset: 1px;
+}
+.desiide-review__stats {
+  flex-shrink: 0;
+  font-family: var(--desiide-font-mono);
+  font-size: 11px;
+}
+.desiide-review__added {
+  color: var(--vscode-gitDecoration-addedResourceForeground, var(--desiide-state-done));
+}
+.desiide-review__removed {
+  color: var(--vscode-gitDecoration-deletedResourceForeground, var(--desiide-state-blocked));
+}
+.desiide-review__critique {
+  margin-top: var(--desiide-space-2);
+}
+.desiide-review__critique ul {
+  margin: var(--desiide-space-1) 0 0;
+  padding-left: var(--desiide-space-4);
+}

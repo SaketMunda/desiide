@@ -4,6 +4,7 @@ import { post } from './bridge.ts';
 import './ui/kit.css';
 import './prompt/prompt.css';
 import './transcript/transcript.css';
+import './review/review.css';
 import './settings/settings.css';
 import { App } from './views/App.tsx';
 

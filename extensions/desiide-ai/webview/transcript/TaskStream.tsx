@@ -3,6 +3,8 @@ import type { ExtensionToWebview } from '../../shared/messages.ts';
 import type { TaskView, TranscriptState } from '../../shared/transcript/model.ts';
 import { isTerminal, streamingItemId, taskTotals } from '../../shared/transcript/reducer.ts';
 import { post, useBridge, usePersistentState } from '../bridge.ts';
+import '../review/register.ts';
+import { TaskViewContext } from '../review/store.ts';
 import { Badge, Button, Codicon, IconButton } from '../ui/index.ts';
 import { formatCost, formatCount, STATE_LABELS, WORKFLOW_NAMES } from './format.ts';
 import { TranscriptRow } from './items.tsx';
@@ -41,12 +43,14 @@ export function TaskStream() {
         <TaskList state={state} selected={view.meta.id} onSelect={setPicked} />
       )}
       <TaskHeader view={view} canRetry={retryable.has(view.meta.id)} onRetry={onRetry} />
-      <Transcript
-        key={view.meta.id}
-        view={view}
-        retryable={retryable.has(view.meta.id)}
-        onRetry={onRetry}
-      />
+      <TaskViewContext.Provider value={view}>
+        <Transcript
+          key={view.meta.id}
+          view={view}
+          retryable={retryable.has(view.meta.id)}
+          onRetry={onRetry}
+        />
+      </TaskViewContext.Provider>
     </div>
   );
 }
