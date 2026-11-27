@@ -110,6 +110,7 @@ async function run() {
   results.orchestratorRestartCommand = 'ok';
 
   await promptBoxChecks(api, results);
+  await reviewChecks(api, results);
 
   results.vscodeVersion = vscode.version;
   const out = process.env.DESIIDE_IT_RESULT;
@@ -179,6 +180,190 @@ async function promptBoxChecks(api, results) {
   await vscode.commands.executeCommand('desiide.focusPrompt');
   results.addSelectionCommand = 'ok';
   await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+}
+
+/** A scripted OpenAI-compatible model on loopback: one turn per request, every request recorded. */
+async function scriptedModel(turns) {
+  const http = require('node:http');
+  const requests = [];
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      requests.push(JSON.parse(body).messages);
+      const turn = turns.shift();
+      if (!turn) return res.writeHead(500).end('no scripted turn');
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      const sse = (chunk) => res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+      if (turn.text) sse({ choices: [{ index: 0, delta: { content: turn.text } }] });
+      (turn.toolCalls ?? []).forEach((c, index) =>
+        sse({
+          choices: [
+            {
+              index: 0,
+              delta: {
+                tool_calls: [
+                  {
+                    index,
+                    id: c.id,
+                    type: 'function',
+                    function: { name: c.name, arguments: JSON.stringify(c.args) },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      );
+      const finish = turn.toolCalls ? 'tool_calls' : 'stop';
+      sse({ choices: [{ index: 0, delta: {}, finish_reason: finish }] });
+      res.end('data: [DONE]\n\n');
+    });
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  return {
+    baseUrl: `http://127.0.0.1:${server.address().port}/v1`,
+    requests,
+    close: () => server.close(),
+  };
+}
+
+/**
+ * UI-4 in the real editor: a real task proposes edits to 3 files; one is open with unsaved
+ * changes (AC5), one isn't open at all. Accept 2 of 3 (AC1) through the extension's review service
+ * and its VS Code workspace (one WorkspaceEdit).
+ */
+async function reviewChecks(api, results) {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const root = vscode.workspace.workspaceFolders[0].uri;
+  fs.mkdirSync(path.join(root.fsPath, 'review'), { recursive: true });
+  for (const n of ['a', 'b', 'c']) {
+    fs.writeFileSync(path.join(root.fsPath, 'review', `${n}.ts`), `export const ${n} = 1;\n`);
+  }
+  const uri = (n) => vscode.Uri.joinPath(root, 'review', `${n}.ts`);
+
+  // AC5: a.ts is open with an unsaved edit above the line the proposal changes.
+  const docA = await vscode.workspace.openTextDocument(uri('a'));
+  const editorA = await vscode.window.showTextDocument(docA);
+  await editorA.edit((e) => e.insert(new vscode.Position(0, 0), '// unsaved note\n'));
+  assert.equal(docA.isDirty, true);
+
+  const model = await scriptedModel([
+    {
+      toolCalls: [
+        {
+          id: 'call_edit',
+          name: 'propose_edit',
+          args: {
+            files: ['a', 'b', 'c'].map((n) => ({
+              path: `review/${n}.ts`,
+              edits: [{ search: `${n} = 1`, replace: `${n} = 2` }],
+            })),
+          },
+        },
+      ],
+    },
+    { text: 'Done.' },
+  ]);
+  const orch = api.orchestrator;
+  const service = api.review.service;
+  try {
+    await orch.request('config.update', {
+      models: [
+        { id: 'fake', provider: 'openai-compatible', model: 'scripted', baseUrl: model.baseUrl },
+      ],
+      roles: { cheap: 'fake', strong: 'fake' },
+    });
+    const events = [];
+    const sub = orch.onEvent((e) => events.push(e));
+    const { task } = await orch.request('task.create', {
+      kind: 'refactor',
+      instruction: 'Bump the constants',
+      allowedTools: ['propose_edit'],
+    });
+    await waitFor(
+      () => service.pending().some((p) => p.kind === 'review'),
+      'edit proposal pending',
+    );
+    const proposalId = events.find((e) => e.type === 'edit_proposed').proposal.id;
+    results.reviewPendingBeforeAnswer = service.pending().map((p) => p.label);
+
+    // The proposed side of the native diff is the blocks applied to the dirty buffer.
+    const proposed = await vscode.workspace.openTextDocument(
+      vscode.Uri.from({
+        scheme: 'desiide-proposed',
+        path: '/review/a.ts',
+        query: `task=${task.id}&proposal=${proposalId}`,
+      }),
+    );
+    assert.equal(proposed.getText(), '// unsaved note\nexport const a = 2;\n');
+
+    // Which documents the one WorkspaceEdit touched.
+    const changed = [];
+    const watch = vscode.workspace.onDidChangeTextDocument((e) => {
+      if (e.contentChanges.length > 0 && e.document.uri.path.includes('/review/')) {
+        changed.push(path.basename(e.document.uri.fsPath));
+      }
+    });
+    const outcome = await service.submit(task.id, proposalId, [
+      { path: 'review/a.ts', accept: true },
+      { path: 'review/b.ts', accept: false },
+      { path: 'review/c.ts', accept: true },
+    ]);
+    watch.dispose();
+    results.reviewChangedDocs = changed;
+    assert.deepEqual(outcome, { ok: true });
+
+    // AC1: exactly a and c changed; AC5: a keeps the unsaved edit and stays unsaved (it was dirty),
+    // c was clean, so it was saved for the agent's checks.
+    assert.equal(docA.getText(), '// unsaved note\nexport const a = 2;\n');
+    assert.equal(docA.isDirty, true, 'a buffer that had unsaved edits is not saved for the user');
+    assert.equal(fs.readFileSync(uri('a').fsPath, 'utf8'), 'export const a = 1;\n');
+    assert.equal(fs.readFileSync(uri('b').fsPath, 'utf8'), 'export const b = 1;\n');
+    assert.equal(fs.readFileSync(uri('c').fsPath, 'utf8'), 'export const c = 2;\n');
+    assert.deepEqual(results.reviewChangedDocs.sort(), ['a.ts', 'c.ts']);
+
+    await waitFor(
+      () => events.some((e) => e.type === 'state_changed' && e.to === 'done'),
+      'task done after the review',
+    );
+    sub.dispose();
+    const told = model.requests[1]
+      .filter((m) => m.role === 'tool')
+      .map((m) => m.content)
+      .join('\n');
+    assert.match(told, /review\/a\.ts: applied/);
+    assert.match(told, /review\/b\.ts: user rejected/);
+    assert.match(told, /review\/c\.ts: applied/);
+    results.reviewState = service.state().find((r) => r.proposalId === proposalId);
+    assert.equal(service.pending().length, 0);
+
+    // AC1: ONE undo (in a.ts) reverts both applied files; a's unsaved note stays.
+    await vscode.window.showTextDocument(docA);
+    try {
+      await vscode.commands.executeCommand('undo');
+    } catch (err) {
+      results.reviewUndoError = String(err && err.message ? err.message : err);
+    }
+    const docC = await vscode.workspace.openTextDocument(uri('c'));
+    results.reviewUndo = { a: docA.getText(), c: docC.getText() };
+    assert.deepEqual(results.reviewUndo, {
+      a: '// unsaved note\nexport const a = 1;\n',
+      c: 'export const c = 1;\n',
+    });
+  } finally {
+    model.close();
+    for (const n of ['a', 'b', 'c']) {
+      const doc = vscode.workspace.textDocuments.find(
+        (d) => d.uri.toString() === uri(n).toString(),
+      );
+      if (doc && doc.isDirty) {
+        await vscode.window.showTextDocument(doc);
+        await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      }
+    }
+  }
 }
 
 module.exports = { run };
