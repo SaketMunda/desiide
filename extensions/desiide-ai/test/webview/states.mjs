@@ -235,7 +235,8 @@ async function liveRun(page, step) {
         },
       }),
     ]);
-    await page.waitForSelector('.desiide-run--failed');
+    // UI-4: a blocked call is its own calm card (BlockedNote), not a failed tool run.
+    await page.waitForSelector('[data-slot="blocked"] .desiide-blocked');
   }
 }
 

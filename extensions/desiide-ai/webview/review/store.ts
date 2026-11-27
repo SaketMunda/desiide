@@ -20,7 +20,8 @@ export function createReviewStore() {
     if (m.type !== 'review.state') return;
     current = {
       proposals: new Map(m.proposals.map((p) => [reviewKey(p.taskId, p.proposalId), p])),
-      reasons: m.reasons,
+      // Labels are only ever added; merging keeps text if a message ever carries fewer.
+      reasons: { ...current.reasons, ...m.reasons },
     };
     for (const l of listeners) l(current);
   };
@@ -36,7 +37,11 @@ export function createReviewStore() {
 
 let shared: ReturnType<typeof createReviewStore> | undefined;
 
-function reviewStore() {
+/**
+ * The panel's store. It must listen before any card renders: `review.state` usually arrives before
+ * the events it describes are applied (those wait for the next animation frame).
+ */
+export function reviewStore() {
   if (!shared) {
     shared = createReviewStore();
     subscribe(shared.handle);

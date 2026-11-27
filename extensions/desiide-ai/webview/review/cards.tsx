@@ -77,6 +77,11 @@ function ReasonField({
   onCancel?: () => void;
   autoFocus?: boolean;
 }) {
+  const input = useRef<HTMLInputElement>(null);
+  // `autoFocus` only works on page load; the field opens later, from the Reject button.
+  useEffect(() => {
+    if (autoFocus) input.current?.focus();
+  }, [autoFocus]);
   return (
     <label class="desiide-review__reason" for={id}>
       <span>Why not? Optional, sent to the agent</span>
@@ -84,8 +89,8 @@ function ReasonField({
         id={id}
         type="text"
         maxLength={2000}
+        ref={input}
         value={value}
-        autoFocus={autoFocus}
         onInput={(e) => onInput(e.currentTarget.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && onSubmit) {
@@ -271,7 +276,7 @@ const FILE_STATUS = {
   pending: undefined,
   applied: { text: 'applied', tone: 'done' },
   rejected: { text: 'rejected', tone: 'neutral' },
-  stale: { text: 'changed since: agent will redo', tone: 'needs' },
+  stale: { text: 'stale · agent redoes', tone: 'needs' },
 } as const;
 
 /** An edit proposal: per-file accept/reject, native diff per file, one WorkspaceEdit on apply. */
